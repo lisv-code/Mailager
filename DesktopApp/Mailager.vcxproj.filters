@@ -1,0 +1,589 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="MainWnd">
+      <UniqueIdentifier>{d4a33ef5-6487-46df-80cf-2653f5d21ae9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\_Lib_">
+      <UniqueIdentifier>{aea4b2ea-1e1c-4d86-85cd-d3031bf35d65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\_Lib_">
+      <UniqueIdentifier>{75092973-994e-4e47-963f-20da54bf09f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="View2">
+      <UniqueIdentifier>{1fa02d87-6d20-4ad3-8a57-4cf1e8cfe959}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\CoreAppLib">
+      <UniqueIdentifier>{6a177efa-09ee-480d-9a6b-4284673c983e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CoreAppLib">
+      <UniqueIdentifier>{37061caf-7734-4a60-bc64-5e7da66eb88c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\CoreNetLib">
+      <UniqueIdentifier>{a0986897-37c1-4b25-8a87-711f516d5460}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CoreNetLib">
+      <UniqueIdentifier>{b48c10d7-e82e-4fbf-9737-4b96881cbbde}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\CoreMailLib">
+      <UniqueIdentifier>{ab2db4a2-cf16-4894-a644-98d012e39bb2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CoreMailLib">
+      <UniqueIdentifier>{be37f885-a381-4adc-945c-a4d68772e18e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ContentViewer">
+      <UniqueIdentifier>{0f83c739-076d-466d-9b4f-07a9eded02b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MailMsgViewer">
+      <UniqueIdentifier>{b434c1cc-2004-4279-b49f-8ea5245b29ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MailMainView">
+      <UniqueIdentifier>{7f518726-cd5f-4762-94b6-6c0137f62bb2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LogView">
+      <UniqueIdentifier>{ea525d10-9eab-4b28-bd8b-ddc6b463a850}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CredentialsWnd">
+      <UniqueIdentifier>{704abcbc-40d5-4607-9976-cce64a970956}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\wxWidgetsX">
+      <UniqueIdentifier>{ee72729a-fec6-43a1-a2fc-48f1fddc17b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\wxWidgetsX">
+      <UniqueIdentifier>{305fa112-a167-4bdc-bd88-88177137203b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MailMsgEditor">
+      <UniqueIdentifier>{a5748131-8cc9-4b40-a5cd-ad96dff83f0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MailAccCfg">
+      <UniqueIdentifier>{1e7c75b2-cb0d-4d31-9c3c-882508e8d7a7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AppMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ResMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UiHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MainWnd\MainWnd.h">
+      <Filter>MainWnd</Filter>
+    </ClInclude>
+    <ClInclude Include="MainWnd\MainWndUI.h">
+      <Filter>MainWnd</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMainView\MailMainView.h">
+      <Filter>MailMainView</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMainView\MailMainViewUI.h">
+      <Filter>MailMainView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CppLib\LisCommon\StrUtils.h">
+      <Filter>Header Files\_Lib_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CppLib\LisCommon\FileSystem.h">
+      <Filter>Header Files\_Lib_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CppLib\LisWin\WinUtils.h">
+      <Filter>Header Files\_Lib_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CppLib\LisCommon\Logger.h">
+      <Filter>Header Files\_Lib_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CppLib\LisCommon\HashFunc.h">
+      <Filter>Header Files\_Lib_</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMainView\MasterViewModel.h">
+      <Filter>MailMainView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\AccountCfg.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\AccountSettings.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\ConnectionAuth.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\RfcDateTimeCodec.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\MimeHeader.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\MailMsgFile.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\MailMsgReceiver.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\MailMsgStore.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreNetLib\NetClient.h">
+      <Filter>Header Files\CoreNetLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreNetLib\NetServer.h">
+      <Filter>Header Files\CoreNetLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreNetLib\OAuth2Client.h">
+      <Filter>Header Files\CoreNetLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\OAuth2Config.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreNetLib\OAuth2Token.h">
+      <Filter>Header Files\CoreNetLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\AuthTokenProc.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\OAuth2TokenStor.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreNetLib\Pop3Client.h">
+      <Filter>Header Files\CoreNetLib</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMsgFileMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMainView\DetailViewModel.h">
+      <Filter>MailMainView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\RfcTextCodec.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMsgViewer\MailMsgViewerUI.h">
+      <Filter>MailMsgViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMsgViewer\MailMsgViewer.h">
+      <Filter>MailMsgViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="LogView\LogViewUI.h">
+      <Filter>LogView</Filter>
+    </ClInclude>
+    <ClInclude Include="LogView\LogView.h">
+      <Filter>LogView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\PasswordStore.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\MailMsgStatus.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CppLib\LisCommon\EventDispBase.h">
+      <Filter>Header Files\_Lib_</Filter>
+    </ClInclude>
+    <ClInclude Include="CredentialsWnd\CredentialsWnd.h">
+      <Filter>CredentialsWnd</Filter>
+    </ClInclude>
+    <ClInclude Include="CredentialsWnd\CredentialsWndUI.h">
+      <Filter>CredentialsWnd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\MailMsgFileHelper.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\MimeMessageDef.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\MimeParser.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\MimeNode.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\MimeNodeProc.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\RfcHeaderField.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentViewer\ContentViewer.h">
+      <Filter>ContentViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentViewer\HtmlContentViewer.h">
+      <Filter>ContentViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentViewer\WebContentViewer.h">
+      <Filter>ContentViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wxWidgetsX\fs_data.h">
+      <Filter>Header Files\wxWidgetsX</Filter>
+    </ClInclude>
+    <ClInclude Include="SysHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentViewer\UrlSchemeHandler_Cid.h">
+      <Filter>ContentViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentViewer\HtmlViewWindow.h">
+      <Filter>ContentViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentViewer\WebViewHandler_Cid.h">
+      <Filter>ContentViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentViewer\WebViewHandler_Null.h">
+      <Filter>ContentViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentViewer\UrlSchemeHandler_Inet.h">
+      <Filter>ContentViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wxWidgetsX\stream_adapter.h">
+      <Filter>Header Files\wxWidgetsX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CppLib\LisCommon\ThreadTaskMgr.h">
+      <Filter>Header Files\_Lib_</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentViewer\ExtResMgr.h">
+      <Filter>ContentViewer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\AppDef.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreNetLib\SmtpClient.h">
+      <Filter>Header Files\CoreNetLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreNetLib\TxtProtoClient.h">
+      <Filter>Header Files\CoreNetLib</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMsgEditor\MailMsgEditor.h">
+      <Filter>MailMsgEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMsgEditor\MailMsgEditorUI.h">
+      <Filter>MailMsgEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\MailMsgTransmitter.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\ConnectionHelper.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="AppCfg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MailAccCfg\MailAccCfg.h">
+      <Filter>MailAccCfg</Filter>
+    </ClInclude>
+    <ClInclude Include="MailAccCfg\MailAccCfgUI.h">
+      <Filter>MailAccCfg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\ConnectionInfo.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="MailAccCfg\ConnectionUiCtrlHelper.h">
+      <Filter>MailAccCfg</Filter>
+    </ClInclude>
+    <ClInclude Include="MailAccCfg\AccEditMgr.h">
+      <Filter>MailAccCfg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\MailMsgFileDef.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMsgViewMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMsgFileView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Resource\AppMain.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\BtnNo.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\BtnOk.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolConfig.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolEdit.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolExport.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolLayout.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolPrint.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolRefresh.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolSave.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolStop.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolView.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AppMgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ResMgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UiHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWnd\MainWnd.cpp">
+      <Filter>MainWnd</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWnd\MainWndUI.cpp">
+      <Filter>MainWnd</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMainView\MailMainView_General.cpp">
+      <Filter>MailMainView</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMainView\MailMainViewUI.cpp">
+      <Filter>MailMainView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\CppLib\LisCommon\StrUtils.cpp">
+      <Filter>Source Files\_Lib_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\CppLib\LisCommon\FileSystem.cpp">
+      <Filter>Source Files\_Lib_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\CppLib\LisWin\WinUtils.cpp">
+      <Filter>Source Files\_Lib_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\CppLib\LisCommon\Logger.cpp">
+      <Filter>Source Files\_Lib_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\CppLib\LisCommon\HashFunc.cpp">
+      <Filter>Source Files\_Lib_</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMainView\MasterViewModel.cpp">
+      <Filter>MailMainView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\AccountCfg.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\AccountSettings.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\ConnectionAuth.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\RfcDateTimeCodec.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\MimeHeader.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\MailMsgFile.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\MailMsgReceiver.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\MailMsgStore.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreNetLib\NetClient.cpp">
+      <Filter>Source Files\CoreNetLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreNetLib\NetServer.cpp">
+      <Filter>Source Files\CoreNetLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreNetLib\OAuth2Client.cpp">
+      <Filter>Source Files\CoreNetLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\AuthTokenProc.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\OAuth2TokenStor.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreNetLib\Pop3Client.cpp">
+      <Filter>Source Files\CoreNetLib</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMsgFileMgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMainView\DetailViewModel.cpp">
+      <Filter>MailMainView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\RfcTextCodec.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMsgViewer\MailMsgViewerUI.cpp">
+      <Filter>MailMsgViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMsgViewer\MailMsgViewer.cpp">
+      <Filter>MailMsgViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="LogView\LogViewUI.cpp">
+      <Filter>LogView</Filter>
+    </ClCompile>
+    <ClCompile Include="LogView\LogView.cpp">
+      <Filter>LogView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\PasswordStore.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\MailMsgStatus.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMainView\MailMainView_Master.cpp">
+      <Filter>MailMainView</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMainView\MailMainView_Detail.cpp">
+      <Filter>MailMainView</Filter>
+    </ClCompile>
+    <ClCompile Include="CredentialsWnd\CredentialsWnd.cpp">
+      <Filter>CredentialsWnd</Filter>
+    </ClCompile>
+    <ClCompile Include="CredentialsWnd\CredentialsWndUI.cpp">
+      <Filter>CredentialsWnd</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMainView\MailMainView_MailMsgProcEvent.cpp">
+      <Filter>MailMainView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\MailMsgFileHelper.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\MimeParser.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\MimeNode.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\RfcHeaderField.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\MimeNodeProc.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentViewer\HtmlContentViewer.cpp">
+      <Filter>ContentViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentViewer\WebContentViewer.cpp">
+      <Filter>ContentViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wxWidgetsX\fs_data.cpp">
+      <Filter>Source Files\wxWidgetsX</Filter>
+    </ClCompile>
+    <ClCompile Include="SysHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentViewer\UrlSchemeHandler_Cid.cpp">
+      <Filter>ContentViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentViewer\HtmlViewWindow.cpp">
+      <Filter>ContentViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentViewer\WebViewHandler_Cid.cpp">
+      <Filter>ContentViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentViewer\WebViewHandler_Null.cpp">
+      <Filter>ContentViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentViewer\UrlSchemeHandler_Inet.cpp">
+      <Filter>ContentViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\CppLib\LisCommon\ThreadTaskMgr.cpp">
+      <Filter>Source Files\_Lib_</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentViewer\ExtResMgr.cpp">
+      <Filter>ContentViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreNetLib\SmtpClient.cpp">
+      <Filter>Source Files\CoreNetLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreNetLib\TxtProtoClient.cpp">
+      <Filter>Source Files\CoreNetLib</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMsgEditor\MailMsgEditor.cpp">
+      <Filter>MailMsgEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMsgEditor\MailMsgEditorUI.cpp">
+      <Filter>MailMsgEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\MailMsgTransmitter.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\ConnectionHelper.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="AppCfg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MailAccCfg\MailAccCfg.cpp">
+      <Filter>MailAccCfg</Filter>
+    </ClCompile>
+    <ClCompile Include="MailAccCfg\MailAccCfgUI.cpp">
+      <Filter>MailAccCfg</Filter>
+    </ClCompile>
+    <ClCompile Include="MailAccCfg\ConnectionUiCtrlHelper.cpp">
+      <Filter>MailAccCfg</Filter>
+    </ClCompile>
+    <ClCompile Include="MailAccCfg\AccEditMgr.cpp">
+      <Filter>MailAccCfg</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMsgViewMgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\OAuth2Config.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Mailager.cfg" />
+    <None Include="MainWnd\MainWndUI.fbp">
+      <Filter>MainWnd</Filter>
+    </None>
+    <None Include="MailMainView\MailMainViewUI.fbp">
+      <Filter>MailMainView</Filter>
+    </None>
+    <None Include="MailMsgViewer\MailMsgViewerUI.fbp">
+      <Filter>MailMsgViewer</Filter>
+    </None>
+    <None Include="LogView\LogViewUI.fbp">
+      <Filter>LogView</Filter>
+    </None>
+    <None Include="CredentialsWnd\CredentialsWndUI.fbp">
+      <Filter>CredentialsWnd</Filter>
+    </None>
+    <None Include="MailMsgEditor\MailMsgEditorUI.fbp">
+      <Filter>MailMsgEditor</Filter>
+    </None>
+    <None Include="MailAccCfg\MailAccCfgUI.fbp">
+      <Filter>MailAccCfg</Filter>
+    </None>
+  </ItemGroup>
+</Project>

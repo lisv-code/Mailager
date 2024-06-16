@@ -1,0 +1,48 @@
+// DesktopApp resource script
+#define VS_VERSION_INFO 1
+
+#include "Resource.h"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 0,0,0,00000
+PRODUCTVERSION 0,0,0,00000
+FILEOS 0x00000004
+FILETYPE 0x00000001
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "FFFF04B0"
+    BEGIN
+      VALUE "Comments", "Mail manager (email client)\0"
+      VALUE "CompanyName", "LISV\0"
+      VALUE "FileDescription", "Mailager desktop application\0"
+      VALUE "InternalName", "Mailager\0"
+      VALUE "LegalCopyright", "(c) 2024 LISV\0"
+      VALUE "OriginalFilename", "Mailager.exe\0"
+      VALUE "ProductName", "LIS Mailager\0"
+      VALUE "FileVersion", "0.0.0.00000\0"
+      VALUE "ProductVersion", "0.0.0.00000\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0xFFFF, 0x04B0
+  END
+END
+
+IcoAppMain ICON DISCARDABLE "../Resource/AppMain.ico"
+
+IcoBtnNo ICON DISCARDABLE "../Resource/BtnNo.ico"
+IcoBtnOk ICON DISCARDABLE "../Resource/BtnOk.ico"
+
+IcoToolConfig ICON DISCARDABLE "../Resource/ToolConfig.ico"
+IcoToolCreate ICON DISCARDABLE "../Resource/ToolCreate.ico"
+IcoToolDelete ICON DISCARDABLE "../Resource/ToolDelete.ico"
+IcoToolEdit ICON DISCARDABLE "../Resource/ToolEdit.ico"
+IcoToolExport ICON DISCARDABLE "../Resource/ToolExport.ico"
+IcoToolLayout ICON DISCARDABLE "../Resource/ToolLayout.ico"
+IcoToolPrint ICON DISCARDABLE "../Resource/ToolPrint.ico"
+IcoToolRefresh ICON DISCARDABLE "../Resource/ToolRefresh.ico"
+IcoToolSave ICON DISCARDABLE "../Resource/ToolSave.ico"
+IcoToolStop ICON DISCARDABLE "../Resource/ToolStop.ico"
+IcoToolView ICON DISCARDABLE "../Resource/ToolView.ico"
