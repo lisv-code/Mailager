@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Mailager" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Mailager" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="`wx-config  --version=3.2 --static=yes --unicode=yes --debug=yes --cflags`" />
+				</Compiler>
+				<Linker>
+					<Add option="`wx-config  --version=3.2 --static=yes --unicode=yes --debug=yes --libs`" />
+					<Add library="libmimetic" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Mailager" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="`wx-config  --version=3.2 --static=yes --unicode=yes --debug=no --cflags`" />
+					<Add option="-DNDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="`wx-config  --version=3.2 --static=yes --unicode=yes --debug=no --libs`" />
+					<Add library="libmimetic" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++14" />
+			<Add option="-fpermissive" />
+			<Add option="-DUNICODE" />
+			<Add directory="../../CppLib" />
+			<Add directory="../../../CppLib" />
+		</Compiler>
+		<Linker>
+			<Add option="`wx-config --libs std,aui,webview`" />
+		</Linker>
+		<ExtraCommands>
+			<Add after='cp &quot;$(PROJECT_DIR)Mailager.cfg&quot; $(TARGET_OUTPUT_DIR)' />
+		</ExtraCommands>
+		<Unit filename="../../CppLib/LisCommon/EventDispBase.h" />
+		<Unit filename="../../CppLib/LisCommon/FileSystem.cpp" />
+		<Unit filename="../../CppLib/LisCommon/FileSystem.h" />
+		<Unit filename="../../CppLib/LisCommon/HashFunc.cpp" />
+		<Unit filename="../../CppLib/LisCommon/HashFunc.h" />
+		<Unit filename="../../CppLib/LisCommon/Logger.cpp" />
+		<Unit filename="../../CppLib/LisCommon/Logger.h" />
+		<Unit filename="../../CppLib/LisCommon/StrUtils.cpp" />
+		<Unit filename="../../CppLib/LisCommon/StrUtils.h" />
+		<Unit filename="../../CppLib/LisCommon/ThreadTaskMgr.cpp" />
+		<Unit filename="../../CppLib/LisCommon/ThreadTaskMgr.h" />
+		<Unit filename="../../CppLib/LisCommon/tchar.h" />
+		<Unit filename="../CoreAppLib/AccountCfg.cpp" />
+		<Unit filename="../CoreAppLib/AccountCfg.h" />
+		<Unit filename="../CoreAppLib/AccountSettings.cpp" />
+		<Unit filename="../CoreAppLib/AccountSettings.h" />
+		<Unit filename="../CoreAppLib/AppDef.h" />
+		<Unit filename="../CoreAppLib/AuthTokenProc.cpp" />
+		<Unit filename="../CoreAppLib/AuthTokenProc.h" />
+		<Unit filename="../CoreAppLib/ConnectionAuth.cpp" />
+		<Unit filename="../CoreAppLib/ConnectionAuth.h" />
+		<Unit filename="../CoreAppLib/ConnectionHelper.cpp" />
+		<Unit filename="../CoreAppLib/ConnectionHelper.h" />
+		<Unit filename="../CoreAppLib/ConnectionInfo.h" />
+		<Unit filename="../CoreAppLib/MailMsgFile.cpp" />
+		<Unit filename="../CoreAppLib/MailMsgFile.h" />
+		<Unit filename="../CoreAppLib/MailMsgFileDef.h" />
+		<Unit filename="../CoreAppLib/MailMsgFileHelper.cpp" />
+		<Unit filename="../CoreAppLib/MailMsgFileHelper.h" />
+		<Unit filename="../CoreAppLib/MailMsgReceiver.cpp" />
+		<Unit filename="../CoreAppLib/MailMsgReceiver.h" />
+		<Unit filename="../CoreAppLib/MailMsgStatus.cpp" />
+		<Unit filename="../CoreAppLib/MailMsgStatus.h" />
+		<Unit filename="../CoreAppLib/MailMsgStore.cpp" />
+		<Unit filename="../CoreAppLib/MailMsgStore.h" />
+		<Unit filename="../CoreAppLib/MailMsgTransmitter.cpp" />
+		<Unit filename="../CoreAppLib/MailMsgTransmitter.h" />
+		<Unit filename="../CoreAppLib/OAuth2Config.cpp" />
+		<Unit filename="../CoreAppLib/OAuth2Config.h" />
+		<Unit filename="../CoreAppLib/OAuth2TokenStor.cpp" />
+		<Unit filename="../CoreAppLib/OAuth2TokenStor.h" />
+		<Unit filename="../CoreAppLib/PasswordStore.cpp" />
+		<Unit filename="../CoreAppLib/PasswordStore.h" />
+		<Unit filename="../CoreMailLib/MimeHeader.cpp" />
+		<Unit filename="../CoreMailLib/MimeHeader.h" />
+		<Unit filename="../CoreMailLib/MimeMessageDef.h" />
+		<Unit filename="../CoreMailLib/MimeNode.cpp" />
+		<Unit filename="../CoreMailLib/MimeNode.h" />
+		<Unit filename="../CoreMailLib/MimeNodeProc.cpp" />
+		<Unit filename="../CoreMailLib/MimeNodeProc.h" />
+		<Unit filename="../CoreMailLib/MimeParser.cpp" />
+		<Unit filename="../CoreMailLib/MimeParser.h" />
+		<Unit filename="../CoreMailLib/RfcDateTimeCodec.cpp" />
+		<Unit filename="../CoreMailLib/RfcDateTimeCodec.h" />
+		<Unit filename="../CoreMailLib/RfcHeaderField.cpp" />
+		<Unit filename="../CoreMailLib/RfcHeaderField.h" />
+		<Unit filename="../CoreMailLib/RfcTextCodec.cpp" />
+		<Unit filename="../CoreMailLib/RfcTextCodec.h" />
+		<Unit filename="../CoreNetLib/NetClient.cpp" />
+		<Unit filename="../CoreNetLib/NetClient.h" />
+		<Unit filename="../CoreNetLib/NetServer.cpp" />
+		<Unit filename="../CoreNetLib/NetServer.h" />
+		<Unit filename="../CoreNetLib/OAuth2Client.cpp" />
+		<Unit filename="../CoreNetLib/OAuth2Client.h" />
+		<Unit filename="../CoreNetLib/OAuth2Token.h" />
+		<Unit filename="../CoreNetLib/Pop3Client.cpp" />
+		<Unit filename="../CoreNetLib/Pop3Client.h" />
+		<Unit filename="../CoreNetLib/SmtpClient.cpp" />
+		<Unit filename="../CoreNetLib/SmtpClient.h" />
+		<Unit filename="../CoreNetLib/TxtProtoClient.cpp" />
+		<Unit filename="../CoreNetLib/TxtProtoClient.h" />
+		<Unit filename="../Resource/AppMain.ico" />
+		<Unit filename="../Resource/BtnNo.ico" />
+		<Unit filename="../Resource/BtnOk.ico" />
+		<Unit filename="../Resource/ToolConfig.ico" />
+		<Unit filename="../Resource/ToolEdit.ico" />
+		<Unit filename="../Resource/ToolExport.ico" />
+		<Unit filename="../Resource/ToolLayout.ico" />
+		<Unit filename="../Resource/ToolPrint.ico" />
+		<Unit filename="../Resource/ToolRefresh.ico" />
+		<Unit filename="../Resource/ToolSave.ico" />
+		<Unit filename="../Resource/ToolStop.ico" />
+		<Unit filename="../Resource/ToolView.ico" />
+		<Unit filename="../wxWidgetsX/fs_data.cpp" />
+		<Unit filename="../wxWidgetsX/fs_data.h" />
+		<Unit filename="../wxWidgetsX/stream_adapter.h" />
+		<Unit filename="AppCfg.cpp" />
+		<Unit filename="AppCfg.h" />
+		<Unit filename="AppMgr.cpp" />
+		<Unit filename="AppMgr.h" />
+		<Unit filename="ContentViewer/ContentViewer.h" />
+		<Unit filename="ContentViewer/ExtResMgr.cpp" />
+		<Unit filename="ContentViewer/ExtResMgr.h" />
+		<Unit filename="ContentViewer/HtmlContentViewer.cpp" />
+		<Unit filename="ContentViewer/HtmlContentViewer.h" />
+		<Unit filename="ContentViewer/HtmlViewWindow.cpp" />
+		<Unit filename="ContentViewer/HtmlViewWindow.h" />
+		<Unit filename="ContentViewer/UrlSchemeHandler_Cid.cpp" />
+		<Unit filename="ContentViewer/UrlSchemeHandler_Cid.h" />
+		<Unit filename="ContentViewer/UrlSchemeHandler_Inet.cpp" />
+		<Unit filename="ContentViewer/UrlSchemeHandler_Inet.h" />
+		<Unit filename="ContentViewer/WebContentViewer.cpp" />
+		<Unit filename="ContentViewer/WebContentViewer.h" />
+		<Unit filename="ContentViewer/WebViewHandler_Cid.cpp" />
+		<Unit filename="ContentViewer/WebViewHandler_Cid.h" />
+		<Unit filename="ContentViewer/WebViewHandler_Null.cpp" />
+		<Unit filename="ContentViewer/WebViewHandler_Null.h" />
+		<Unit filename="CredentialsWnd/CredentialsWnd.cpp" />
+		<Unit filename="CredentialsWnd/CredentialsWnd.h" />
+		<Unit filename="CredentialsWnd/CredentialsWndUI.cpp" />
+		<Unit filename="CredentialsWnd/CredentialsWndUI.fbp" />
+		<Unit filename="CredentialsWnd/CredentialsWndUI.h" />
+		<Unit filename="LogView/LogView.cpp" />
+		<Unit filename="LogView/LogView.h" />
+		<Unit filename="LogView/LogViewUI.cpp" />
+		<Unit filename="LogView/LogViewUI.fbp" />
+		<Unit filename="LogView/LogViewUI.h" />
+		<Unit filename="MailAccCfg/AccEditMgr.cpp" />
+		<Unit filename="MailAccCfg/AccEditMgr.h" />
+		<Unit filename="MailAccCfg/ConnectionUiCtrlHelper.cpp" />
+		<Unit filename="MailAccCfg/ConnectionUiCtrlHelper.h" />
+		<Unit filename="MailAccCfg/MailAccCfg.cpp" />
+		<Unit filename="MailAccCfg/MailAccCfg.h" />
+		<Unit filename="MailAccCfg/MailAccCfgUI.cpp" />
+		<Unit filename="MailAccCfg/MailAccCfgUI.fbp" />
+		<Unit filename="MailAccCfg/MailAccCfgUI.h" />
+		<Unit filename="MailMainView/DetailViewModel.cpp" />
+		<Unit filename="MailMainView/DetailViewModel.h" />
+		<Unit filename="MailMainView/MailMainView.h" />
+		<Unit filename="MailMainView/MailMainViewUI.cpp" />
+		<Unit filename="MailMainView/MailMainViewUI.fbp" />
+		<Unit filename="MailMainView/MailMainViewUI.h" />
+		<Unit filename="MailMainView/MailMainView_Detail.cpp" />
+		<Unit filename="MailMainView/MailMainView_General.cpp" />
+		<Unit filename="MailMainView/MailMainView_MailMsgProcEvent.cpp" />
+		<Unit filename="MailMainView/MailMainView_Master.cpp" />
+		<Unit filename="MailMainView/MasterViewModel.cpp" />
+		<Unit filename="MailMainView/MasterViewModel.h" />
+		<Unit filename="MailMsgEditor/MailMsgEditor.cpp" />
+		<Unit filename="MailMsgEditor/MailMsgEditor.h" />
+		<Unit filename="MailMsgEditor/MailMsgEditorUI.cpp" />
+		<Unit filename="MailMsgEditor/MailMsgEditorUI.fbp" />
+		<Unit filename="MailMsgEditor/MailMsgEditorUI.h" />
+		<Unit filename="MailMsgFileMgr.cpp" />
+		<Unit filename="MailMsgFileMgr.h" />
+		<Unit filename="MailMsgFileView.h" />
+		<Unit filename="MailMsgViewMgr.cpp" />
+		<Unit filename="MailMsgViewMgr.h" />
+		<Unit filename="MailMsgViewer/MailMsgViewer.cpp" />
+		<Unit filename="MailMsgViewer/MailMsgViewer.h" />
+		<Unit filename="MailMsgViewer/MailMsgViewerUI.cpp" />
+		<Unit filename="MailMsgViewer/MailMsgViewerUI.fbp" />
+		<Unit filename="MailMsgViewer/MailMsgViewerUI.h" />
+		<Unit filename="Mailager.cfg" />
+		<Unit filename="MainApp.cpp" />
+		<Unit filename="MainWnd/MainWnd.cpp" />
+		<Unit filename="MainWnd/MainWnd.h" />
+		<Unit filename="MainWnd/MainWndUI.cpp" />
+		<Unit filename="MainWnd/MainWndUI.fbp" />
+		<Unit filename="MainWnd/MainWndUI.h" />
+		<Unit filename="ResMgr.cpp" />
+		<Unit filename="ResMgr.h" />
+		<Unit filename="ResourcX.S" />
+		<Unit filename="ResourcX.h" />
+		<Unit filename="SysHelper.cpp" />
+		<Unit filename="SysHelper.h" />
+		<Unit filename="UiHelper.cpp" />
+		<Unit filename="UiHelper.h" />
+		<Unit filename="View2/View2WndUI.fbp" />
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>

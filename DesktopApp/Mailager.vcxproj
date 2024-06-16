@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{6caf409b-b3a8-4071-96ca-ed72857cf0fe}</ProjectGuid>
+    <RootNamespace>Mailager</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>D:\Projects\CppLib\wxWidgets\include;D:\Projects\CppLib\wxWidgets\include\msvc;D:\Projects\CppLib\libcurl\include;D:\Projects\CppLib;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Projects\CppLib\wxWidgets\lib\vc_lib;D:\Projects\CppLib\libcurl\lib\x86;D:\Projects\CppLib\mimetic\lib\x86;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>D:\Projects\CppLib\wxWidgets\include;D:\Projects\CppLib\wxWidgets\include\msvc;D:\Projects\CppLib\libcurl\include;D:\Projects\CppLib;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Projects\CppLib\wxWidgets\lib\vc_lib;D:\Projects\CppLib\libcurl\lib\x86;D:\Projects\CppLib\mimetic\lib\x86;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>D:\Projects\CppLib\wxWidgets\include;D:\Projects\CppLib\wxWidgets\include\msvc;D:\Projects\CppLib\libcurl\include;D:\Projects\CppLib;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Projects\CppLib\wxWidgets\lib\vc_x64_lib;D:\Projects\CppLib\libcurl\lib\x64;D:\Projects\CppLib\mimetic\lib\x64;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>D:\Projects\CppLib\wxWidgets\include;D:\Projects\CppLib\wxWidgets\include\msvc;D:\Projects\CppLib\libcurl\include;D:\Projects\CppLib;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Projects\CppLib\wxWidgets\lib\vc_x64_lib;D:\Projects\CppLib\libcurl\lib\x64;D:\Projects\CppLib\mimetic\lib\x64;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;__WXMSW__;%(PreprocessorDefinitions);CURL_STATICLIB</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\CppLib</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>wxmsw32ud_core.lib;wxbase32ud.lib;comctl32.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a_debug.lib;crypt32.lib;normaliz.lib;wldap32.lib;libmimetic_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /D /Y "$(ProjectDir)$(TargetName).cfg" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;__WXMSW__;%(PreprocessorDefinitions);CURL_STATICLIB</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\CppLib</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>wxmsw32u_core.lib;wxbase32u.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a.lib;crypt32.lib;normaliz.lib;wldap32.lib;libmimetic.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /D /Y "$(ProjectDir)$(TargetName).cfg" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;__WXMSW__;%(PreprocessorDefinitions);CURL_STATICLIB</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\CppLib</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>wxmsw32ud_core.lib;wxbase32ud.lib;comctl32.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a_debug.lib;crypt32.lib;normaliz.lib;wldap32.lib;libmimetic_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /D /Y "$(ProjectDir)$(TargetName).cfg" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;__WXMSW__;%(PreprocessorDefinitions);CURL_STATICLIB</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\CppLib</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>wxmsw32u_core.lib;wxbase32u.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a.lib;crypt32.lib;normaliz.lib;wldap32.lib;libmimetic.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /D /Y "$(ProjectDir)$(TargetName).cfg" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\CppLib\LisCommon\EventDispBase.h" />
+    <ClInclude Include="..\..\CppLib\LisCommon\HashFunc.h" />
+    <ClInclude Include="..\..\CppLib\LisCommon\Logger.h" />
+    <ClInclude Include="..\..\CppLib\LisCommon\StrUtils.h" />
+    <ClInclude Include="..\..\CppLib\LisCommon\FileSystem.h" />
+    <ClInclude Include="..\..\CppLib\LisCommon\ThreadTaskMgr.h" />
+    <ClInclude Include="..\..\CppLib\LisWin\WinUtils.h" />
+    <ClInclude Include="..\CoreAppLib\AccountCfg.h" />
+    <ClInclude Include="..\CoreAppLib\AppDef.h" />
+    <ClInclude Include="..\CoreAppLib\ConnectionHelper.h" />
+    <ClInclude Include="..\CoreAppLib\ConnectionInfo.h" />
+    <ClInclude Include="..\CoreAppLib\MailMsgFileDef.h" />
+    <ClInclude Include="..\CoreAppLib\MailMsgTransmitter.h" />
+    <ClInclude Include="..\CoreMailLib\MimeHeader.h" />
+    <ClInclude Include="..\CoreAppLib\MailMsgFile.h" />
+    <ClInclude Include="..\CoreMailLib\MimeMessageDef.h" />
+    <ClInclude Include="..\CoreAppLib\MailMsgFileHelper.h" />
+    <ClInclude Include="..\CoreMailLib\MimeParser.h" />
+    <ClInclude Include="..\CoreMailLib\MimeNode.h" />
+    <ClInclude Include="..\CoreAppLib\MailMsgReceiver.h" />
+    <ClInclude Include="..\CoreAppLib\AccountSettings.h" />
+    <ClInclude Include="..\CoreAppLib\MailMsgStatus.h" />
+    <ClInclude Include="..\CoreMailLib\RfcHeaderField.h" />
+    <ClInclude Include="..\CoreMailLib\RfcTextCodec.h" />
+    <ClInclude Include="..\CoreNetLib\SmtpClient.h" />
+    <ClInclude Include="..\CoreNetLib\TxtProtoClient.h" />
+    <ClInclude Include="..\wxWidgetsX\fs_data.h" />
+    <ClInclude Include="..\wxWidgetsX\stream_adapter.h" />
+    <ClInclude Include="AppCfg.h" />
+    <ClInclude Include="AppMgr.h" />
+    <ClInclude Include="..\CoreAppLib\ConnectionAuth.h" />
+    <ClInclude Include="..\CoreAppLib\MailMsgStore.h" />
+    <ClInclude Include="..\CoreMailLib\RfcDateTimeCodec.h" />
+    <ClInclude Include="..\CoreAppLib\PasswordStore.h" />
+    <ClInclude Include="ContentViewer\ExtResMgr.h" />
+    <ClInclude Include="ContentViewer\HtmlViewWindow.h" />
+    <ClInclude Include="ContentViewer\UrlSchemeHandler_Cid.h" />
+    <ClInclude Include="ContentViewer\ContentViewer.h" />
+    <ClInclude Include="ContentViewer\HtmlContentViewer.h" />
+    <ClInclude Include="ContentViewer\UrlSchemeHandler_Inet.h" />
+    <ClInclude Include="ContentViewer\WebContentViewer.h" />
+    <ClInclude Include="ContentViewer\WebViewHandler_Cid.h" />
+    <ClInclude Include="ContentViewer\WebViewHandler_Null.h" />
+    <ClInclude Include="CredentialsWnd\CredentialsWnd.h" />
+    <ClInclude Include="CredentialsWnd\CredentialsWndUI.h" />
+    <ClInclude Include="LogView\LogView.h" />
+    <ClInclude Include="LogView\LogViewUI.h" />
+    <ClInclude Include="MailAccCfg\AccEditMgr.h" />
+    <ClInclude Include="MailAccCfg\MailAccCfg.h" />
+    <ClInclude Include="MailAccCfg\MailAccCfgUI.h" />
+    <ClInclude Include="MailAccCfg\ConnectionUiCtrlHelper.h" />
+    <ClInclude Include="MailMsgFileView.h" />
+    <ClInclude Include="MailMsgViewMgr.h" />
+    <ClInclude Include="MailMsgEditor\MailMsgEditor.h" />
+    <ClInclude Include="MailMsgEditor\MailMsgEditorUI.h" />
+    <ClInclude Include="MailMsgViewer\MailMsgViewer.h" />
+    <ClInclude Include="..\CoreMailLib\MimeNodeProc.h" />
+    <ClInclude Include="MailMsgViewer\MailMsgViewerUI.h" />
+    <ClInclude Include="MailMainView\DetailViewModel.h" />
+    <ClInclude Include="MailMsgFileMgr.h" />
+    <ClInclude Include="MailMainView\MasterViewModel.h" />
+    <ClInclude Include="..\CoreNetLib\NetServer.h" />
+    <ClInclude Include="..\CoreNetLib\OAuth2Client.h" />
+    <ClInclude Include="..\CoreAppLib\OAuth2Config.h" />
+    <ClInclude Include="..\CoreNetLib\OAuth2Token.h" />
+    <ClInclude Include="..\CoreAppLib\AuthTokenProc.h" />
+    <ClInclude Include="..\CoreAppLib\OAuth2TokenStor.h" />
+    <ClInclude Include="..\CoreNetLib\Pop3Client.h" />
+    <ClInclude Include="..\CoreNetLib\NetClient.h" />
+    <ClInclude Include="MainWnd\MainWnd.h" />
+    <ClInclude Include="MainWnd\MainWndUI.h" />
+    <ClInclude Include="ResMgr.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="SysHelper.h" />
+    <ClInclude Include="UiHelper.h" />
+    <ClInclude Include="MailMainView\MailMainView.h" />
+    <ClInclude Include="MailMainView\MailMainViewUI.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Resource\AppMain.ico" />
+    <Image Include="..\Resource\BtnNo.ico" />
+    <Image Include="..\Resource\BtnOk.ico" />
+    <Image Include="..\Resource\ToolConfig.ico" />
+    <Image Include="..\Resource\ToolEdit.ico" />
+    <Image Include="..\Resource\ToolExport.ico" />
+    <Image Include="..\Resource\ToolLayout.ico" />
+    <Image Include="..\Resource\ToolPrint.ico" />
+    <Image Include="..\Resource\ToolRefresh.ico" />
+    <Image Include="..\Resource\ToolSave.ico" />
+    <Image Include="..\Resource\ToolStop.ico" />
+    <Image Include="..\Resource\ToolView.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\CppLib\LisCommon\HashFunc.cpp" />
+    <ClCompile Include="..\..\CppLib\LisCommon\Logger.cpp" />
+    <ClCompile Include="..\..\CppLib\LisCommon\StrUtils.cpp" />
+    <ClCompile Include="..\..\CppLib\LisCommon\FileSystem.cpp" />
+    <ClCompile Include="..\..\CppLib\LisCommon\ThreadTaskMgr.cpp" />
+    <ClCompile Include="..\..\CppLib\LisWin\WinUtils.cpp" />
+    <ClCompile Include="..\CoreAppLib\AccountCfg.cpp" />
+    <ClCompile Include="..\CoreAppLib\AccountSettings.cpp" />
+    <ClCompile Include="..\CoreAppLib\ConnectionHelper.cpp" />
+    <ClCompile Include="..\CoreAppLib\MailMsgTransmitter.cpp" />
+    <ClCompile Include="..\CoreAppLib\OAuth2Config.cpp" />
+    <ClCompile Include="..\CoreMailLib\MimeHeader.cpp" />
+    <ClCompile Include="..\CoreAppLib\MailMsgFile.cpp" />
+    <ClCompile Include="..\CoreAppLib\MailMsgFileHelper.cpp" />
+    <ClCompile Include="..\CoreMailLib\MimeParser.cpp" />
+    <ClCompile Include="..\CoreMailLib\MimeNode.cpp" />
+    <ClCompile Include="..\CoreAppLib\MailMsgReceiver.cpp" />
+    <ClCompile Include="..\CoreAppLib\MailMsgStatus.cpp" />
+    <ClCompile Include="..\CoreMailLib\RfcHeaderField.cpp" />
+    <ClCompile Include="..\CoreMailLib\RfcTextCodec.cpp" />
+    <ClCompile Include="..\CoreNetLib\SmtpClient.cpp" />
+    <ClCompile Include="..\CoreNetLib\TxtProtoClient.cpp" />
+    <ClCompile Include="..\wxWidgetsX\fs_data.cpp" />
+    <ClCompile Include="AppCfg.cpp" />
+    <ClCompile Include="AppMgr.cpp" />
+    <ClCompile Include="..\CoreAppLib\ConnectionAuth.cpp" />
+    <ClCompile Include="..\CoreAppLib\MailMsgStore.cpp" />
+    <ClCompile Include="..\CoreMailLib\RfcDateTimeCodec.cpp" />
+    <ClCompile Include="..\CoreAppLib\PasswordStore.cpp" />
+    <ClCompile Include="ContentViewer\ExtResMgr.cpp" />
+    <ClCompile Include="ContentViewer\HtmlViewWindow.cpp" />
+    <ClCompile Include="ContentViewer\UrlSchemeHandler_Cid.cpp" />
+    <ClCompile Include="ContentViewer\HtmlContentViewer.cpp" />
+    <ClCompile Include="ContentViewer\UrlSchemeHandler_Inet.cpp" />
+    <ClCompile Include="ContentViewer\WebContentViewer.cpp" />
+    <ClCompile Include="ContentViewer\WebViewHandler_Cid.cpp" />
+    <ClCompile Include="ContentViewer\WebViewHandler_Null.cpp" />
+    <ClCompile Include="CredentialsWnd\CredentialsWnd.cpp" />
+    <ClCompile Include="CredentialsWnd\CredentialsWndUI.cpp" />
+    <ClCompile Include="LogView\LogView.cpp" />
+    <ClCompile Include="LogView\LogViewUI.cpp" />
+    <ClCompile Include="MailAccCfg\AccEditMgr.cpp" />
+    <ClCompile Include="MailAccCfg\MailAccCfg.cpp" />
+    <ClCompile Include="MailAccCfg\MailAccCfgUI.cpp" />
+    <ClCompile Include="MailAccCfg\ConnectionUiCtrlHelper.cpp" />
+    <ClCompile Include="MailMainView\MailMainView_Detail.cpp" />
+    <ClCompile Include="MailMainView\MailMainView_MailMsgProcEvent.cpp" />
+    <ClCompile Include="MailMainView\MailMainView_Master.cpp" />
+    <ClCompile Include="MailMsgViewMgr.cpp" />
+    <ClCompile Include="MailMsgEditor\MailMsgEditor.cpp" />
+    <ClCompile Include="MailMsgEditor\MailMsgEditorUI.cpp" />
+    <ClCompile Include="MailMsgViewer\MailMsgViewer.cpp" />
+    <ClCompile Include="..\CoreMailLib\MimeNodeProc.cpp" />
+    <ClCompile Include="MailMsgViewer\MailMsgViewerUI.cpp" />
+    <ClCompile Include="MailMainView\DetailViewModel.cpp" />
+    <ClCompile Include="MailMsgFileMgr.cpp" />
+    <ClCompile Include="MailMainView\MasterViewModel.cpp" />
+    <ClCompile Include="..\CoreNetLib\NetServer.cpp" />
+    <ClCompile Include="..\CoreNetLib\OAuth2Client.cpp" />
+    <ClCompile Include="..\CoreAppLib\AuthTokenProc.cpp" />
+    <ClCompile Include="..\CoreAppLib\OAuth2TokenStor.cpp" />
+    <ClCompile Include="..\CoreNetLib\Pop3Client.cpp" />
+    <ClCompile Include="..\CoreNetLib\NetClient.cpp" />
+    <ClCompile Include="MainApp.cpp" />
+    <ClCompile Include="MainWnd\MainWnd.cpp" />
+    <ClCompile Include="MainWnd\MainWndUI.cpp" />
+    <ClCompile Include="ResMgr.cpp" />
+    <ClCompile Include="SysHelper.cpp" />
+    <ClCompile Include="UiHelper.cpp" />
+    <ClCompile Include="MailMainView\MailMainView_General.cpp" />
+    <ClCompile Include="MailMainView\MailMainViewUI.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CredentialsWnd\CredentialsWndUI.fbp" />
+    <None Include="LogView\LogViewUI.fbp" />
+    <None Include="MailAccCfg\MailAccCfgUI.fbp" />
+    <None Include="Mailager.cfg" />
+    <None Include="MailMsgEditor\MailMsgEditorUI.fbp" />
+    <None Include="MailMsgViewer\MailMsgViewerUI.fbp" />
+    <None Include="MainWnd\MainWndUI.fbp" />
+    <None Include="MailMainView\MailMainViewUI.fbp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
