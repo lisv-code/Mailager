@@ -4,6 +4,7 @@
 #include <mimetic/contenttype.h>
 #include <mimetic/contentdisposition.h>
 #include <mimetic/contenttransferencoding.h>
+#include <mimetic/rfc822/addresslist.h>
 #include <LisCommon/StrUtils.h>
 
 using namespace RfcHeaderField;
@@ -44,43 +45,86 @@ int RfcHeaderField::Parameters::GetValue(const NameValueStrCollection& params, c
 	return result;
 }
 
-ContentType RfcHeaderFieldCodec::GetContentType(const char* field_value)
+ContentType RfcHeaderFieldCodec::ReadContentType(const char* field_value)
 {
-	mimetic::ContentType info(field_value);
+	mimetic::ContentType field_data(field_value);
 	NameValueStrCollection params;
-	params.reserve(info.paramList().size());
-	for (auto& item : info.paramList()) params.emplace(item.name(), item.value());
-	return ContentType { info.type(), info.subtype(), params };
+	params.reserve(field_data.paramList().size());
+	for (auto& item : field_data.paramList()) params.emplace(item.name(), item.value());
+	return ContentType { field_data.type(), field_data.subtype(), params };
 }
 
-ContentType RfcHeaderFieldCodec::GetContentType(const wchar_t* field_value)
+ContentType RfcHeaderFieldCodec::ReadContentType(const wchar_t* field_value)
 {
-	return GetContentType((char*)LisStr::CStrConvert(field_value));
+	return ReadContentType((char*)LisStr::CStrConvert(field_value));
 }
 
-ContentDisposition RfcHeaderFieldCodec::GetContentDisposition(const char* field_value)
+ContentDisposition RfcHeaderFieldCodec::ReadContentDisposition(const char* field_value)
 {
-	mimetic::ContentDisposition info(field_value);
+	mimetic::ContentDisposition field_data(field_value);
 	NameValueStrCollection params;
-	params.reserve(info.paramList().size());
-	for (auto& item : info.paramList()) params.emplace(item.name(), item.value());
-	return ContentDisposition{ info.type(), params };
+	params.reserve(field_data.paramList().size());
+	for (auto& item : field_data.paramList()) params.emplace(item.name(), item.value());
+	return ContentDisposition{ field_data.type(), params };
 }
 
-ContentDisposition RfcHeaderFieldCodec::GetContentDisposition(const wchar_t* field_value)
+ContentDisposition RfcHeaderFieldCodec::ReadContentDisposition(const wchar_t* field_value)
 {
-	return GetContentDisposition((char*)LisStr::CStrConvert(field_value));
+	return ReadContentDisposition((char*)LisStr::CStrConvert(field_value));
 }
 
-MessageId RfcHeaderFieldCodec::GetMessageId(const char* field_value)
+MsgId RfcHeaderFieldCodec::ReadMsgId(const char* field_value)
 {
-	std::string result_id(field_value);
-	result_id.erase(result_id.find_last_not_of(StrSpaceChars StrMsgIdSuffix) + 1);
-	result_id.erase(0, result_id.find_first_not_of(StrSpaceChars StrMsgIdPrefix));
-	return MessageId{ result_id };
+	MsgId result(field_value);
+	result.erase(result.find_last_not_of(StrSpaceChars StrMsgIdSuffix) + 1);
+	result.erase(0, result.find_first_not_of(StrSpaceChars StrMsgIdPrefix));
+	return result;
 }
 
-MessageId RfcHeaderFieldCodec::GetMessageId(const wchar_t* field_value)
+MsgId RfcHeaderFieldCodec::ReadMsgId(const wchar_t* field_value)
 {
-	return GetMessageId((char*)LisStr::CStrConvert(field_value));
+	return ReadMsgId((char*)LisStr::CStrConvert(field_value));
+}
+
+static MailAddr transfer_mail_addr(const mimetic::Mailbox& data)
+{
+	MailAddr addr;
+	const auto route = data.sourceroute();
+	if (!route.empty()) {
+		addr += route;
+		addr += ':';
+	}
+	addr += data.mailbox();
+	addr += '@';
+	addr += data.domain();
+	return addr;
+}
+
+static Mailbox transfer_mailbox(const mimetic::Mailbox& data)
+{
+	return Mailbox{ data.label(), std::move(transfer_mail_addr(data)) };
+}
+
+AddressList RfcHeaderFieldCodec::ReadAddresses(const char* field_value)
+{
+	mimetic::AddressList field_data(field_value);
+	AddressList result;
+	for (auto& src_item : field_data) {
+		Address dst_item;
+		if (src_item.isGroup()) {
+			dst_item.group = src_item.group().name();
+			for (auto& src_subitem : src_item.group()) {
+				dst_item.mailboxes.emplace_back(transfer_mailbox(src_subitem));
+			}
+		} else {
+			dst_item.mailboxes.emplace_back(transfer_mailbox(src_item.mailbox()));
+		}
+		result.emplace_back(std::move(dst_item));
+	}
+	return result;
+}
+
+AddressList RfcHeaderFieldCodec::ReadAddresses(const wchar_t* field_value)
+{
+	return ReadAddresses((char*)LisStr::CStrConvert(field_value));
 }

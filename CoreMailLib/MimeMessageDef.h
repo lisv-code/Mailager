@@ -8,4 +8,6 @@ namespace MimeMessageDef
 
 	const int ErrorCode_DataFormat = -1;
 	const int ErrorCode_BrokenData = -2;
+
+	const int ErrorCode_LastCode = -2;
 }

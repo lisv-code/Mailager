@@ -35,7 +35,7 @@ int MimeParser::Load(std::istream& msg_stm, bool hdr_only)
 	return result;
 }
 
-void MimeParser::Save(std::ostream& msg_stm)
+void MimeParser::Save(std::ostream& msg_stm) const
 {
 	msg_stm << *((mimetic::MimeEntity*)mimeData) << MimeMessageLineEnd;
 }
@@ -54,35 +54,10 @@ int MimeParser::GetHdr(const char** field_names, int field_count, MimeHeader& ma
 	return result;
 }
 
-int MimeParser::SetHdr(const MimeHeader& hdr_data)
+int MimeParser::AddHdr(const MimeHeader& hdr_data, bool set_new_top)
 {
-	if (!mimeData) {
-		mimeData = (MimeEntity*)new mimetic::MimeEntity();
-	}
-
-	int result = (int)true;
-	std::string str1;
-	auto hdr_iter = hdr_data.GetIter();
-	for (auto it = hdr_iter.first; it != hdr_iter.second; ++it) {
-		auto hdr_name = (*it).first.c_str();
-		const auto& hdr_fld = (*it).second;
-		switch (hdr_fld.GetType())
-		{
-			// TODO: maybe should recognize high priority fields to write in the top of the header
-		case MimeHeader::HeaderFieldDataType::hfdtTime:
-			RfcDateTimeCodec::DateTimeToString(hdr_fld.GetTime(), str1);
-			result = result & (int)SetMimeHdrRaw(mimeData, hdr_name, str1.c_str());
-			break;
-		case MimeHeader::HeaderFieldDataType::hfdtText:
-			result = result & (int)SetMimeHdrStr(mimeData, hdr_name, hdr_fld.GetText(), hdr_fld.GetTextLen());
-			break;
-		case MimeHeader::HeaderFieldDataType::hfdtRaw:
-			result = result & (int)SetMimeHdrRaw(mimeData, hdr_name, hdr_fld.GetRaw());
-			break;
-		}
-	}
-
-	return result ? MimeMessageDef::ErrorCode_None : MimeMessageDef::ErrorCode_BrokenData;
+	if (!mimeData) mimeData = (MimeEntity*)new mimetic::MimeEntity();
+	return SetHdr(hdr_data, mimeData, set_new_top);
 }
 
 int MimeParser::GetData(MimeNode& data, MimeHeaderValueType value_type) const
@@ -92,7 +67,7 @@ int MimeParser::GetData(MimeNode& data, MimeHeaderValueType value_type) const
 		auto data_item = &data;
 		while (level > 0) {
 			--level;
-			if (!level || data_item->Parts.empty()) {
+			if ((0 == level) || data_item->Parts.empty()) {
 				auto new_item = new MimeNode();
 				data_item->Parts.push_back(new_item);
 				data_item = new_item;
@@ -107,6 +82,13 @@ int MimeParser::GetData(MimeNode& data, MimeHeaderValueType value_type) const
 		//mime_data = mimeData;
 		return 0;
 	});
+}
+
+int MimeParser::SetData(const MimeNode& mail_data)
+{
+	Clear();
+	mimeData = (MimeEntity*)new mimetic::MimeEntity();
+	return SetNode(mail_data, mimeData);
 }
 
 // **************************************** mimetic helpers ****************************************
@@ -150,14 +132,6 @@ int MimeParser::GetHdr(const MimeEntity* mime_entity, MimeHeader& mail_data,
 	return result;
 }
 
-bool MimeParser::GetMimeHdrStr(const MimeEntity* mime_entity, const char* field_name,
-	std::basic_string<TCHAR>& field_value)
-{
-	auto field = FindMimeHdrField(mime_entity, field_name);
-	if (field) return RfcTextCodec::DecodeHeader(field->value(), field_value);
-	else return false;
-}
-
 int MimeParser::ReadHdrRaw(const MimeEntity* mime_entity, const char* hdr_name, MimeHeader& hdr_data)
 {
 	int result = MimeMessageDef::ErrorCode_None;
@@ -176,11 +150,37 @@ int MimeParser::ReadHdrValue(const MimeEntity* mime_entity, const char* hdr_name
 	return result;
 }
 
+int MimeParser::SetHdr(const MimeHeader& hdr_data, MimeEntity* mime_entity, bool set_new_top)
+{
+	int result = (int)true;
+	std::string str1;
+	auto hdr_iter = hdr_data.GetIter();
+	for (auto it = hdr_iter.first; it != hdr_iter.second; ++it) {
+		auto hdr_name = (*it).first.c_str();
+		const auto& hdr_fld = (*it).second;
+		switch (hdr_fld.GetType())
+		{
+		case MimeHeader::HeaderFieldDataType::hfdtTime:
+			RfcDateTimeCodec::DateTimeToString(hdr_fld.GetTime(), str1);
+			result = result & (int)SetMimeHdrRaw(mime_entity, hdr_name, str1.c_str(), set_new_top);
+			break;
+		case MimeHeader::HeaderFieldDataType::hfdtText:
+			result = result & (int)SetMimeHdrStr(mime_entity, hdr_name, hdr_fld.GetText(), hdr_fld.GetTextLen(), set_new_top);
+			break;
+		case MimeHeader::HeaderFieldDataType::hfdtRaw:
+			result = result & (int)SetMimeHdrRaw(mime_entity, hdr_name, hdr_fld.GetRaw(), set_new_top);
+			break;
+		}
+	}
+
+	return result ? MimeMessageDef::ErrorCode_None : MimeMessageDef::ErrorCode_BrokenData;
+}
+
 bool MimeParser::SetMimeHdrRaw(MimeEntity* mime_entity,
-	const char* field_name, const char* field_value, bool new_first)
+	const char* field_name, const char* field_value, bool set_new_top)
 {
 	if (!mime_entity) return false;
-	if (new_first) {
+	if (set_new_top) {
 		auto field = ((const mimetic::MimeEntity*)mime_entity)->header().field(field_name);
 		if (field.name().empty()) {
 			mimetic::Field fieldX(field_name, field_value);
@@ -193,11 +193,27 @@ bool MimeParser::SetMimeHdrRaw(MimeEntity* mime_entity,
 }
 
 bool MimeParser::SetMimeHdrStr(MimeEntity* mime_entity,
-	const char* field_name, const TCHAR* field_value, size_t length)
+	const char* field_name, const TCHAR* field_value, size_t length, bool set_new_top)
 {
 	std::string str1;
 	RfcTextCodec::EncodeHeader(field_value, length, str1);
-	return SetMimeHdrRaw(mime_entity, field_name, str1.c_str());
+	return SetMimeHdrRaw(mime_entity, field_name, str1.c_str(), set_new_top);
+}
+
+int MimeParser::SetNode(const MimeNode& mail_data, MimeEntity* mime_entity)
+{
+	int result = SetHdr(mail_data.Header, mime_entity, false);
+	if (result < 0) return result;
+	if (mail_data.Parts.empty()) {
+		mime_entity->body().set(mail_data.Body);
+	} else
+		for (const auto item : mail_data.Parts) {
+			auto new_entity = (MimeEntity*)new mimetic::MimeEntity();
+			mime_entity->body().parts().push_back(new_entity);
+			result = SetNode(*item, new_entity);
+			if (result < 0) break;
+		}
+	return result;
 }
 
 int MimeParser::EnumStruct(MimeEntity* entity, int level, MimeParser::MimeItemProc proc)

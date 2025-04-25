@@ -37,8 +37,8 @@ class MailMsgEditorUI : public wxPanel
 
 	protected:
 		wxToolBar* tlbrMain;
-		wxToolBarToolBase* toolSaveMessage;
-		wxToolBarToolBase* toolSendMessage;
+		wxToolBarToolBase* toolSaveFile;
+		wxToolBarToolBase* toolSendMail;
 		wxPanel* pnlHeader;
 		wxStaticText* lblSender;
 		wxChoice* chcSender;

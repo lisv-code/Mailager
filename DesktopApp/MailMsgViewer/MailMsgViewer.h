@@ -14,7 +14,6 @@ namespace MailMsgViewer_Def
 class MailMsgViewer : public MailMsgViewerUI, public MailMsgFileView
 {
 	ContentViewer* contentViewer;
-	std::basic_string<FILE_PATH_CHAR> filePath;
 	MimeNode msgNode;
 	MimeNodeProc::NodeInfoContainer nodeStruct;
 
@@ -22,7 +21,7 @@ class MailMsgViewer : public MailMsgViewerUI, public MailMsgFileView
 	wxString structInfo;
 
 	void InitContentViewer(int content_viewer_type);
-	int LoadData(const FILE_PATH_CHAR* msg_file_path, std::string& out_info);
+	int LoadData(std::string& out_info);
 	void RefreshHeaderView();
 	MimeNode* FindRootViewNode();
 	static wxString ComposeStructViewContent(const wxString& struct_info, const FILE_PATH_CHAR* msg_file_path);
@@ -41,7 +40,7 @@ class MailMsgViewer : public MailMsgViewerUI, public MailMsgFileView
 	virtual void btnDownloadImages_OnButtonClick(wxCommandEvent& event) override;
 
 	// ****** MaiMsgFileView override ******
-	virtual int OnMailMsgFileSet();
+	virtual int OnMailMsgFileSet() override;
 public:
 	MailMsgViewer(wxWindow* parent);
 	virtual ~MailMsgViewer();

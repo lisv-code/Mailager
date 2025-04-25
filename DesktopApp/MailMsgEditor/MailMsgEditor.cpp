@@ -1,14 +1,11 @@
 #pragma once
 #include "MailMsgEditor.h"
 #include <LisCommon/StrUtils.h>
+#include "../../CoreMailLib/MimeNodeProc.h"
 #include "../../CoreMailLib/MimeParser.h"
-#include "../../CoreAppLib/AccountCfg.h"
-#include "../../CoreAppLib/AuthTokenProc.h"
-#include "../../CoreAppLib/MailMsgFileHelper.h"
-#include "../../CoreAppLib/MailMsgTransmitter.h" // ?
-#include "../AppCfg.h"
+#include "../../CoreAppLib/MailMsgFileDef.h"
 
-#define AccountId_Empty -1
+#define AccountId_Empty MailMsgGrpId_Empty
 
 namespace MailMsgEditor_Def
 {
@@ -28,7 +25,7 @@ MailMsgEditor::MailMsgEditor(wxWindow* parent) : MailMsgEditorUI(parent)
 		std::bind(&MailMsgEditor::AccountCfg_EventHandler,
 			this, std::placeholders::_1, std::placeholders::_2));
 	load_accounts(AccCfg, chcSender, AccountId_Empty);
-	UpdateToolbar();
+	UpdateToolState();
 }
 
 MailMsgEditor::~MailMsgEditor()
@@ -40,14 +37,27 @@ int MailMsgEditor::OnMailMsgFileSet()
 {
 	int result = 0;
 	if (mailMsgFile && mailMsgFile->GetFilePath()) {
-		result = LoadData(mailMsgFile->GetFilePath());
-		if (result >= 0) UpdateHeaderView();
+		MimeNode msg_node;
+		result = mailMsgFile->LoadData(msg_node);
+		//MimeNodeProc::NodeInfoContainer nodeStruct;
+		if (result >= 0) {
+			//result = MimeNodeProc::GetNodeStructInfo(msg_node, nodeStruct, nullptr);
+		}
+		if (result >= 0) {
+			LoadMsgHdrData(&msg_node);
+			LoadMsgBodyData(&msg_node);
+		}
 	} else {
 		int acc_id = mailMsgFile ? mailMsgFile->GetGrpId() : AccountId_Empty;
 		chcSender->SetSelection(FindSenderIdx(acc_id));
 		wxCommandEvent evt;
 		chcSender_OnChoice(evt);
 	}
+	if (result < 0) {
+		// TODO: handle the error after the file load attempt - show/log the error
+	}
+	UpdateEditState();
+	UpdateToolState();
 	return result;
 }
 
@@ -57,12 +67,15 @@ int MailMsgEditor::AccountCfg_EventHandler(const AccountCfg* acc_cfg, const Acco
 	int cur_acc_id = GetAccountId();
 	for (const auto acc_id : evt_info.data->DeletedAccIds) {
 		if (acc_id == cur_acc_id) {
+			if (mailMsgFile && (cur_acc_id == mailMsgFile->GetGrpId())) {
+				mailMsgFile = nullptr;
+			}
 			cur_acc_id = AccountId_Empty;
-			if (mailMsgFile) mailMsgFile = nullptr;
 			break;
 		}
 	}
 	load_accounts(AccCfg, chcSender, cur_acc_id);
+	UpdateToolState();
 	return 0;
 }
 
@@ -81,85 +94,91 @@ const AccountSettings* MailMsgEditor::FindAccount(int sel_idx) const
 const int MailMsgEditor::FindSenderIdx(int acc_id, const char* mailbox) const
 {
 	for (unsigned int i = 0; i < chcSender->GetCount(); ++i) {
-		bool is_this = (acc_id >= 0) && (acc_id == (int)chcSender->GetClientData(i));
-		if (!is_this && mailbox) {
+		bool is_match = (acc_id >= 0) && (acc_id == (int)chcSender->GetClientData(i));
+		if (!is_match && mailbox) {
 			auto acc = FindAccount(i);
-			is_this = (0 == LisStr::StrICmp(acc->GetMailbox(), mailbox));
+			is_match = (0 == LisStr::StrICmp(acc->GetMailbox(), mailbox));
 		}
-		if (is_this) return i;
+		if (is_match) return i;
 	}
 	return -1;
 }
 
-int MailMsgEditor::LoadData(const FILE_PATH_CHAR* msg_file_path)
-{
-	nodeStruct.clear();
-
-	std::ifstream stm;
-	int result = MailMsgFileHelper::InitInputStream(stm, msg_file_path, true);
-	if (result < 0) return result;
-
-	MimeParser parser;
-	result = parser.Load(stm, false);
-	stm.close();
-	if (result >= 0) {
-		result = parser.GetData(msgNode, hvtAuto);
-		if (result >= 0) {
-			result = MimeNodeProc::GetNodeStructInfo(msgNode, nodeStruct, nullptr);
-		}
-	}
-	return result;
-}
-
-void MailMsgEditor::UpdateHeaderView()
+void MailMsgEditor::LoadMsgHdrData(const MimeNode* msg_node)
 {
 	int sender_idx = -1;
 	if (mailMsgFile) sender_idx = FindSenderIdx(mailMsgFile->GetGrpId());
 	else {
-		auto sender_fld = msgNode.Header.GetField(MailMsgHdrName_From);
+		auto sender_fld = msg_node->Header.GetField(MailMsgHdrName_From);
 		if (sender_fld.GetRaw()) {
-			auto sender_addr = RfcHeaderFieldCodec::GetMessageId(sender_fld.GetRaw()).id;
+			auto sender_addr = RfcHeaderFieldCodec::ReadMsgId(sender_fld.GetRaw());
 			sender_idx = FindSenderIdx(AccountId_Empty, sender_addr.c_str());
 		}
 	}
 	chcSender->Select(sender_idx);
-	chcSender->Enable(mailMsgFile == nullptr || sender_idx <= 0);
 
-	txtRecipient->SetValue(msgNode.Header.GetField(MailMsgHdrName_To).GetText());
-	txtSubject->SetValue(msgNode.Header.GetField(MailMsgHdrName_Subj).GetText());
+	txtRecipient->SetValue(msg_node->Header.GetField(MailMsgHdrName_To).GetText());
+	txtSubject->SetValue(msg_node->Header.GetField(MailMsgHdrName_Subj).GetText());
 }
 
-void MailMsgEditor::UpdateToolbar()
+void MailMsgEditor::LoadMsgBodyData(const MimeNode* msg_node)
+{
+	txtContent->SetValue(msg_node->Body);
+}
+
+void MailMsgEditor::SaveMsgHdrData(MimeNode& msg_node)
+{
+	msg_node.Header.SetField(MailMsgHdrName_From, new std::basic_string<TCHAR>(chcSender->GetStringSelection()));
+    // TODO: the address list should be composed according to the specification...
+	// ? RfcHeaderFieldCodec.WriteAddresses // RFC 822 - 6. Address Specification, A.1. Addresses (appendix)
+	msg_node.Header.SetField(MailMsgHdrName_To, new std::basic_string<TCHAR>(txtRecipient->GetValue()));
+	msg_node.Header.SetField(MailMsgHdrName_Subj, new std::basic_string<TCHAR>(txtSubject->GetValue()));
+	// ...
+}
+
+void MailMsgEditor::SaveMsgBodyData(MimeNode& msg_node)
+{
+	msg_node.Header.SetField(MailMsgHdrName_ContentType, new std::string("text/plain; charset=utf-8"));
+	msg_node.Header.SetField(MailMsgHdrName_ContentTransferEncoding, new std::string("8bit"));
+
+	msg_node.Body = txtContent->GetValue().ToUTF8();
+}
+
+void MailMsgEditor::UpdateEditState()
+{
+	auto sender_idx = chcSender->GetCurrentSelection();
+	chcSender->Enable((mailMsgFile == nullptr) || (mailMsgFile->GetFilePath() == nullptr)
+		|| (sender_idx <= 0));
+}
+
+void MailMsgEditor::UpdateToolState()
 {
 	auto acc = FindAccount(chcSender->GetSelection());
-	tlbrMain->EnableTool(toolSaveMessage->GetId(), nullptr != acc);
-	tlbrMain->EnableTool(toolSendMessage->GetId(), acc && !acc->Outgoing.Server.empty());
+	tlbrMain->EnableTool(toolSaveFile->GetId(), mailMsgFile && acc);
+	tlbrMain->EnableTool(toolSendMail->GetId(), acc && !acc->Outgoing.Server.empty()); // TODO: !txtRecipient->IsEmpty()
 }
 
 void MailMsgEditor::toolSaveMessage_OnToolClicked(wxCommandEvent& event)
 {
-	// msgNode to be updated
-	// msgFile should be created somewhere on this stage if not exists yet
-	UpdateHeaderView();
+	MimeNode mail_msg;
+	SaveMsgHdrData(mail_msg);
+	SaveMsgBodyData(mail_msg);
+	int result = mailMsgFile->SaveData(mail_msg, GetAccountId());
+	// TODO: handle saving errors
+	UpdateEditState();
+	UpdateToolState();
 }
 
 void MailMsgEditor::toolSendMessage_OnToolClicked(wxCommandEvent& event)
 {
-	// TODO: ! following test implementation needs replacement
-
-	auto acc = FindAccount(chcSender->GetSelection());
-	MailMsgTransmitter transmitter;
-	transmitter.SetLocation(AppCfg.Get().AppDataDir.c_str(), acc->Directory.c_str(), acc->Outgoing, acc->Id);
-
-	char buf[0xFFF] = { 0 };
-	AuthTokenProc::ComposeAuthPlainToken(buf, nullptr, acc->Outgoing.UserName.c_str(), "<PASSWORD>");
-
-	transmitter.Transmit(buf, nullptr);
+	// TODO: save the message file
+	//mailMsgFile->ChangeStatus(MailMsgStatus::mmsIsOutgoing, MailMsgStatus::mmsIsDraft);
+	// TODO: close the editor window
 }
 
 void MailMsgEditor::chcSender_OnChoice(wxCommandEvent& event)
 {
-	UpdateToolbar();
+	UpdateToolState();
 }
 
 void MailMsgEditor::mnuAttachmentFileSave_OnMenuSelection(wxCommandEvent& event)

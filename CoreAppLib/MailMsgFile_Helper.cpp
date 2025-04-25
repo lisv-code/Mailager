@@ -1,4 +1,4 @@
-#include "MailMsgFileHelper.h"
+#include "MailMsgFile_Helper.h"
 #include <chrono>
 #include <fstream>
 #include <list>
@@ -16,21 +16,21 @@
 
 #define FileExt_OperaMail ".mbs" // Opera Mailbox File
 
-namespace MailMsgFileHelper_Imp
+namespace MailMsgFile_Helper_Imp
 {
-	void read_line(std::ifstream& ifs, std::string& line);
-	void write_field(std::ofstream& ofs, const char* field_name, const char* field_value);
-	int write_lines(const FILE_PATH_CHAR* out_file_path, std::ofstream& ofs,
+	static void read_line(std::ifstream& ifs, std::string& line);
+	static void write_field(std::ofstream& ofs, const char* field_name, const char* field_value);
+	static int write_lines(const FILE_PATH_CHAR* out_file_path, std::ofstream& ofs,
 		std::list<std::string>& lines, int count);
 }
-using namespace MailMsgFileHelper_Imp;
+using namespace MailMsgFile_Helper_Imp;
 
-bool MailMsgFileHelper::IsOperaMailFile(const FILE_PATH_CHAR* file_path)
+bool MailMsgFile_Helper::is_opera_mail_file(const FILE_PATH_CHAR* file_path)
 {
 	return LisStr::StrIStr(file_path, FILE_PATH_TEXT(FileExt_OperaMail));
 }
 
-std::string MailMsgFileHelper::GetTmpFileName(const char* name_prefix)
+std::string MailMsgFile_Helper::generate_file_name(const char* name_prefix, const char* name_suffix)
 {
 	char time_buf[0x20];
 	//int len = sizeof(time_buf);
@@ -49,16 +49,17 @@ std::string MailMsgFileHelper::GetTmpFileName(const char* name_prefix)
 		time_buf, 36);
 
 	char name_buf[MAX_PATH];
-	snprintf(name_buf, MAX_PATH, "%s%s.tmp", name_prefix, time_buf);
+	snprintf(name_buf, MAX_PATH, "%s%s%s",
+		name_prefix ? name_prefix : "", time_buf, name_suffix ? name_suffix : "");
 	return std::string(name_buf);
 }
 
-int MailMsgFileHelper::InitInputStream(std::ifstream& file_data, const FILE_PATH_CHAR* file_path, bool normalize)
+int MailMsgFile_Helper::init_input_stream(std::ifstream& file_data, const FILE_PATH_CHAR* file_path, bool normalize)
 {
 	if (!file_path) return mfrError_Initialization;
 	file_data.open(file_path, std::ios::in | std::ios::binary);
 	if (normalize) {
-		bool is_opera_mail_file = MailMsgFileHelper::IsOperaMailFile(file_path);
+		bool is_opera_mail_file = MailMsgFile_Helper::is_opera_mail_file(file_path);
 		if (is_opera_mail_file) {
 			char c;
 			size_t pos = 0;
@@ -68,7 +69,7 @@ int MailMsgFileHelper::InitInputStream(std::ifstream& file_data, const FILE_PATH
 	return mfrOk;
 }
 
-int MailMsgFileHelper::UpdateFieldLine(const FILE_PATH_CHAR* file_path,
+int MailMsgFile_Helper::update_field_line(const FILE_PATH_CHAR* file_path,
 	const char* field_name, const char* field_value)
 {
 	if (!file_path)
@@ -99,7 +100,7 @@ int MailMsgFileHelper::UpdateFieldLine(const FILE_PATH_CHAR* file_path,
 	}
 	ifs.close();
 	if (!ofs.is_open()) {
-		result = write_lines(tmp_file.c_str(), ofs, lines, IsOperaMailFile(file_path) ? 1 : 0);
+		result = write_lines(tmp_file.c_str(), ofs, lines, is_opera_mail_file(file_path) ? 1 : 0);
 		write_field(ofs, field_name, field_value);
 		if (result >= 0)
 			result = write_lines(tmp_file.c_str(), ofs, lines, -1);
@@ -114,10 +115,10 @@ int MailMsgFileHelper::UpdateFieldLine(const FILE_PATH_CHAR* file_path,
 
 // ******************************* Internal functions implementation *******************************
 
-void MailMsgFileHelper_Imp::read_line(std::ifstream& ifs, std::string& line)
+void MailMsgFile_Helper_Imp::read_line(std::ifstream& ifs, std::string& line)
 {
 	std::getline(ifs, line);
-#ifndef _WINDOWS // non-Windows OS can return '\r' symbol in the end
+#ifndef _WINDOWS // non-Windows OS may return '\r' symbol in the end
 	if (!line.empty()) { // right trim
 		auto pos = line.find_last_not_of("\r");
 		if (std::string::npos == pos) line.clear();
@@ -126,19 +127,19 @@ void MailMsgFileHelper_Imp::read_line(std::ifstream& ifs, std::string& line)
 #endif
 }
 
-void MailMsgFileHelper_Imp::write_field(std::ofstream& ofs,
+void MailMsgFile_Helper_Imp::write_field(std::ofstream& ofs,
 	const char* field_name, const char* field_value)
 {
 	ofs << field_name << ": " << field_value << MimeMessageLineEnd;
 }
 
-int MailMsgFileHelper_Imp::write_lines(const FILE_PATH_CHAR* out_file_path, std::ofstream& ofs,
+int MailMsgFile_Helper_Imp::write_lines(const FILE_PATH_CHAR* out_file_path, std::ofstream& ofs,
 	std::list<std::string>& lines, int count)
 {
 	if (!ofs.is_open())
 		ofs.open(out_file_path, std::ios::binary | std::ios::out | std::ios::trunc);
 	if (!ofs.is_open())
-		return mfrError_DataLoad;
+		return mfrError_FileOperation;
 
 	size_t line_cnt = count >= 0 ? count : lines.size();
 	if (line_cnt)

@@ -29,7 +29,6 @@ void MailMainView::CreateDetailViewModel(const wxDataViewItem* master_item)
 		is_parent_filter = (folder_id > 0) && !data_item->IsFolder();
 		// Load data
 		for (auto& acc : accounts) {
-			size_t count = 0;
 			MailMsgFileMgr::FilesIterator msg_list_begin, msg_list_end;
 			if (!msgFileMgr->GetIter(acc->Id, msg_list_begin, msg_list_end)) {
 				msgFileMgr->LoadList(acc->Id, acc->Directory.c_str());
@@ -93,9 +92,8 @@ void MailMainView::UpdateMailMessageStatusFlag(wxDataViewItemArray& items,
 	for (auto& item : items) {
 		if (item.IsOk()) {
 			auto mail_msg = ((DetailViewModel::DataItem*)item.m_pItem)->get();
-			int new_status =
-				to_add ? mail_msg->GetStatus() | status_flag : mail_msg->GetStatus() & ~status_flag;
-			mail_msg->SetStatus((MailMsgStatus)new_status, true);
+			if (to_add) mail_msg->ChangeStatus(status_flag, MailMsgStatus::mmsNone);
+			else mail_msg->ChangeStatus(MailMsgStatus::mmsNone, status_flag);
 		}
 	}
 	dvMailMsgList->GetModel()->ItemsChanged(items);

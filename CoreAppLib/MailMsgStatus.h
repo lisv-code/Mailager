@@ -9,6 +9,8 @@
 
 enum MailMsgStatus
 {
+	mmsNone = 0,
+
 	// Based on IMAP system flags (RFC 9051)
 	mmsIsSeen = 1,
 	mmsIsAnswered = 1 << 1,

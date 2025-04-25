@@ -198,7 +198,7 @@
     <ClInclude Include="CredentialsWnd\CredentialsWndUI.h">
       <Filter>CredentialsWnd</Filter>
     </ClInclude>
-    <ClInclude Include="..\CoreAppLib\MailMsgFileHelper.h">
+    <ClInclude Include="..\CoreAppLib\MailMsgFile_Helper.h">
       <Filter>Header Files\CoreAppLib</Filter>
     </ClInclude>
     <ClInclude Include="..\CoreMailLib\MimeMessageDef.h">
@@ -474,7 +474,7 @@
     <ClCompile Include="MailMainView\MailMainView_MailMsgProcEvent.cpp">
       <Filter>MailMainView</Filter>
     </ClCompile>
-    <ClCompile Include="..\CoreAppLib\MailMsgFileHelper.cpp">
+    <ClCompile Include="..\CoreAppLib\MailMsgFile_Helper.cpp">
       <Filter>Source Files\CoreAppLib</Filter>
     </ClCompile>
     <ClCompile Include="..\CoreMailLib\MimeParser.cpp">

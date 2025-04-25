@@ -191,7 +191,7 @@
     <ClInclude Include="..\CoreMailLib\MimeHeader.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgFile.h" />
     <ClInclude Include="..\CoreMailLib\MimeMessageDef.h" />
-    <ClInclude Include="..\CoreAppLib\MailMsgFileHelper.h" />
+    <ClInclude Include="..\CoreAppLib\MailMsgFile_Helper.h" />
     <ClInclude Include="..\CoreMailLib\MimeParser.h" />
     <ClInclude Include="..\CoreMailLib\MimeNode.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgReceiver.h" />
@@ -284,7 +284,7 @@
     <ClCompile Include="..\CoreAppLib\OAuth2Config.cpp" />
     <ClCompile Include="..\CoreMailLib\MimeHeader.cpp" />
     <ClCompile Include="..\CoreAppLib\MailMsgFile.cpp" />
-    <ClCompile Include="..\CoreAppLib\MailMsgFileHelper.cpp" />
+    <ClCompile Include="..\CoreAppLib\MailMsgFile_Helper.cpp" />
     <ClCompile Include="..\CoreMailLib\MimeParser.cpp" />
     <ClCompile Include="..\CoreMailLib\MimeNode.cpp" />
     <ClCompile Include="..\CoreAppLib\MailMsgReceiver.cpp" />

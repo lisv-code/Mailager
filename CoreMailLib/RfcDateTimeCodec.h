@@ -18,7 +18,10 @@ class RfcDateTimeCodec
 {
 public:
 	enum TimeZoneOptions { tzoNone = 0, tzoConvertToUtc = 1, tzoSaveToYday = 2, tzoSaveToIsdst = 4 };
+
+	// if returned tm_sec is less than zero - it's an error code
 	static std::tm ParseDateTime(const char* dt_str, TimeZoneOptions tz_options = tzoNone);
+
 	static void DateTimeToString(const std::tm* date_time, std::string& date_time_string,
 		const char* tz_str = " +0000"); // default tz - UTC
 };

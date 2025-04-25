@@ -7,21 +7,18 @@
 #include "../CoreNetLib/Pop3Client.h"
 #include "ConnectionAuth.h"
 #include "ConnectionHelper.h"
-#include "MailMsgFileHelper.h"
+#include "MailMsgFile_Helper.h"
 #include "MailMsgStatus.h"
-#include "MailMsgStore.h"
 
 #define Log_Scope "MailRcvr"
 #define MailMsgUidl_HeaderName "X-Mailager-Uidl"
 
 using namespace LisLog;
 
-int MailMsgReceiver::SetLocation(const FILE_PATH_CHAR* temp_path, const FILE_PATH_CHAR* work_path,
-	const char* directory, const Connections::ConnectionInfo& connection, int grp_id)
+int MailMsgReceiver::SetLocation(const FILE_PATH_CHAR* work_path,
+	const Connections::ConnectionInfo& connection, int grp_id)
 {
-	tempPath = temp_path;
 	workPath = work_path;
-	accDir = directory;
 	this->connection = connection;
 	this->grpId = grp_id;
 	logger->LogFmt(llInfo, Log_Scope " Intialized: grp#%i, %s - %s.",
@@ -29,7 +26,7 @@ int MailMsgReceiver::SetLocation(const FILE_PATH_CHAR* temp_path, const FILE_PAT
 	return 0;
 }
 
-int MailMsgReceiver::Retrieve(const char* auth_data, MailFileProc file_proc)
+int MailMsgReceiver::Receive(const char* auth_data, MailFileProc file_proc)
 {
 	if (Connections::ProtocolType::cptPop3 != connection.Protocol)
 		return Connection_Error_Protocol;
@@ -59,16 +56,12 @@ int MailMsgReceiver::Retrieve(const char* auth_data, MailFileProc file_proc)
 		logger->LogFmt(llInfo,
 			Log_Scope " grp#%i messages on the server: %zu.", grpId, uidl.size());
 
-		auto mail_store_path = MailMsgStore::GetStorePath(workPath.c_str(), accDir.c_str());
-		MailMsgStore mail_store;
-		mail_store.SetLocation(mail_store_path.c_str(), grpId);
-
 		int file_count = 0;
 		std::string file_name_prefix = std::to_string(grpId);
 		for (size_t i = 0; i < uidl.size(); ++i) {
-			std::string file_name = MailMsgFileHelper::GetTmpFileName(file_name_prefix.c_str());
+			std::string file_name = MailMsgFile_Helper::generate_file_name(file_name_prefix.c_str(), ".tmp");
 
-			std::basic_string<FILE_PATH_CHAR> file_path = tempPath
+			std::basic_string<FILE_PATH_CHAR> file_path = workPath
 				+ FILE_PATH_TEXT(FILE_PATH_SEPARATOR_STR)
 				+ (FILE_PATH_CHAR*)LisStr::CStrConvert(file_name.c_str());
 			std::ofstream stm(file_path, std::ios::out | std::ios::binary);
@@ -79,14 +72,10 @@ int MailMsgReceiver::Retrieve(const char* auth_data, MailFileProc file_proc)
 
 			if (is_ok) {
 				logger->LogFmt(llDebug, Log_Scope " grp#%i downloaded: %s.", grpId, file_name.c_str());
-
-				auto msg = mail_store.SaveMsgFile(file_path.c_str(), true);
-				if (msg.GetLastErrorCode() >= 0) {
+				int file_res = file_proc(file_path.c_str());
+				if (file_res) {
 					mail_client.Dele(uidl[i].number);
 				} else {
-					// TODO: decide what to do with the broken file
-				}
-				if (!file_proc(msg)) {
 					result = Connection_Error_Interrupted;
 					break;
 				}

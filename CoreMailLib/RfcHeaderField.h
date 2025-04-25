@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace RfcHeaderField
 {
@@ -48,27 +49,42 @@ namespace RfcHeaderField
 	// std values: 7bit, 8bit, binary, quoted-printable, base64, ietf-token / x-token
 	// ... (looks like no need to be implemented here)
 
-	// RFC 822 - Standard for ARPA Internet Text Messages (4.6.1. Message-ID / Resent-Message-ID)
-	// Message-ID:msg-id
-	// msg-id = "<" addr-spec ">" (see RFC 822 - 6. Address Specification)
-	struct MessageId {
-		std::string id;
+	// RFC 822 - Standard for ARPA Internet Text Messages (6. Address Specification)
+	// addr-spec = local-part "@" domain
+	typedef std::string AddrSpec;
+	// route-addr = "<" [route] addr-spec ">" (the route is quite optional)
+	typedef std::string MailAddr; // includes AddrSpec (could be named RouteAddr)
+	// mailbox = addr-spec         (simple address)
+	//         | phrase route-addr (name & addr-spec)
+	struct Mailbox {
+		std::string name;
+		MailAddr addr;
 	};
+	// address = mailbox (one addressee)
+	//         | group   (named list)
+	// group = phrase ":" [#mailbox] ";" (the mailbox list is optional)
+	struct Address {
+		std::string group;
+		std::vector<Mailbox> mailboxes;
+	};
+	typedef std::vector<Address> AddressList;
 
-	// RFC 2045 - Format of Internet Message Bodies (7. Content-ID Header Field)
-	// Content-ID:msg-id
-	// ... (looks like the MessageId implementation covers this)
+	// RFC 822 - Standard for ARPA Internet Text Messages (4. Message Specification)
+	// msg-id = "<" addr-spec ">"
+	typedef AddrSpec MsgId;
 }
 
 class RfcHeaderFieldCodec
 {
 public:
-	static RfcHeaderField::ContentType GetContentType(const char* field_value);
-	static RfcHeaderField::ContentType GetContentType(const wchar_t* field_value);
-	static RfcHeaderField::ContentDisposition GetContentDisposition(const char* field_value);
-	static RfcHeaderField::ContentDisposition GetContentDisposition(const wchar_t* field_value);
-	static RfcHeaderField::MessageId GetMessageId(const char* field_value);
-	static RfcHeaderField::MessageId GetMessageId(const wchar_t* field_value);
+	static RfcHeaderField::ContentType ReadContentType(const char* field_value);
+	static RfcHeaderField::ContentType ReadContentType(const wchar_t* field_value);
+	static RfcHeaderField::ContentDisposition ReadContentDisposition(const char* field_value);
+	static RfcHeaderField::ContentDisposition ReadContentDisposition(const wchar_t* field_value);
+	static RfcHeaderField::MsgId ReadMsgId(const char* field_value);
+	static RfcHeaderField::MsgId ReadMsgId(const wchar_t* field_value);
+	static RfcHeaderField::AddressList ReadAddresses(const char* field_value);
+	static RfcHeaderField::AddressList ReadAddresses(const wchar_t* field_value);
 };
 
 #endif // _LIS_RFC_HEADER_FIELD_H_

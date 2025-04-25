@@ -48,7 +48,7 @@ private:
 	int GetCurrentAccountId();
 	void CreateMasterViewModel(bool group_by_folder);
 	void ExpandFirstLevel();
-	static bool IsFolderMatches(int folder_id, const MailMsgFile* mail_msg);
+	static bool IsFolderMatches(int folder_id, MailMsgFile* mail_msg);
 	static bool IsAccItemBusy(const wxDataViewItem& item, MailMsgFileMgr* msg_mgr);
 	static void ResetFolderMailCount(wxDataViewCtrl* view_ctrl, int folder_id);
 
@@ -68,13 +68,13 @@ private:
 	int procResult;
 	void InitMailMsgProcEvent();
 	void FreeMailMsgProcEvent();
-	bool MailMsgProcEventHandler(int acc_id, MailMsgFileMgr::ProcEventData evt_data);
-	static bool NeedProcEventWait(MailMsgFileMgr::ProcEventData evt_data, bool event_finish);
-	static bool RouteProcEvent(wxEvtHandler* dest, int acc_id, MailMsgFileMgr::ProcEventData evt_data);
+	int MailMsgProcEventHandler(const MailMsgFileMgr* mail_mgr, const MailMsgFileMgr::EventInfo& evt_info);
+	static bool NeedProcEventWait(MailMsgFileMgr_EventType evt_type, bool event_finish);
+	static bool RouteProcEvent(wxEvtHandler* dest, const MailMsgFileMgr::EventInfo& evt_info);
 	void MailMsgCommandHandler(wxCommandEvent& event);
 	void MailMsgEvent_CredentialsRequest(
 		const Connections::ConnectionInfo* connection, std::string* pswd_data, bool* need_save);
-	void MailMsgEvent_NewMessageAdded(int acc_id, std::shared_ptr<MailMsgFile>* mail_msg);
+	void MailMsgEvent_NewMessageAdded(std::shared_ptr<MailMsgFile>* mail_msg);
 	void MailMsgEvent_SyncFinished();
 public:
 	MailMainView(wxWindow* parent, MailMsgFileMgr* msg_file_mgr, MailMsgViewMgr* msg_view_mgr);

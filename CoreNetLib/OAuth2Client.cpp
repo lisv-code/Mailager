@@ -25,7 +25,7 @@ namespace OAuth2Client_Imp
 	const char* auth_code_resp_head = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: %u\n\n";
 	const char* auth_code_resp_body = "<html>"
 		"<head><title>OAuth2</title></head>"
-		"<body><h2>Auth OK</h2><h4>The browser window can be closed.</h4></body>"
+		"<body><h2>Auth OK</h2><h4>It is okay to close this page.</h4></body>"
 		"</html>";
 	const char* auth_token_request = "grant_type=authorization_code&"
 		"code=%s&"

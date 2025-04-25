@@ -2,6 +2,7 @@
 #include <string>
 #include <LisCommon/StrUtils.h>
 #include "../../CoreAppLib/AppDef.h"
+#include "../../CoreAppLib/MailMsgFileDef.h"
 #include "../ResMgr.h"
 #include "../MailMainView/MailMainView.h"
 #include "../LogView/LogView.h"
@@ -59,7 +60,7 @@ void MainWnd::mnuFileExit_OnMenuSelection(wxCommandEvent& event) { this->Close()
 
 void MainWnd::mnuEditNewMailMessageOnMenuSelection(wxCommandEvent& event)
 {
-	mailMsgViewMgr.OpenStdView(nullptr);
+	mailMsgViewMgr.OpenStdView(mailMsgFileMgr.CreateMailMsg(MailMsgGrpId_Empty));
 }
 
 void MainWnd::mnuViewToolbar_OnMenuSelection(wxCommandEvent& event)

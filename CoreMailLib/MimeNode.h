@@ -12,7 +12,7 @@ private:
 	static int EnumStruct(MimeNode* entity, int level, MailMsgDataItemProc proc);
 public:
 	MimeHeader Header;
-	std::string Body;
+	std::string Body; // Content
 	std::vector<MimeNode*> Parts;
 
 	MimeNode();

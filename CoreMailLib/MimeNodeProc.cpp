@@ -33,9 +33,9 @@ void MimeNodeProc::GetNodeDescription(const MimeNode& node, int level, std::stri
 	}
 	hdr_fld1 = node.Header.GetField(MailMsgHdrName_ContentId);
 	if (hdr_fld1.GetRaw()) {
-		auto msg_id = RfcHeaderFieldCodec::GetMessageId(hdr_fld1.GetRaw());
+		auto msg_id = RfcHeaderFieldCodec::ReadMsgId(hdr_fld1.GetRaw());
 		txt += ". _id: ";
-		txt += msg_id.id;
+		txt += msg_id;
 	}
 	info_line += txt;
 	info_line += "\n";
@@ -47,7 +47,7 @@ MimeNodeProc::MimeNodeContentType MimeNodeProc::GetNodeType(const MimeNode* node
 
 	auto hdr_fld1 = node->Header.GetField(MailMsgHdrName_ContentType);
 	if (hdr_fld1.GetRaw()) {
-		auto content_type = RfcHeaderFieldCodec::GetContentType(hdr_fld1.GetRaw());
+		auto content_type = RfcHeaderFieldCodec::ReadContentType(hdr_fld1.GetRaw());
 		if (0 == LisStr::StrICmp(content_type.type.c_str(), "multipart")) {
 			result = nctContainer;
 		} else if (0 == LisStr::StrICmp(content_type.type.c_str(), "text")) {
@@ -65,7 +65,7 @@ MimeNodeProc::MimeNodeContentType MimeNodeProc::GetNodeType(const MimeNode* node
 
 	hdr_fld1 = node->Header.GetField(MailMsgHdrName_ContentDisposition);
 	if (hdr_fld1.GetRaw()) {
-		auto content_disp = RfcHeaderFieldCodec::GetContentDisposition(hdr_fld1.GetRaw());
+		auto content_disp = RfcHeaderFieldCodec::ReadContentDisposition(hdr_fld1.GetRaw());
 		if (0 == LisStr::StrICmp(content_disp.type.c_str(), "attachment")) {
 			result = static_cast<MimeNodeContentType>(result | nctIsAttachment);
 		} else if ((nctUnknown == result)
@@ -76,8 +76,8 @@ MimeNodeProc::MimeNodeContentType MimeNodeProc::GetNodeType(const MimeNode* node
 
 	hdr_fld1 = node->Header.GetField(MailMsgHdrName_ContentId);
 	if (hdr_fld1.GetRaw()) {
-		auto content_id = RfcHeaderFieldCodec::GetMessageId(hdr_fld1.GetRaw());
-		if (!content_id.id.empty()) {
+		auto content_id = RfcHeaderFieldCodec::ReadMsgId(hdr_fld1.GetRaw());
+		if (!content_id.empty()) {
 			result = static_cast<MimeNodeContentType>(result | nctHasContentId);
 		}
 	}
@@ -120,7 +120,7 @@ int MimeNodeProc::GetContentDataBin(const MimeNode* node, std::string& type, std
 {
 	auto hdr_fld1 = node->Header.GetField(MailMsgHdrName_ContentType);
 	if (hdr_fld1.GetRaw()) {
-		auto content_type = RfcHeaderFieldCodec::GetContentType(hdr_fld1.GetRaw());
+		auto content_type = RfcHeaderFieldCodec::ReadContentType(hdr_fld1.GetRaw());
 		type = content_type.type + '/' + content_type.subtype;
 	} else {
 		type = "text/plain"; // No "Content-Type" header, assume default
@@ -149,7 +149,7 @@ int MimeNodeProc::GetContentDataTxt(const MimeNode* node, RfcText::Charset& char
 	charset = RfcText::Charset::csNone;
 	auto hdr_fld1 = node->Header.GetField(MailMsgHdrName_ContentType);
 	if (hdr_fld1.GetRaw()) {
-		auto content_type = RfcHeaderFieldCodec::GetContentType(hdr_fld1.GetRaw());
+		auto content_type = RfcHeaderFieldCodec::ReadContentType(hdr_fld1.GetRaw());
 		if (0 == LisStr::StrICmp(content_type.type.c_str(), "text")) {
 			if (0 == LisStr::StrICmp(content_type.subtype.c_str(), "html")) is_html_text = true;
 		} else {
@@ -199,8 +199,8 @@ bool MimeNodeProc::ReadContentId(const MimeNode* node, std::basic_string<TCHAR>&
 {
 	auto hdr_fld1 = node->Header.GetField(MailMsgHdrName_ContentId);
 	if (hdr_fld1.GetRaw()) {
-		auto content_id = RfcHeaderFieldCodec::GetMessageId(hdr_fld1.GetRaw());
-		return RfcTextCodec::DecodeHeader(content_id.id, id);
+		auto content_id = RfcHeaderFieldCodec::ReadMsgId(hdr_fld1.GetRaw());
+		return RfcTextCodec::DecodeHeader(content_id, id);
 	}
 	return false;
 }
@@ -208,20 +208,20 @@ bool MimeNodeProc::ReadContentId(const MimeNode* node, std::basic_string<TCHAR>&
 bool MimeNodeProc::ReadFileName(const MimeNode* node, std::basic_string<TCHAR>& name)
 {
 	bool result = false;
-	auto content_disp = RfcHeaderFieldCodec::GetContentDisposition(
+	auto content_disp = RfcHeaderFieldCodec::ReadContentDisposition(
 		node->Header.GetField(MailMsgHdrName_ContentDisposition).GetRaw());
 	std::string raw_name;
 	int code = RfcHeaderField::Parameters::GetValue(content_disp.parameters, "filename", raw_name);
 	if (0 > code) {
-		auto content_type = RfcHeaderFieldCodec::GetContentType(
+		auto content_type = RfcHeaderFieldCodec::ReadContentType(
 			node->Header.GetField(MailMsgHdrName_ContentType).GetRaw());
 		code = RfcHeaderField::Parameters::GetValue(content_type.parameters, "name", raw_name);
 	}
 	if (0 > code) {
 		auto hdr_fld_val = node->Header.GetField(MailMsgHdrName_ContentId).GetRaw();
 		if (hdr_fld_val) {
-			auto content_id = RfcHeaderFieldCodec::GetMessageId(hdr_fld_val);
-			raw_name = content_id.id;
+			auto content_id = RfcHeaderFieldCodec::ReadMsgId(hdr_fld_val);
+			raw_name = content_id;
 			code = 0;
 		}
 	}

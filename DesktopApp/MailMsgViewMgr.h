@@ -10,7 +10,7 @@ public:
 private:
 	wxWindow *embViewParent, *stdViewParent;
 	ViewCreationHandler viewCreationEvent;
-	static bool IsMailMsgEditable(const MailMsgFile* mail_msg);
+	static bool IsMailMsgEditable(MailMsgFile* mail_msg);
 public:
 	void SetEmbViewDefaults(wxWindow* view_parent);
 	void SetStdViewDefaults(wxWindow* view_parent, ViewCreationHandler view_handler);

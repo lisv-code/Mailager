@@ -8,6 +8,13 @@
 
 namespace MailMainView_Def
 {
+	enum MailMsgProc_Event
+	{
+		evtCredentialsRequest,
+		evtNewMessageAdded,
+		evtSyncFinished
+	};
+
 	const auto EventWaitDuration = std::chrono::milliseconds(200);
 
 	struct CredReqData {
@@ -24,6 +31,12 @@ void MailMainView::InitMailMsgProcEvent()
 {
 	isStop = false;
 	Bind(MAIL_MSG_PROC_EVENT, &MailMainView::MailMsgCommandHandler, this);
+
+	auto mail_mgr_evt_handler = std::bind(&MailMainView::MailMsgProcEventHandler,
+		this, std::placeholders::_1, std::placeholders::_2);
+	msgFileMgr->EventSubscribe(MailMsgFileMgr_EventType::etCredentialsRequest, mail_mgr_evt_handler);
+	msgFileMgr->EventSubscribe(MailMsgFileMgr_EventType::etNewMessageAdded, mail_mgr_evt_handler);
+	msgFileMgr->EventSubscribe(MailMsgFileMgr_EventType::etSyncFinished, mail_mgr_evt_handler);
 }
 
 void MailMainView::FreeMailMsgProcEvent()
@@ -31,48 +44,51 @@ void MailMainView::FreeMailMsgProcEvent()
 	isStop = true;
 }
 
-bool MailMainView::MailMsgProcEventHandler(int acc_id, MailMsgFileMgr::ProcEventData evt_data)
+int MailMainView::MailMsgProcEventHandler(const MailMsgFileMgr* mail_mgr, const MailMsgFileMgr::EventInfo& evt_info)
 {
 	// Check if need to wait, then sleep while main thread is busy and not cancelled
-	bool needWait = NeedProcEventWait(evt_data, false);
+	bool needWait = NeedProcEventWait(evt_info.type, false);
 	std::unique_lock<std::mutex> lock1(mutex1, std::defer_lock);
 	while (needWait && !isStop && !lock1.try_lock())
 		std::this_thread::sleep_for(EventWaitDuration);
 	// Check if need to wait for result, prepare for result
-	needWait = NeedProcEventWait(evt_data, true);
+	needWait = NeedProcEventWait(evt_info.type, true);
 	procResult = 0;
 	// Send (queue) the event to main thread and wait for result if needed
-	bool result = RouteProcEvent(this, acc_id, evt_data);
-	if (result) {
+	if (RouteProcEvent(this, evt_info)) {
 		while (needWait && !isStop && !procResult)
 			std::this_thread::sleep_for(EventWaitDuration);
-		if (needWait) {
-			result = procResult > 0;
-		}
 	}
-	return result;
+	return procResult;
 }
 
-bool MailMainView::NeedProcEventWait(MailMsgFileMgr::ProcEventData evt_data, bool event_finish)
+bool MailMainView::NeedProcEventWait(MailMsgFileMgr_EventType evt_type, bool event_finish)
 {
-	return evt_data.Type == MailMsgFileMgr::ProcEventType::petCredentialsRequest;
+	return evt_type == MailMsgFileMgr_EventType::etCredentialsRequest;
 }
 
-bool MailMainView::RouteProcEvent(wxEvtHandler* dest, int acc_id, MailMsgFileMgr::ProcEventData evt_data)
+bool MailMainView::RouteProcEvent(wxEvtHandler* dest, const MailMsgFileMgr::EventInfo& evt_info)
 {
 	auto cmd_evt = new wxCommandEvent(MAIL_MSG_PROC_EVENT);
-	cmd_evt->SetInt((int)evt_data.Type);
-	cmd_evt->SetExtraLong(acc_id);
-	switch (evt_data.Type) {
-	case MailMsgFileMgr::ProcEventType::petCredentialsRequest:
-		cmd_evt->SetClientData(new CredReqData {
-			evt_data.CredReq.Connection,
-			evt_data.CredReq.PswdData,
-			evt_data.CredReq.NeedSave
-		});
-		break;
-	case MailMsgFileMgr::ProcEventType::petNewMessageAdded:
-		cmd_evt->SetClientData(evt_data.MailMsg);
+	switch (evt_info.type) {
+	case MailMsgFileMgr_EventType::etCredentialsRequest:
+	{
+		cmd_evt->SetInt((int)MailMsgProc_Event::evtCredentialsRequest);
+		auto cred_req = static_cast<MailMsgFileMgr_EventData_CredentialsRequest*>(evt_info.data);
+		cmd_evt->SetClientData(new CredReqData{ cred_req->Connection, cred_req->PswdData, cred_req->NeedSave });
+	}
+	break;
+	case MailMsgFileMgr_EventType::etNewMessageAdded:
+	{
+		cmd_evt->SetInt((int)MailMsgProc_Event::evtNewMessageAdded);
+		auto new_msg = static_cast<MailMsgFileMgr_EventData_NewMessage*>(evt_info.data);
+		cmd_evt->SetClientData(new_msg);
+	}
+	break;
+	case MailMsgFileMgr_EventType::etSyncFinished:
+		cmd_evt->SetInt((int)MailMsgProc_Event::evtSyncFinished);
+		auto sync_fin = static_cast<MailMsgFileMgr_EventData_SyncFinish*>(evt_info.data);
+		// No data actually is passed to further processing
 		break;
 	}
 	wxQueueEvent(dest, cmd_evt);
@@ -81,20 +97,20 @@ bool MailMainView::RouteProcEvent(wxEvtHandler* dest, int acc_id, MailMsgFileMgr
 
 void MailMainView::MailMsgCommandHandler(wxCommandEvent& event)
 {
-	auto evt_type = (MailMsgFileMgr::ProcEventType)event.GetInt();
+	auto evt_type = (MailMsgProc_Event)event.GetInt();
 	long acc_id = event.GetExtraLong();
 	switch (evt_type) {
-	case MailMsgFileMgr::ProcEventType::petCredentialsRequest:
-		{
-			auto data = (CredReqData*)event.GetClientData();
-			MailMsgEvent_CredentialsRequest(data->Connection, data->PswdData, data->NeedSave);
-			delete data;
-		}
+	case MailMsgProc_Event::evtCredentialsRequest:
+	{
+		auto data = (CredReqData*)event.GetClientData();
+		MailMsgEvent_CredentialsRequest(data->Connection, data->PswdData, data->NeedSave);
+		delete data;
+	}
+	break;
+	case MailMsgProc_Event::evtNewMessageAdded:
+		MailMsgEvent_NewMessageAdded((std::shared_ptr<MailMsgFile>*)event.GetClientData());
 		break;
-	case MailMsgFileMgr::ProcEventType::petNewMessageAdded:
-		MailMsgEvent_NewMessageAdded(acc_id, (std::shared_ptr<MailMsgFile>*)event.GetClientData());
-		break;
-	case MailMsgFileMgr::ProcEventType::petSyncFinished:
+	case MailMsgProc_Event::evtSyncFinished:
 		MailMsgEvent_SyncFinished();
 		break;
 	}
@@ -116,7 +132,7 @@ void MailMainView::MailMsgEvent_CredentialsRequest(
 	wxEndBusyCursor();
 }
 
-void MailMainView::MailMsgEvent_NewMessageAdded(int acc_id, std::shared_ptr<MailMsgFile>* mail_msg)
+void MailMainView::MailMsgEvent_NewMessageAdded(std::shared_ptr<MailMsgFile>* mail_msg)
 {
 	bool is_refresh_needed = false;
 	const auto item = dvAccFolders->GetSelection();
@@ -126,7 +142,7 @@ void MailMainView::MailMsgEvent_NewMessageAdded(int acc_id, std::shared_ptr<Mail
 		if (!(folder_id > 0) || IsFolderMatches(folder_id, mail_msg->get())) {
 			auto accounts = data_item->GetAccounts();
 			for (auto& item : accounts)
-				if (item->Id == acc_id) { is_refresh_needed = true; break; }
+				if (item->Id == mail_msg->get()->GetGrpId()) { is_refresh_needed = true; break; }
 		}
 	}
 	if (is_refresh_needed) {

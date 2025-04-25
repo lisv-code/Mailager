@@ -1,5 +1,5 @@
 #include "HtmlContentViewer.h"
-//#include "../../wxWidgetsX/fs_data.h"
+#include "../../wxWidgetsX/fs_data.h"
 #include <LisCommon/StrUtils.h>
 #include "ExtResMgr.h"
 #include "HtmlViewWindow.h"
@@ -17,8 +17,8 @@ HtmlContentViewer::HtmlContentViewer()
 	viewCtrl = nullptr;
 	cidHandler = nullptr;
 
-	// Using prefix to separate requests of the different viewer instances
-	// and handle downloads only for permitted.
+	// The prefix is used to separate data requests of the different viewer instances
+	// to handle CID scheme only for particular instance with corresponding ContentDataProvider.
 	// Scheme name must start with an "alpha" symbol, may contain alphanumeric and '.', '+', '-'.
 	schemePrefix += "X";
 	schemePrefix += (char*)LisStr::CIntToStr((int64_t)this, 36);
@@ -41,7 +41,7 @@ wxWindow* HtmlContentViewer::InitView(wxWindow* parent, wxWindow* container)
 {
 	static bool is_1st_init = true;
 	if (is_1st_init) {
-		//wxFileSystem::AddHandler(new wxDataSchemeFSHandler);
+		wxFileSystem::AddHandler(new wxDataSchemeFSHandler);
 		wxFileSystem::AddHandler(new UrlSchemeHandler_Inet);
 		is_1st_init = false;
 	}

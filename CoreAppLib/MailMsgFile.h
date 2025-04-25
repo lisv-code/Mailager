@@ -2,47 +2,56 @@
 #include <fstream>
 #include <LisCommon/EventDispBase.h>
 #include <LisCommon/FileSystem.h>
+#include "MailMsgFileDef.h"
 #include "MailMsgStatus.h"
-#include "../CoreMailLib/MimeHeader.h"
+#include "../CoreMailLib/MimeParser.h"
+
+#define MailMsgStatus_Undefined 0xFFFF
 
 class MailMsgFile; // forward declaration
 
-namespace MailMsgFile_Def
+enum MailMsgFile_EventType
 {
-	enum EventType { etStatusChanging, etStatusChanged, etFileDeleted };
+	etDataSaving, // see MailMsgFile_EventParam_DataSaving
+	etDataSaved, // nullptr
+	etFileDeleted, // nullptr
+	etStatusChanging, // MailMsgStatus - new status value
+	etStatusChanged // MailMsgStatus - old status value
+};
+typedef FILE_PATH_CHAR* MailMsgFile_EventData_DataSaving; // pointer to current path, accepts new path to be set
+typedef EventDispatcherBase<MailMsgFile, MailMsgFile_EventType, void*> MailMsgFile_EventDispatcher;
 
-	typedef EventDispatcherBase<MailMsgFile, EventType, void*> MailMsgFile_EventDispatcher;
-}
-
-class MailMsgFile : public MailMsgFile_Def::MailMsgFile_EventDispatcher
+/// <summary>
+/// Mail message basic metadata container and data access
+/// </summary>
+class MailMsgFile : public MailMsgFile_EventDispatcher
 {
 	int grpId;
-	uint32_t status;
-	int lastErrorCode;
-	MimeHeader mailInfo;
 	FILE_PATH_CHAR* filePath;
+	uint32_t mailStatus;
+	MimeHeader mailInfo;
 
-	int LoadMsgInfo(std::istream& stm);
-	int SaveStatusToFile(const char* status_value = nullptr);
+	void Clear();
+	int LoadMsgData(MimeNode* data);
+	int LoadMsgInfo(MimeParser& parser);
+	int SetStatus(MailMsgStatus value);
+	static int UpdateStatusField(MailMsgStatus status, MimeHeader& header, const FILE_PATH_CHAR* file_path);
 public:
-	MailMsgFile(int grp_id);
+	MailMsgFile(int grp_id,
+		const FILE_PATH_CHAR* file_path = nullptr, MailMsgStatus msg_status = (MailMsgStatus)MailMsgStatus_Undefined);
 	MailMsgFile(const MailMsgFile& src) noexcept;
 	MailMsgFile(MailMsgFile&& src) noexcept;
 	~MailMsgFile();
 
-	void Clear();
 	const int GetGrpId() const;
 	const FILE_PATH_CHAR* GetFilePath() const;
-	int GetLastErrorCode() const;
-	int InitFile(const FILE_PATH_CHAR* file_path = nullptr);
-	int LoadFile(const FILE_PATH_CHAR* file_path = nullptr);
-	int SaveFile(const FILE_PATH_CHAR* file_path = nullptr);
+	int LoadInfo(); // Load meta-data cache if not loaded yet
+	int LoadData(MimeNode& data);
+	int SaveData(const MimeNode& data, int grp_id = MailMsgGrpId_Empty);
 	int DeleteFile();
 
-	MailMsgStatus GetStatus() const;
-	int SetStatus(MailMsgStatus value, bool permanent);
+	MailMsgStatus GetStatus();
+	int ChangeStatus(MailMsgStatus added, MailMsgStatus removed);
 
 	const MimeHeader& GetInfo();
-
-	static const char* GetErrorText(int error_code);
 };

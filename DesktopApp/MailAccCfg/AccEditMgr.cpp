@@ -100,7 +100,7 @@ int AccEditMgr::ApplyChanges()
 
 int AccEditMgr::InitAccResources(const AccountSettings& acc)
 {
-	auto store_path = MailMsgStore::GetStorePath(AppCfg.Get().AppDataDir.c_str(), acc.Directory.c_str());
+	auto store_path = MailMsgStore::GetStoreDirPath(AppCfg.Get().AppDataDir.c_str(), acc.Directory.c_str());
 	MailMsgStore mail_store;
 	int result = mail_store.SetLocation(store_path.c_str(), acc.Id);
 	if (result >= 0)
@@ -112,7 +112,7 @@ int AccEditMgr::InitAccResources(const AccountSettings& acc)
 
 int AccEditMgr::DeleteAccResources(const AccountSettings& acc)
 {
-	auto store_path = MailMsgStore::GetStorePath(AppCfg.Get().AppDataDir.c_str(), acc.Directory.c_str());
+	auto store_path = MailMsgStore::GetStoreDirPath(AppCfg.Get().AppDataDir.c_str(), acc.Directory.c_str());
 	MailMsgStore mail_store;
 	int result = mail_store.SetLocation(store_path.c_str(), acc.Id);
 	if (result >= 0) result = mail_store.DeleteAll();

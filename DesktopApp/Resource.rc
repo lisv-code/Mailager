@@ -17,7 +17,7 @@ BEGIN
       VALUE "CompanyName", "LISV\0"
       VALUE "FileDescription", "Mailager desktop application\0"
       VALUE "InternalName", "Mailager\0"
-      VALUE "LegalCopyright", "(c) 2024 LISV\0"
+      VALUE "LegalCopyright", "(c) 2024-2025 LISV\0"
       VALUE "OriginalFilename", "Mailager.exe\0"
       VALUE "ProductName", "LIS Mailager\0"
       VALUE "FileVersion", "0.0.0.00000\0"

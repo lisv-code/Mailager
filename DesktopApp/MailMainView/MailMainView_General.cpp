@@ -64,10 +64,7 @@ void MailMainView::toolStartSyncMail_OnToolClicked(wxCommandEvent& event)
 		auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
 		auto accounts = data_item->GetAccounts();
 		for (auto& account : accounts) {
-			bool result = msgFileMgr->StartSyncMail(account->Id, *account,
-				[this](int acc_idx, MailMsgFileMgr::ProcEventData evt_data) {
-					return MailMsgProcEventHandler(acc_idx, evt_data); }
-			);
+			bool result = msgFileMgr->StartMailSync(account->Id, *account);
 		}
 		RefreshMasterToolsState(&item);
 	}
@@ -100,7 +97,7 @@ void MailMainView::toolStopSyncMail_OnToolClicked(wxCommandEvent& event)
 void MailMainView::toolCreateMailMsg_OnToolClicked(wxCommandEvent& event)
 {
 	wxBeginBusyCursor();
-	msgViewMgr->OpenStdView(std::make_shared<MailMsgFile>(GetCurrentAccountId()));
+	msgViewMgr->OpenStdView(msgFileMgr->CreateMailMsg(GetCurrentAccountId()));
 	wxEndBusyCursor();
 }
 

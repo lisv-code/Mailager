@@ -1,14 +1,19 @@
 #include "DetailViewModel.h"
 
 #define ColIdx_Text 0
-#define FailItemInfo "-= ??? =-"
+#define FailItemInfo "-= ? ? ? =-"
+#define FailItemTime "< ? ? ? >"
 #define DateTimeViewFmt "%F %H:%M:%S" // TODO: format "%F %T" when %T will be supported by wxDateTime
 
 bool MailMsgCompFunc(const DetailViewModel::DataItem& item1, const DetailViewModel::DataItem& item2)
 {
-	std::tm tm1 = *item1->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
-	std::tm tm2 = *item2->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
-	return std::mktime(&tm1) > std::mktime(&tm2);
+	const std::tm *tm1_ref = item1->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
+	const std::tm *tm2_ref = item2->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
+	if (tm1_ref && tm2_ref) {
+		std::tm tm1 = *tm1_ref, tm2 = *tm2_ref;
+		return std::mktime(&tm1) > std::mktime(&tm2);
+	} else
+		return tm1_ref ? false : (tm2_ref ? true : false);
 }
 
 DetailViewModel::DetailViewModel(std::shared_ptr<MailMsgFile>const* messages, size_t count)
@@ -37,8 +42,10 @@ wxString DetailViewModel::GetInfoText(const MimeHeader& info, bool is_outgoing)
 		&& !info.GetField(MailMsgHdrName_Subj).GetText())
 		return wxString(wxT(FailItemInfo));
 
-	wxString result(wxDateTime(*info.GetField(MailMsgHdrName_Date).GetTime())
-		.FromUTC().Format(wxT(DateTimeViewFmt "   ")));
+	auto msg_time = info.GetField(MailMsgHdrName_Date).GetTime();
+	wxString result(msg_time
+		? wxDateTime(*msg_time).FromUTC().Format(DateTimeViewFmt "   ")
+		: wxT(FailItemTime "   "));
 	result += is_outgoing
 		? info.GetField(MailMsgHdrName_To).GetText()
 		: info.GetField(MailMsgHdrName_From).GetText();

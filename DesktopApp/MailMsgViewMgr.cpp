@@ -47,12 +47,12 @@ void MailMsgViewMgr::OpenStdView(std::shared_ptr<MailMsgFile> mail_msg)
 			? MailMsgEditor_Def::WndTitle : MailMsgViewer_Def::WndTitle);
 }
 
-bool MailMsgViewMgr::IsMailMsgEditable(const MailMsgFile* mail_msg)
+bool MailMsgViewMgr::IsMailMsgEditable(MailMsgFile* mail_msg)
 {
 	if (mail_msg) {
 		if (mail_msg->GetFilePath() == nullptr) return true;
 		auto msg_status = mail_msg->GetStatus();
-		return (MailMsgStatus::mmsIsOutgoing & msg_status)
+		return (MailMsgStatus::mmsIsDraft & msg_status)
 			&& !(MailMsgStatus::mmsIsSent & msg_status);
 	}
 	return true;

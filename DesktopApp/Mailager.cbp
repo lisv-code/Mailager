@@ -80,8 +80,8 @@
 		<Unit filename="../CoreAppLib/MailMsgFile.cpp" />
 		<Unit filename="../CoreAppLib/MailMsgFile.h" />
 		<Unit filename="../CoreAppLib/MailMsgFileDef.h" />
-		<Unit filename="../CoreAppLib/MailMsgFileHelper.cpp" />
-		<Unit filename="../CoreAppLib/MailMsgFileHelper.h" />
+		<Unit filename="../CoreAppLib/MailMsgFile_Helper.cpp" />
+		<Unit filename="../CoreAppLib/MailMsgFile_Helper.h" />
 		<Unit filename="../CoreAppLib/MailMsgReceiver.cpp" />
 		<Unit filename="../CoreAppLib/MailMsgReceiver.h" />
 		<Unit filename="../CoreAppLib/MailMsgStatus.cpp" />

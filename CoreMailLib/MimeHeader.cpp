@@ -58,7 +58,7 @@ void MimeHeader::HeaderField::SetType(HeaderFieldDataType new_type)
 	Clear();
 	if (hfdtRaw == new_type) { raw = new std::string(); }
 	if (hfdtText == new_type) { text = new std::basic_string<TCHAR>(); }
-	else memset(&time, 0, sizeof(std::tm));
+	else memset(&time, 0, sizeof(std::tm)); // assuming hfdtTime
 	type = new_type;
 }
 
@@ -103,7 +103,7 @@ MimeHeader::HeaderField& MimeHeader::InitHeaderField(const char* name, HeaderFie
 {
 	auto it = data.find(name);
 	if (it == data.end()) {
-		const auto& item = data.insert(std::make_pair(std::string(name), HeaderField { }));
+		const auto& item = data.emplace(std::string(name), HeaderField { });
 		auto& result = (*item.first).second;
 		result.SetType(type);
 		return result;

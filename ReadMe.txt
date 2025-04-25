@@ -10,11 +10,11 @@ Target OS: Windows, Linux.
 
 - wxWidgets https://www.wxwidgets.org/
 wxWindows Library Licence (LGPL-like, but derived works in binary form may be distributed on the user’s own terms)
-https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.5/wxWidgets-3.2.5.7z
+https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.6/wxWidgets-3.2.6.7z
 
 - libcurl https://curl.se/libcurl/
 curl license (MIT-like)
-https://github.com/curl/curl/releases/download/curl-8_8_0/curl-8.8.0.zip
+https://github.com/curl/curl/releases/download/curl-8_12_1/curl-8.12.1.zip
 
 - mimetic https://codesink.org/mimetic_mime_library.html
 MIT license

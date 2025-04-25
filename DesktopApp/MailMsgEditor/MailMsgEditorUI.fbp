@@ -127,10 +127,10 @@
               <property name="id">wxID_ANY</property>
               <property name="kind">wxITEM_NORMAL</property>
               <property name="label">save</property>
-              <property name="name">toolSaveMessage</property>
+              <property name="name">toolSaveFile</property>
               <property name="permission">protected</property>
               <property name="statusbar"></property>
-              <property name="tooltip">Save message</property>
+              <property name="tooltip">Save draft</property>
               <event name="OnToolClicked">toolSaveMessage_OnToolClicked</event>
             </object>
             <object class="tool" expanded="true">
@@ -139,10 +139,10 @@
               <property name="id">wxID_ANY</property>
               <property name="kind">wxITEM_NORMAL</property>
               <property name="label">open</property>
-              <property name="name">toolSendMessage</property>
+              <property name="name">toolSendMail</property>
               <property name="permission">protected</property>
               <property name="statusbar"></property>
-              <property name="tooltip">Send message</property>
+              <property name="tooltip">Send mail</property>
               <event name="OnToolClicked">toolSendMessage_OnToolClicked</event>
             </object>
           </object>

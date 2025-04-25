@@ -35,7 +35,6 @@ public:
 	private:
 		HeaderFieldDataType type;
 		union {
-			void* _ptr; // for internal initialization
 			std::string* raw;
 			std::basic_string<TCHAR>* text;
 			std::tm time;

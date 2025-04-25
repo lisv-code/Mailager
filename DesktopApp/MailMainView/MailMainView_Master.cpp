@@ -40,22 +40,25 @@ void MailMainView::ExpandFirstLevel()
 		dvAccFolders->Expand(*it);
 }
 
-bool MailMainView::IsFolderMatches(int folder_id, const MailMsgFile* mail_msg)
+bool MailMainView::IsFolderMatches(int folder_id, MailMsgFile* mail_msg)
 {
+	const int MsgStatusSet_Outbox = MailMsgStatus::mmsIsDraft | MailMsgStatus::mmsIsOutgoing;
+	const int MsgStatusExc_Outbox = MailMsgStatus::mmsIsSent | MailMsgStatus::mmsIsDeleted;
+	const int MsgStatusSet_Sent = MailMsgStatus::mmsIsSent;
+	const int MsgStatusExc_Sent = MailMsgStatus::mmsIsDeleted;
+	const int MsgStatusSet_Trash = MailMsgStatus::mmsIsDeleted;
+	const int MsgStatusExc_Inbox = MailMsgStatus::mmsIsDraft | MailMsgStatus::mmsIsOutgoing | MailMsgStatus::mmsIsSent | MailMsgStatus::mmsIsDeleted;
+
 	auto status = mail_msg->GetStatus();
 	bool result = false;
 	result = result ||
-		((MasterViewModel_Def::fiOutbox == folder_id)
-			&& (MailMsgStatus::mmsIsOutgoing & status) && !(MailMsgStatus::mmsIsSent & status));
+		((MasterViewModel_Def::fiOutbox == folder_id) && (MsgStatusSet_Outbox & status) && !(MsgStatusExc_Outbox & status));
 	result = result ||
-		((MasterViewModel_Def::fiSent == folder_id)
-			&& (MailMsgStatus::mmsIsSent & status));
+		((MasterViewModel_Def::fiSent == folder_id) && (MsgStatusSet_Sent & status) && !(MsgStatusExc_Sent & status));
 	result = result ||
-		((MasterViewModel_Def::fiTrash == folder_id) && (MailMsgStatus::mmsIsDeleted & status));
+		((MasterViewModel_Def::fiTrash == folder_id) && (MsgStatusSet_Trash & status));
 	result = result ||
-		((MasterViewModel_Def::fiInbox == folder_id)
-			&& !(status &
-				(MailMsgStatus::mmsIsOutgoing | MailMsgStatus::mmsIsSent | MailMsgStatus::mmsIsDeleted)));
+		((MasterViewModel_Def::fiInbox == folder_id) && !(MsgStatusExc_Inbox & status));
 	return result;
 }
 
@@ -64,11 +67,11 @@ bool MailMainView::IsAccItemBusy(const wxDataViewItem& item, MailMsgFileMgr* msg
 	auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
 	if (!data_item) return false;
 	auto accounts = data_item->GetAccounts();
-	auto status = MailMsgFileMgr_Def::MailMsgGrpStatus::mgsNone;
+	auto status = MailMsgFileMgr::MailMsgGrpStatus::mgsNone;
 	for (auto& account : accounts) {
-		status = (MailMsgFileMgr_Def::MailMsgGrpStatus)(status | msg_mgr->GetProcStatus(account->Id));
+		status = (MailMsgFileMgr::MailMsgGrpStatus)(status | msg_mgr->GetProcStatus(account->Id));
 	}
-	return MailMsgFileMgr_Def::MailMsgGrpStatus::mgsProcessing & status;
+	return MailMsgFileMgr::MailMsgGrpStatus::mgsProcessing & status;
 }
 
 void MailMainView::ResetFolderMailCount(wxDataViewCtrl* view_ctrl, int folder_id)

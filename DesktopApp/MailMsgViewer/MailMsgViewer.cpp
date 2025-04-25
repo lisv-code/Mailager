@@ -3,7 +3,6 @@
 #include <wx/filedlg.h>
 #include <wx/msgdlg.h>
 #include "../../CoreAppLib/AppDef.h"
-#include "../../CoreAppLib/MailMsgFileHelper.h"
 #include "../../CoreMailLib/MimeParser.h"
 #include "../../CoreMailLib/MimeMessageDef.h"
 #include "../AppCfg.h"
@@ -18,6 +17,7 @@ namespace MailMsgViewer_Def
 using namespace MailMsgViewer_Def;
 namespace MailMsgViewer_Imp
 {
+#define MsgTimeFailView "<???>"
 #define HtmlViewPrefix "<html><body>"
 #define HtmlViewSuffix "</body></html>"
 	const TCHAR* Msg_SaveMsgContent = _T("Save message content");
@@ -40,11 +40,9 @@ MailMsgViewer::~MailMsgViewer()
 
 int MailMsgViewer::OnMailMsgFileSet()
 {
-	filePath = mailMsgFile ? mailMsgFile->GetFilePath() : nullptr;
-
 	structInfo.clear();
 	std::string struct_descr;
-	int struct_result = LoadData(filePath.c_str(), struct_descr);
+	int struct_result = LoadData(struct_descr);
 	structInfo = struct_descr;
 	structInfo += "(items: " + std::to_string(struct_result) + ")";
 
@@ -84,7 +82,7 @@ void MailMsgViewer::toolSaveContent_OnToolClicked(wxCommandEvent& event)
 
 void MailMsgViewer::toolOpenMessage_OnToolClicked(wxCommandEvent& event)
 {
-	if (!SysHelper::Open(filePath.c_str())) {
+	if (!SysHelper::Open(mailMsgFile->GetFilePath())) {
 		wxMessageBox(Msg_ErrorOpeningMsgExt, AppDef_Title, wxICON_ERROR | wxOK);
 	}
 }
@@ -124,22 +122,12 @@ void MailMsgViewer::InitContentViewer(int content_viewer_type)
 	}
 }
 
-int MailMsgViewer::LoadData(const FILE_PATH_CHAR* msg_file_path, std::string& out_info)
+int MailMsgViewer::LoadData(std::string& out_info)
 {
 	nodeStruct.clear();
-
-	std::ifstream stm;
-	int result = MailMsgFileHelper::InitInputStream(stm, msg_file_path, true);
-	if (result < 0) return result;
-
-	MimeParser parser;
-	result = parser.Load(stm, false);
-	stm.close();
+	int result = mailMsgFile->LoadData(msgNode);
 	if (result >= 0) {
-		result = parser.GetData(msgNode, hvtAuto);
-		if (result >= 0) {
-			result = MimeNodeProc::GetNodeStructInfo(msgNode, nodeStruct, &out_info);
-		}
+		result = MimeNodeProc::GetNodeStructInfo(msgNode, nodeStruct, &out_info);
 	}
 	return result;
 }
@@ -148,7 +136,8 @@ void MailMsgViewer::RefreshHeaderView()
 {
 	// Update header values
 	txtSubject->SetValue(msgNode.Header.GetField(MailMsgHdrName_Subj).GetText());
-	txtDate->SetValue(wxDateTime(*msgNode.Header.GetField(MailMsgHdrName_Date).GetTime()).FromUTC().Format());
+	auto msg_time = msgNode.Header.GetField(MailMsgHdrName_Date).GetTime();
+	txtDate->SetValue(msg_time ? wxDateTime(*msg_time).FromUTC().Format() : MsgTimeFailView);
 	txtSender->SetValue(msgNode.Header.GetField(MailMsgHdrName_From).GetText());
 
 	// Refresh header layout
@@ -234,7 +223,7 @@ int MailMsgViewer::RefreshView(bool update_content)
 
 	if (update_content)
 		contentViewer->SetContent(isViewMsgStruct
-			? ComposeStructViewContent(structInfo, filePath.c_str())
+			? ComposeStructViewContent(structInfo, mailMsgFile->GetFilePath())
 			: ComposeTextViewContent(FindRootViewNode()));
 	else
 		contentViewer->ReloadContent();
