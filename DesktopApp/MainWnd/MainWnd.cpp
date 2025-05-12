@@ -14,10 +14,8 @@
 MainWnd::MainWnd(wxWindow* parent) : MainWndUI(parent)
 {
 	wndTabFixed = nullptr;
-	auto view_creation_event = [this](wxWindow* window, const TCHAR* title) {
-		UpdateMainViewCreated(window, title, false);
-	};
-	mailMsgViewMgr.SetStdViewDefaults(tabCtrlMain, view_creation_event);
+
+	mailMsgViewMgr.SetStdViewDefaults(tabCtrlMain, static_cast<IMailMsgViewCtrl*>(this));
 
 	SetIcon(ResMgr::GetIcon(_T(Res_AppMainIcon)));
 	//this->SetLabel(this->GetLabel() + wxT(" ") + DataModule::Instance.GetAppVer());
@@ -43,7 +41,7 @@ MainWnd::~MainWnd()
 	// tabCtrlMain->DeleteAllPages(); // Views are freed before the MailMsgFile collection
 }
 
-void MainWnd::UpdateMainViewCreated(wxWindow* window, const wxString& title, bool fixed)
+void MainWnd::UpdateMain_ViewCreated(wxWindow* window, const wxString& title, bool fixed)
 {
 	tabCtrlMain->AddPage(window, title, true);
 	if (fixed) wndTabFixed = window;
@@ -53,7 +51,7 @@ void MainWnd::UpdateMainViewCreated(wxWindow* window, const wxString& title, boo
 void MainWnd::CreateMailMainView()
 {
 	MailMainView* wnd = new MailMainView(tabCtrlMain, &mailMsgFileMgr, &mailMsgViewMgr);
-	UpdateMainViewCreated(wnd, MailMainView_Def::WndTitle, true);
+	UpdateMain_ViewCreated(wnd, MailMainView_Def::WndTitle, true);
 }
 
 void MainWnd::mnuFileExit_OnMenuSelection(wxCommandEvent& event) { this->Close(); }
@@ -71,7 +69,7 @@ void MainWnd::mnuViewToolbar_OnMenuSelection(wxCommandEvent& event)
 
 void MainWnd::mnuViewLog_OnMenuSelection(wxCommandEvent& event)
 {
-	UpdateMainViewCreated(new LogView(tabCtrlMain), LogView_Def::WndTitle);
+	UpdateMain_ViewCreated(new LogView(tabCtrlMain), LogView_Def::WndTitle, false);
 }
 
 void MainWnd::mnuToolsAccountsConfig_OnMenuSelection(wxCommandEvent& event)
@@ -128,4 +126,21 @@ void MainWnd::mnuHelpAbout_OnMenuSelection(wxCommandEvent& event)
 	dlg.SetDescription(data.Comments);
 	dlg.SetWebSite(wxT("http://lisv.site")); // TODO: Should be path to the app page
 	wxAboutBox(dlg, this);
+}
+
+// *************************************** IMailMsgViewCtrl ****************************************
+
+void MainWnd::OnViewCreated(wxWindow* wnd, const TCHAR* title)
+{
+	UpdateMain_ViewCreated(wnd, title, false);
+}
+
+wxWindow* MainWnd::GetView(int index)
+{
+	return tabCtrlMain->GetPageCount() > index ? tabCtrlMain->GetPage(index) : nullptr;
+}
+
+void MainWnd::ActivateView(int index)
+{
+	tabCtrlMain->SetSelection(index);
 }

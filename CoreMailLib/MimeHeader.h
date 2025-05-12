@@ -12,6 +12,9 @@
 
 #include "RfcHeaderField.h"
 
+#define MailMsgHdrName_MimeVersion "MIME-Version"
+#define MailMsgHdrData_MimeVersion1 "1.0"
+
 #define MailMsgHdrName_Date "Date"
 #define MailMsgHdrName_From "From"
 #define MailMsgHdrName_To "To"
@@ -27,6 +30,8 @@
 bool MailMsgHdrName_IsDateType(const char* name);
 bool MailMsgHdrName_IsMetadata(const char* name);
 
+#define MimeHeaderTimeValueUndefined (std::time_t)-1
+
 class MimeHeader
 {
 public:
@@ -34,31 +39,31 @@ public:
 	struct HeaderField {
 	private:
 		HeaderFieldDataType type;
-		union {
+		union TDataValue {
 			std::string* raw;
 			std::basic_string<TCHAR>* text;
-			std::tm time;
-		};
-		void Clear(bool preserve_pointer_data = false);
+			std::time_t time;
+		} data;
+		void Clear(bool preserve_pointer_data);
 		void SetType(HeaderFieldDataType new_type);
-		static void Copy(const HeaderField* src, HeaderField* dst, bool need_clear);
+		static void Copy(const HeaderField* src, HeaderField* dst, bool dst_need_clear);
 		friend class MimeHeader;
 	public:
 		HeaderField();
 		HeaderField(const HeaderField& src);
 		HeaderField(HeaderField&& src);
-		~HeaderField() { Clear(); }
+		~HeaderField() { Clear(false); }
 		HeaderField& operator =(const HeaderField& src);
 
 		HeaderFieldDataType GetType() const { return type; }
 
-		const char* GetRaw() const { return hfdtRaw == type ? raw->c_str() : nullptr; }
-		size_t GetRawLen() const { return hfdtRaw == type ? raw->length() : 0; }
+		const char* GetRaw() const { return hfdtRaw == type ? data.raw->c_str() : nullptr; }
+		size_t GetRawLen() const { return hfdtRaw == type ? data.raw->length() : 0; }
 
-		const TCHAR* GetText() const { return hfdtText == type ? text->c_str() : nullptr; }
-		size_t GetTextLen() const { return hfdtText == type ? text->length() : 0; }
+		const TCHAR* GetText() const { return hfdtText == type ? data.text->c_str() : nullptr; }
+		size_t GetTextLen() const { return hfdtText == type ? data.text->length() : 0; }
 
-		const tm* GetTime() const { return hfdtTime == type ? &time : nullptr; }
+		const std::time_t* GetTime() const { return hfdtTime == type ? &data.time : nullptr; }
 	};
 
 	typedef std::unordered_map<std::string, HeaderField,
@@ -83,5 +88,5 @@ public:
 
 	const HeaderField& SetField(const char* name, std::string* raw_value);
 	const HeaderField& SetField(const char* name, std::basic_string<TCHAR>* text_value);
-	const HeaderField& SetField(const char* name, std::tm time_value);
+	const HeaderField& SetField(const char* name, std::time_t time_value);
 };

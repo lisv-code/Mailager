@@ -4,7 +4,7 @@
 #include "../MailMsgFileMgr.h"
 #include "../MailMsgViewMgr.h"
 
-class MainWnd: public MainWndUI
+class MainWnd: public MainWndUI, public IMailMsgViewCtrl
 {
 	virtual void mnuFileExit_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void mnuEditNewMailMessageOnMenuSelection(wxCommandEvent& event) override;
@@ -20,8 +20,13 @@ class MainWnd: public MainWndUI
 	wxWindow* wndTabFixed;
 	MailMsgFileMgr mailMsgFileMgr;
 	MailMsgViewMgr mailMsgViewMgr;
-	void UpdateMainViewCreated(wxWindow* window, const wxString& title, bool fixed = false);
+	void UpdateMain_ViewCreated(wxWindow* window, const wxString& title, bool fixed);
 	void CreateMailMainView();
+
+	// ****** IMailMsgViewCtrl ******
+	virtual void OnViewCreated(wxWindow* wnd, const TCHAR* title);
+	virtual wxWindow* GetView(int index);
+	virtual void ActivateView(int index);
 public:
 	MainWnd(wxWindow* parent);
 	~MainWnd();

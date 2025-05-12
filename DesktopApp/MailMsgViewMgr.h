@@ -3,17 +3,24 @@
 #include <wx/window.h>
 #include "../CoreAppLib/MailMsgFile.h"
 
-class MailMsgViewMgr
+class IMailMsgViewCtrl
 {
 public:
-	typedef std::function<void(wxWindow* wnd, const TCHAR* title)> ViewCreationHandler;
-private:
+	virtual ~IMailMsgViewCtrl() {}
+	virtual void OnViewCreated(wxWindow* wnd, const TCHAR* title) = 0;
+	virtual wxWindow* GetView(int index) = 0;
+	virtual void ActivateView(int index) = 0;
+};
+
+
+class MailMsgViewMgr
+{
 	wxWindow *embViewParent, *stdViewParent;
-	ViewCreationHandler viewCreationEvent;
-	static bool IsMailMsgEditable(MailMsgFile* mail_msg);
+	IMailMsgViewCtrl *mailMsgViewCtrl;
 public:
 	void SetEmbViewDefaults(wxWindow* view_parent);
-	void SetStdViewDefaults(wxWindow* view_parent, ViewCreationHandler view_handler);
+	void SetStdViewDefaults(wxWindow* view_parent, IMailMsgViewCtrl* view_ctrl);
+
 	void InitEmbView(std::shared_ptr<MailMsgFile> mail_msg); // Embedded (preview)
 	void OpenStdView(std::shared_ptr<MailMsgFile> mail_msg); // Standalone (tab)
 };

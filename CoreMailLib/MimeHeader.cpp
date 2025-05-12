@@ -22,7 +22,7 @@ using namespace MailMsgHeader_Imp;
 
 // ********************************** HeaderField implementation ***********************************
 
-MimeHeader::HeaderField::HeaderField() : type(hfdtNone), time({}) { }
+MimeHeader::HeaderField::HeaderField() : type(hfdtNone), data({}) { }
 
 MimeHeader::HeaderField::HeaderField(const HeaderField& src)
 {
@@ -30,7 +30,7 @@ MimeHeader::HeaderField::HeaderField(const HeaderField& src)
 }
 
 MimeHeader::HeaderField::HeaderField(HeaderField&& src)
-	: type(src.type), time(src.time)
+	: type(src.type), data(src.data)
 {
 	src.Clear(true);
 }
@@ -43,32 +43,33 @@ MimeHeader::HeaderField& MimeHeader::HeaderField::operator=(const HeaderField& s
 
 void MimeHeader::HeaderField::Clear(bool preserve_pointer_data)
 {
-	if (!preserve_pointer_data) {
-		if ((hfdtRaw == type) && raw) delete raw;
-		else if ((hfdtText == type) && text) delete text;
+	if (!preserve_pointer_data) { // Cleanup for the reference data types
+		if ((hfdtRaw == type) && data.raw) delete data.raw;
+		else if ((hfdtText == type) && data.text) delete data.text;
 	}
 	if (hfdtNone != type) {
 		type = hfdtNone;
-		memset(&time, 0, sizeof(std::tm));
+		memset(&data, 0, sizeof(TDataValue)); // Any non-reference data is set to zero
 	}
 }
 
 void MimeHeader::HeaderField::SetType(HeaderFieldDataType new_type)
 {
-	Clear();
-	if (hfdtRaw == new_type) { raw = new std::string(); }
-	if (hfdtText == new_type) { text = new std::basic_string<TCHAR>(); }
-	else memset(&time, 0, sizeof(std::tm)); // assuming hfdtTime
+	Clear(false);
+	if (hfdtRaw == new_type) { data.raw = new std::string(); }
+	else if (hfdtText == new_type) { data.text = new std::basic_string<TCHAR>(); }
+	else if (hfdtTime == new_type) { data.time = MimeHeaderTimeValueUndefined; }
+	else memset(&data, 0, sizeof(TDataValue)); // Zero for all unknown data types
 	type = new_type;
 }
 
-void MimeHeader::HeaderField::Copy(const HeaderField* src, HeaderField* dst, bool need_clear)
+void MimeHeader::HeaderField::Copy(const HeaderField* src, HeaderField* dst, bool dst_need_clear)
 {
-	if (need_clear) dst->Clear();
+	if (dst_need_clear) dst->Clear(false);
 	dst->type = src->type;
-	if (hfdtRaw == dst->type) { dst->raw = new std::string(*src->raw); }
-	else if (hfdtText == dst->type) { dst->text = new std::basic_string<TCHAR>(*src->text); }
-	else dst->time = src->time; // the value of the biggest size
+	if (hfdtRaw == dst->type) { dst->data.raw = new std::string(*src->data.raw); }
+	else if (hfdtText == dst->type) { dst->data.text = new std::basic_string<TCHAR>(*src->data.text); }
+	else dst->data = src->data; // Non-reference value, just copy the data
 }
 
 // *********************************** MimeHeader implementation ***********************************
@@ -124,20 +125,23 @@ const MimeHeader::HeaderField& MimeHeader::GetField(const char* name) const
 const MimeHeader::HeaderField& MimeHeader::SetField(const char* name, std::string* raw_value)
 {
 	auto& hdr_fld = InitHeaderField(name, hfdtRaw);
-	hdr_fld.raw = raw_value;
+	hdr_fld.data.raw = raw_value;
 	return hdr_fld;
 }
 
 const MimeHeader::HeaderField& MimeHeader::SetField(const char* name, std::basic_string<TCHAR>* text_value)
 {
 	auto& hdr_fld = InitHeaderField(name, hfdtText);
-	hdr_fld.text = text_value;
+	hdr_fld.data.text = text_value;
 	return hdr_fld;
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetField(const char* name, std::tm time_value)
+const MimeHeader::HeaderField& MimeHeader::SetField(const char* name, std::time_t time_value)
 {
 	auto& hdr_fld = InitHeaderField(name, hfdtTime);
-	hdr_fld.time = time_value;
+	if (MimeHeaderTimeValueUndefined == time_value) {
+		time_value = std::time(nullptr); // Set current time
+	}
+	hdr_fld.data.time = time_value;
 	return hdr_fld;
 }

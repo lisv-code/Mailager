@@ -7,12 +7,11 @@
 
 bool MailMsgCompFunc(const DetailViewModel::DataItem& item1, const DetailViewModel::DataItem& item2)
 {
-	const std::tm *tm1_ref = item1->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
-	const std::tm *tm2_ref = item2->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
-	if (tm1_ref && tm2_ref) {
-		std::tm tm1 = *tm1_ref, tm2 = *tm2_ref;
-		return std::mktime(&tm1) > std::mktime(&tm2);
-	} else
+	const std::time_t *tm1_ref = item1->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
+	const std::time_t *tm2_ref = item2->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
+	if (tm1_ref && tm2_ref)
+		return *tm1_ref > *tm2_ref;
+	else
 		return tm1_ref ? false : (tm2_ref ? true : false);
 }
 
@@ -44,7 +43,7 @@ wxString DetailViewModel::GetInfoText(const MimeHeader& info, bool is_outgoing)
 
 	auto msg_time = info.GetField(MailMsgHdrName_Date).GetTime();
 	wxString result(msg_time
-		? wxDateTime(*msg_time).FromUTC().Format(DateTimeViewFmt "   ")
+		? wxDateTime(*msg_time).Format(DateTimeViewFmt "   ")
 		: wxT(FailItemTime "   "));
 	result += is_outgoing
 		? info.GetField(MailMsgHdrName_To).GetText()

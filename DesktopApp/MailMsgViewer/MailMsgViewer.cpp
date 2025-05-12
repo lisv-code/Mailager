@@ -137,7 +137,7 @@ void MailMsgViewer::RefreshHeaderView()
 	// Update header values
 	txtSubject->SetValue(msgNode.Header.GetField(MailMsgHdrName_Subj).GetText());
 	auto msg_time = msgNode.Header.GetField(MailMsgHdrName_Date).GetTime();
-	txtDate->SetValue(msg_time ? wxDateTime(*msg_time).FromUTC().Format() : MsgTimeFailView);
+	txtDate->SetValue(msg_time ? wxDateTime(*msg_time).Format() : MsgTimeFailView);
 	txtSender->SetValue(msgNode.Header.GetField(MailMsgHdrName_From).GetText());
 
 	// Refresh header layout

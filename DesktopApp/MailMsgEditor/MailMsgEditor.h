@@ -23,7 +23,7 @@ class MailMsgEditor : public MailMsgEditorUI, public MailMsgFileView
 	void SaveMsgBodyData(MimeNode& msg_node);
 
 	void UpdateEditState();
-	void UpdateToolState();
+	void UpdateToolState(bool can_edit);
 
 	// ****** MailMsgEditorUI override ******
 	virtual void toolSaveMessage_OnToolClicked(wxCommandEvent& event) override;
@@ -38,6 +38,6 @@ public:
 	virtual ~MailMsgEditor();
 
 	// ****** MaiMsgFileView override ******
-	virtual bool GetCanEdit() override { return true; };
-	virtual int SetCanEdit(bool new_state) override { return -1; } // TODO: probably should UpdateToolState
+	virtual bool GetCanEdit() override;
+	virtual void SetCanEdit(bool new_state) override;
 };

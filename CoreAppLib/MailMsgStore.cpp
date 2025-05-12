@@ -121,9 +121,9 @@ int MailMsgStore::StoreMessage(const FILE_PATH_CHAR* src_path, const char* dst_d
 
 void MailMsgStore::ComposePathParts(std::string& dir_name, std::string& file_name, std::tm* time)
 {
-	if (time == nullptr) {
-		auto time1 = std::time(0);
-		time = std::gmtime(&time1);
+	if (nullptr == time) {
+		auto time1 = std::time(nullptr); // get current time
+		time = std::gmtime(&time1); // UTC
 	}
 	char buf[0xFF];
 	snprintf(buf, sizeof(buf), "%04i" FILE_PATH_SEPARATOR_STR "%02i" FILE_PATH_SEPARATOR_STR "%02i",
@@ -153,7 +153,7 @@ int MailMsgStore::ComposePathNames(std::string& dir_name, std::string& file_name
 	parser.GetHdr(field_names, field_count, mail_data, hvtRaw);
 
 	std::tm mail_time = RfcDateTimeCodec::ParseDateTime(
-		mail_data.GetField(MailMsgHdrName_Date).GetRaw(), RfcDateTimeCodec::tzoConvertToUtc);
+		mail_data.GetField(MailMsgHdrName_Date).GetRaw(), RfcDateTimeCodec::TimeZoneOptions::tzoUtc);
 	if (mail_time.tm_sec >= 0) {
 		ComposePathParts(dir_name, file_name, &mail_time);
 

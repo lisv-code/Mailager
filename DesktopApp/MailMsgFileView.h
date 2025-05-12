@@ -11,9 +11,9 @@ public:
 	MailMsgFileView() : mailMsgFile(nullptr) { }
 	virtual ~MailMsgFileView() { }
 
-	virtual const MailMsgFile* GetMailMsgFile() { return mailMsgFile.get(); };
-	virtual int SetMailMsgFile(std::shared_ptr<MailMsgFile> msg_file) { mailMsgFile = msg_file; return OnMailMsgFileSet(); };
+	virtual const MailMsgFile* GetMailMsgFile() { return mailMsgFile.get(); }
+	virtual int SetMailMsgFile(std::shared_ptr<MailMsgFile> msg_file) { mailMsgFile = msg_file; return OnMailMsgFileSet(); }
 
-	virtual bool GetCanEdit() { return false; };
-	virtual int SetCanEdit(bool new_state) { return 0; }
+	virtual bool GetCanEdit() { return false; }
+	virtual void SetCanEdit(bool new_state) { }
 };

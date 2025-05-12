@@ -96,13 +96,17 @@ int MimeParser::SetData(const MimeNode& mail_data)
 int ReadMimeHdrValue(const mimetic::Field& field, MimeHeader& mail_data) {
 	int result = MimeMessageDef::ErrorCode_None;
 	if (MailMsgHdrName_IsDateType(field.name().c_str())) {
-		auto fld = mail_data.SetField(field.name().c_str(),
-			RfcDateTimeCodec::ParseDateTime(field.value().c_str(), RfcDateTimeCodec::tzoConvertToUtc));
-		if (fld.GetTime()->tm_sec < 0) result = MimeMessageDef::ErrorCode_BrokenData;
+		auto fld_val = RfcDateTimeCodec::ParseDateTime(field.value().c_str());
+		if (RfcDateTimeValueUndefined != fld_val) mail_data.SetField(field.name().c_str(), fld_val);
+		else result = MimeMessageDef::ErrorCode_BrokenData;
 	} else {
 		auto fld_val = new std::basic_string<TCHAR>();
-		RfcTextCodec::DecodeHeader(field.value(), *fld_val);
-		mail_data.SetField(field.name().c_str(), fld_val);
+		if (RfcTextCodec::DecodeHeader(field.value(), *fld_val))
+			mail_data.SetField(field.name().c_str(), fld_val);
+		else {
+			delete fld_val;
+			result = MimeMessageDef::ErrorCode_BrokenData;
+		}
 	}
 	return result;
 }

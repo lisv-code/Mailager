@@ -25,7 +25,7 @@ MailMsgEditor::MailMsgEditor(wxWindow* parent) : MailMsgEditorUI(parent)
 		std::bind(&MailMsgEditor::AccountCfg_EventHandler,
 			this, std::placeholders::_1, std::placeholders::_2));
 	load_accounts(AccCfg, chcSender, AccountId_Empty);
-	UpdateToolState();
+	UpdateToolState(true);
 }
 
 MailMsgEditor::~MailMsgEditor()
@@ -57,8 +57,21 @@ int MailMsgEditor::OnMailMsgFileSet()
 		// TODO: handle the error after the file load attempt - show/log the error
 	}
 	UpdateEditState();
-	UpdateToolState();
+	UpdateToolState(GetCanEdit());
 	return result;
+}
+
+bool MailMsgEditor::GetCanEdit()
+{
+	return txtContent->IsEditable();
+}
+
+void MailMsgEditor::SetCanEdit(bool new_state)
+{
+	UpdateToolState(new_state);
+	txtRecipient->SetEditable(new_state);
+	txtSubject->SetEditable(new_state);
+	txtContent->SetEditable(new_state);
 }
 
 int MailMsgEditor::AccountCfg_EventHandler(const AccountCfg* acc_cfg, const AccountCfg::EventInfo& evt_info)
@@ -75,7 +88,7 @@ int MailMsgEditor::AccountCfg_EventHandler(const AccountCfg* acc_cfg, const Acco
 		}
 	}
 	load_accounts(AccCfg, chcSender, cur_acc_id);
-	UpdateToolState();
+	UpdateToolState(GetCanEdit());
 	return 0;
 }
 
@@ -133,7 +146,9 @@ void MailMsgEditor::SaveMsgHdrData(MimeNode& msg_node)
 	// ? RfcHeaderFieldCodec.WriteAddresses // RFC 822 - 6. Address Specification, A.1. Addresses (appendix)
 	msg_node.Header.SetField(MailMsgHdrName_To, new std::basic_string<TCHAR>(txtRecipient->GetValue()));
 	msg_node.Header.SetField(MailMsgHdrName_Subj, new std::basic_string<TCHAR>(txtSubject->GetValue()));
+	msg_node.Header.SetField(MailMsgHdrName_Date, MimeHeaderTimeValueUndefined);
 	// ...
+	msg_node.Header.SetField(MailMsgHdrName_MimeVersion, new std::string(MailMsgHdrData_MimeVersion1));
 }
 
 void MailMsgEditor::SaveMsgBodyData(MimeNode& msg_node)
@@ -151,11 +166,11 @@ void MailMsgEditor::UpdateEditState()
 		|| (sender_idx <= 0));
 }
 
-void MailMsgEditor::UpdateToolState()
+void MailMsgEditor::UpdateToolState(bool can_edit)
 {
 	auto acc = FindAccount(chcSender->GetSelection());
-	tlbrMain->EnableTool(toolSaveFile->GetId(), mailMsgFile && acc);
-	tlbrMain->EnableTool(toolSendMail->GetId(), acc && !acc->Outgoing.Server.empty()); // TODO: !txtRecipient->IsEmpty()
+	tlbrMain->EnableTool(toolSaveFile->GetId(), can_edit && mailMsgFile && acc);
+	tlbrMain->EnableTool(toolSendMail->GetId(), can_edit && acc && !acc->Outgoing.Server.empty() && !txtRecipient->IsEmpty());
 }
 
 void MailMsgEditor::toolSaveMessage_OnToolClicked(wxCommandEvent& event)
@@ -166,7 +181,7 @@ void MailMsgEditor::toolSaveMessage_OnToolClicked(wxCommandEvent& event)
 	int result = mailMsgFile->SaveData(mail_msg, GetAccountId());
 	// TODO: handle saving errors
 	UpdateEditState();
-	UpdateToolState();
+	UpdateToolState(GetCanEdit());
 }
 
 void MailMsgEditor::toolSendMessage_OnToolClicked(wxCommandEvent& event)
@@ -178,7 +193,7 @@ void MailMsgEditor::toolSendMessage_OnToolClicked(wxCommandEvent& event)
 
 void MailMsgEditor::chcSender_OnChoice(wxCommandEvent& event)
 {
-	UpdateToolState();
+	UpdateToolState(GetCanEdit());
 }
 
 void MailMsgEditor::mnuAttachmentFileSave_OnMenuSelection(wxCommandEvent& event)
