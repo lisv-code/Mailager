@@ -2,16 +2,19 @@
 #include <cstring>
 #include <utility>
 #include <LisCommon/StrUtils.h>
+#include "MimeHeaderDef.h"
+#include "RfcDateTimeCodec.h"
+#include "RfcTextCodec.h"
 
-bool MailMsgHdrName_IsDateType(const char* name) { return 0 == LisStr::StrICmp(name, MailMsgHdrName_Date); }
+bool MailMsgHdrName_IsDateType(const char* name) { return 0 == LisStr::StrICmp(name, MailHdrName_Date); }
 
 bool MailMsgHdrName_IsMetadata(const char* name)
 {
-	return 0 == LisStr::StrICmp(MailMsgHdrName_MessageId, name)
-		|| 0 == LisStr::StrICmp(MailMsgHdrName_ContentType, name)
-		|| 0 == LisStr::StrICmp(MailMsgHdrName_ContentDisposition, name)
-		|| 0 == LisStr::StrICmp(MailMsgHdrName_ContentTransferEncoding, name)
-		|| 0 == LisStr::StrICmp(MailMsgHdrName_ContentId, name);
+	return 0 == LisStr::StrICmp(MailHdrName_MessageId, name)
+		|| 0 == LisStr::StrICmp(MailHdrName_ContentType, name)
+		|| 0 == LisStr::StrICmp(MailHdrName_ContentDisposition, name)
+		|| 0 == LisStr::StrICmp(MailHdrName_ContentTransferEncoding, name)
+		|| 0 == LisStr::StrICmp(MailHdrName_ContentId, name);
 }
 
 namespace MailMsgHeader_Imp
@@ -39,6 +42,22 @@ MimeHeader::HeaderField& MimeHeader::HeaderField::operator=(const HeaderField& s
 {
 	Copy(&src, this, true);
 	return *this;
+}
+
+bool MimeHeader::HeaderField::GetRawStr(std::string& raw_data) const
+{
+	switch (type)
+	{
+	case MimeHeader::HeaderFieldDataType::hfdtRaw:
+		raw_data = *data.raw;
+		return true;
+	case MimeHeader::HeaderFieldDataType::hfdtText:
+		return RfcTextCodec::EncodeHeader(data.text->c_str(), data.text->length(), raw_data);
+	case MimeHeader::HeaderFieldDataType::hfdtTime:
+		return RfcDateTimeCodec::DateTimeToString(&data.time, raw_data);
+	default:
+		return false;
+	}
 }
 
 void MimeHeader::HeaderField::Clear(bool preserve_pointer_data)

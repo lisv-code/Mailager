@@ -4,14 +4,14 @@ using namespace MasterViewModel_Def;
 namespace MasterViewModel_Imp
 {
 	const wxChar* FolderName_Inbox = wxT("Inbox");
+	const wxChar* FolderName_Drafts = wxT("Drafts");
 	const wxChar* FolderName_Outbox = wxT("Outbox");
 	const wxChar* FolderName_Sent = wxT("Sent");
 	const wxChar* FolderName_Trash = wxT("Trash");
-	const int Folders_Count = 4;
-	const wxChar* Folders_Names[Folders_Count] =
-		{ FolderName_Inbox, FolderName_Outbox, FolderName_Sent, FolderName_Trash };
-	const int Folders_Ids[Folders_Count] = { fiInbox, fiOutbox, fiSent, fiTrash };
 
+	const wxChar* Folders_Names[Folder_Count] =
+		{ FolderName_Inbox, FolderName_Drafts, FolderName_Outbox, FolderName_Sent, FolderName_Trash };
+	const int Folders_Ids[Folder_Count] = { fiInbox, fiDrafts, fiOutbox, fiSent, fiTrash };
 
 	const wxChar* Name_Undefined = wxT("-= ? =-");
 	const wxChar* Count_Unknown_Txt = wxT("_");
@@ -30,7 +30,7 @@ void MasterViewModel::SetAccounts(const AccountSettings** accounts, size_t count
 	data.clear();
 	if (group_by_folder) {
 		//data.reserve(Folders_Count + (this->accounts.size() * Folders_Count));
-		for (size_t i = 0; i < Folders_Count; ++i) {
+		for (size_t i = 0; i < Folder_Count; ++i) {
 			auto parent = SetFolderDataItem(AddDataItem(nullptr), Folders_Names[i]);
 			for (int j = 0; j < count; ++j)
 				parent->Children->push_back(SetAccountDataItem(AddDataItem(parent), &this->accounts[j]));
@@ -39,7 +39,7 @@ void MasterViewModel::SetAccounts(const AccountSettings** accounts, size_t count
 		//data.reserve(this->accounts.size() + (this->accounts.size() * Folders_Count));
 		for (size_t i = 0; i < count; ++i) {
 			auto parent = SetAccountDataItem(AddDataItem(nullptr), &this->accounts[i]);
-			for (size_t j = 0; j < Folders_Count; ++j)
+			for (size_t j = 0; j < Folder_Count; ++j)
 				parent->Children->push_back(SetFolderDataItem(AddDataItem(parent), Folders_Names[j]));
 		}
 	}
@@ -121,7 +121,7 @@ int MasterViewModel::DataItem::GetFolderId() const
 	while ((ditFolder != data_item->Type) && !data_item->IsContainer)
 		data_item = data_item->Parent;
 	if (data_item) {
-		for (int i = 0; i < Folders_Count; ++i)
+		for (int i = 0; i < Folder_Count; ++i)
 			if (Folders_Names[i] == data_item->Folder.Name) return Folders_Ids[i];
 		return -1;
 	} else

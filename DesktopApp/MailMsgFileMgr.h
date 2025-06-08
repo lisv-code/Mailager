@@ -36,43 +36,51 @@ public:
 	typedef std::list<std::shared_ptr<MailMsgFile>> FilesContainer;
 	typedef FilesContainer::const_iterator FilesIterator;
 
-	enum MailMsgGrpStatus { mgsNone = 0, mgsProcessing = 1 };
+	enum GrpProcStatus { gpsNone = 0, gpsProcessing = 1 };
 private:
-	typedef FilesContainer GrpDataItem;
-	std::unordered_map<GrpId, GrpDataItem*> grpData;
+	struct GrpDataItem {
+		AccountSettings MailAcc;
+		FilesContainer MsgFiles;
+	};
+	std::unordered_map<GrpId, GrpDataItem*> mailGroups;
 	FilesContainer draftMessages;
 	LisLog::ILogger* logger = LisLog::Logger::GetInstance();
 	LisThread::ThreadTaskMgr taskMgr;
 
-	GrpDataItem* GetGrpData(GrpId grp_id, bool auto_create);
+	GrpDataItem* GetGrpData(GrpId grp_id);
 	void FreeGrpData(GrpDataItem* grp_data);
 	int MailMsgFile_EventHandler(const MailMsgFile* mail_msg, const MailMsgFile::EventInfo& evt_info);
+
+	static MailMsgFile::EventHandler GetMailMsgFileEvtHandler(MailMsgFileMgr* mgr);
+	static void AfterMailMsgFileAdded(std::shared_ptr<MailMsgFile>* file, MailMsgFileMgr* mgr, bool raise_event);
+
+	static std::string GetGrpTaskProcId(GrpId grp_id, bool is_receiving);
 
 	struct MailSyncProcPrm
 	{
 		MailMsgFileMgr* Manager;
-		AccountSettings Account;
+		GrpId GroupId;
 	};
-	static LisThread::TaskProcResult MailReceiveProc(
+	static LisThread::TaskProcResult MailRecvProc(
 		LisThread::TaskProcCtrl* proc_ctrl, LisThread::TaskWorkData work_data);
 	static LisThread::TaskProcResult MailSendProc(
 		LisThread::TaskProcCtrl* proc_ctrl, LisThread::TaskWorkData work_data);
 
-	static void AfterMailMsgFileAdded(MailMsgFileMgr* mgr, std::shared_ptr<MailMsgFile>* file);
-
 	static int GetAuthData(std::string& auth_data, const Connections::ConnectionInfo& connection,
 		LisThread::TaskProcCtrl* proc_ctrl, const MailMsgFileMgr* mgr);
-	static bool AuthEvtProc_UserPswd(ConnectionAuth::EventParams& event_params,
+	static bool AuthEvtProc_UserPswd(ConnectionAuth::EventData_PswdRequest* pswd_data,
 		const Connections::ConnectionInfo& connection, const MailMsgFileMgr* mgr);
-	static bool AuthEvtProc_OAuth2(ConnectionAuth::EventParams& event_params,
+	static bool AuthEvtProc_StopFunc(ConnectionAuth::EventData_StopFunction* stop_func,
 		LisThread::TaskProcCtrl* proc_ctrl);
 public:
 	~MailMsgFileMgr();
-	MailMsgGrpStatus GetProcStatus(GrpId grp_id);
+	int InitGroup(GrpId grp_id, const AccountSettings& account);
+	GrpProcStatus GetProcStatus(GrpId grp_id);
 	bool GetIter(GrpId grp_id, FilesIterator& begin, FilesIterator& end);
-	bool LoadList(GrpId grp_id, const char* acc_dir);
+	int LoadList(GrpId grp_id);
 	bool StopProcessing(GrpId grp_id);
 	bool RemoveGroup(GrpId grp_id);
-	bool StartMailSync(GrpId grp_id, const AccountSettings& account);
+	int StartMailRecv(GrpId grp_id);
+	int StartMailSend(GrpId grp_id);
 	std::shared_ptr<MailMsgFile>& CreateMailMsg(GrpId grp_id);
 };

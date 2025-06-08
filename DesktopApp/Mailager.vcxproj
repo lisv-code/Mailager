@@ -252,6 +252,7 @@
     <ClInclude Include="UiHelper.h" />
     <ClInclude Include="MailMainView\MailMainView.h" />
     <ClInclude Include="MailMainView\MailMainViewUI.h" />
+    <ClCompile Include="..\CoreMailLib\MimeHeaderDef.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

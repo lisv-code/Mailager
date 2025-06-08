@@ -15,13 +15,14 @@ namespace ConnectionUiCtrlHelper
 	const wxString OutProtNames[OutProtCount] = {
 		wxT(""), wxT("SMTP (Simple Mail Transfer Protocol)") };
 
-	const int DefAuthCount = 3;
+	const int DefAuthCount = 4;
 	const Connections::AuthenticationType DefAuthTypes[DefAuthCount] = {
 		Connections::AuthenticationType::catNone,
 		Connections::AuthenticationType::catUserPswd,
+		Connections::AuthenticationType::catPlain,
 		Connections::AuthenticationType::catOAuth2 };
 	const wxString DefAuthNames[DefAuthCount] = {
-		wxT(""), wxT("User password"), wxT("OAuth 2") };
+		wxT(""), wxT("User password"), wxT("Plain"), wxT("OAuth 2") };
 
 	static std::vector<Connections::AuthenticationType> AuthTypes;
 	static std::vector<wxString> AuthNames;

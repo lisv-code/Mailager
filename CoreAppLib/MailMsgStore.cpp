@@ -4,6 +4,7 @@
 #include <LisCommon/FileSystem.h>
 #include <LisCommon/HashFunc.h>
 #include <LisCommon/StrUtils.h>
+#include "../CoreMailLib/MimeHeaderDef.h"
 #include "../CoreMailLib/MimeParser.h"
 #include "../CoreMailLib/MimeMessageDef.h"
 #include "../CoreMailLib/RfcDateTimeCodec.h"
@@ -145,15 +146,15 @@ int MailMsgStore::ComposePathNames(std::string& dir_name, std::string& file_name
 	const int field_count = 5;
 	const int hash_fields_start_index = 1;
 	const char* field_names[field_count] = {
-		MailMsgHdrName_Date,
-		MailMsgHdrName_From, MailMsgHdrName_To, MailMsgHdrName_Subj, MailMsgHdrName_MessageId
+		MailHdrName_Date,
+		MailHdrName_From, MailHdrName_To, MailHdrName_Subj, MailHdrName_MessageId
 	};
 
 	MimeHeader mail_data;
 	parser.GetHdr(field_names, field_count, mail_data, hvtRaw);
 
 	std::tm mail_time = RfcDateTimeCodec::ParseDateTime(
-		mail_data.GetField(MailMsgHdrName_Date).GetRaw(), RfcDateTimeCodec::TimeZoneOptions::tzoUtc);
+		mail_data.GetField(MailHdrName_Date).GetRaw(), RfcDateTimeCodec::TimeZoneOptions::tzoUtc);
 	if (mail_time.tm_sec >= 0) {
 		ComposePathParts(dir_name, file_name, &mail_time);
 

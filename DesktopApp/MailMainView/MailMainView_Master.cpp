@@ -1,7 +1,41 @@
 #include "MailMainView.h"
+#include <algorithm>
 #include "../../CoreAppLib/AccountCfg.h"
 #include "../AppCfg.h"
 #include "MasterViewModel.h"
+
+namespace MailMainView_Master_Imp
+{
+	typedef struct FolderStatusMatch {
+		int FolderId;
+		MailMsgStatus StatusSet, StatusExc;
+	};
+	const FolderStatusMatch FolderStatusMatches[MasterViewModel_Def::Folder_Count] = {
+		{
+			MasterViewModel_Def::FolderId::fiInbox,
+			MailMsgStatus::mmsNone,
+			MailMsgStatus::mmsIsDraft | MailMsgStatus::mmsIsOutgoing | MailMsgStatus::mmsIsSent | MailMsgStatus::mmsIsDeleted
+		},
+		{
+			MasterViewModel_Def::FolderId::fiDrafts,
+			MailMsgStatus::mmsIsDraft, MailMsgStatus::mmsIsDeleted
+		},
+		{
+			MasterViewModel_Def::FolderId::fiOutbox,
+			MailMsgStatus::mmsIsOutgoing, MailMsgStatus::mmsIsDraft | MailMsgStatus::mmsIsSent | MailMsgStatus::mmsIsDeleted
+		},
+		{
+			MasterViewModel_Def::FolderId::fiSent,
+			MailMsgStatus::mmsIsSent, MailMsgStatus::mmsIsDeleted
+		},
+		{
+			MasterViewModel_Def::FolderId::fiTrash,
+			MailMsgStatus::mmsIsDeleted,
+			MailMsgStatus::mmsNone,
+		}
+	};
+}
+using namespace MailMainView_Master_Imp;
 
 int MailMainView::GetCurrentAccountId()
 {
@@ -42,23 +76,14 @@ void MailMainView::ExpandFirstLevel()
 
 bool MailMainView::IsFolderMatches(int folder_id, MailMsgFile* mail_msg)
 {
-	const int MsgStatusSet_Outbox = MailMsgStatus::mmsIsDraft | MailMsgStatus::mmsIsOutgoing;
-	const int MsgStatusExc_Outbox = MailMsgStatus::mmsIsSent | MailMsgStatus::mmsIsDeleted;
-	const int MsgStatusSet_Sent = MailMsgStatus::mmsIsSent;
-	const int MsgStatusExc_Sent = MailMsgStatus::mmsIsDeleted;
-	const int MsgStatusSet_Trash = MailMsgStatus::mmsIsDeleted;
-	const int MsgStatusExc_Inbox = MailMsgStatus::mmsIsDraft | MailMsgStatus::mmsIsOutgoing | MailMsgStatus::mmsIsSent | MailMsgStatus::mmsIsDeleted;
-
-	auto status = mail_msg->GetStatus();
 	bool result = false;
-	result = result ||
-		((MasterViewModel_Def::fiOutbox == folder_id) && (MsgStatusSet_Outbox & status) && !(MsgStatusExc_Outbox & status));
-	result = result ||
-		((MasterViewModel_Def::fiSent == folder_id) && (MsgStatusSet_Sent & status) && !(MsgStatusExc_Sent & status));
-	result = result ||
-		((MasterViewModel_Def::fiTrash == folder_id) && (MsgStatusSet_Trash & status));
-	result = result ||
-		((MasterViewModel_Def::fiInbox == folder_id) && !(MsgStatusExc_Inbox & status));
+	const auto& list_end = FolderStatusMatches + MasterViewModel_Def::Folder_Count;
+	const auto& match_ref = std::find_if(FolderStatusMatches, list_end,
+		[folder_id](const FolderStatusMatch& item) { return item.FolderId == folder_id; });
+	if (match_ref != list_end) {
+		const auto& match = *match_ref;
+		result = mail_msg->CheckStatusFlags(match.StatusSet, match.StatusExc);
+	}
 	return result;
 }
 
@@ -67,11 +92,11 @@ bool MailMainView::IsAccItemBusy(const wxDataViewItem& item, MailMsgFileMgr* msg
 	auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
 	if (!data_item) return false;
 	auto accounts = data_item->GetAccounts();
-	auto status = MailMsgFileMgr::MailMsgGrpStatus::mgsNone;
+	auto status = MailMsgFileMgr::GrpProcStatus::gpsNone;
 	for (auto& account : accounts) {
-		status = (MailMsgFileMgr::MailMsgGrpStatus)(status | msg_mgr->GetProcStatus(account->Id));
+		status = (MailMsgFileMgr::GrpProcStatus)(status | msg_mgr->GetProcStatus(account->Id));
 	}
-	return MailMsgFileMgr::MailMsgGrpStatus::mgsProcessing & status;
+	return MailMsgFileMgr::GrpProcStatus::gpsProcessing & status;
 }
 
 void MailMainView::ResetFolderMailCount(wxDataViewCtrl* view_ctrl, int folder_id)

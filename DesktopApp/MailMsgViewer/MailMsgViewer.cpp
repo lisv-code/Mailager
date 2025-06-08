@@ -3,6 +3,7 @@
 #include <wx/filedlg.h>
 #include <wx/msgdlg.h>
 #include "../../CoreAppLib/AppDef.h"
+#include "../../CoreMailLib/MimeHeaderDef.h"
 #include "../../CoreMailLib/MimeParser.h"
 #include "../../CoreMailLib/MimeMessageDef.h"
 #include "../AppCfg.h"
@@ -125,7 +126,7 @@ void MailMsgViewer::InitContentViewer(int content_viewer_type)
 int MailMsgViewer::LoadData(std::string& out_info)
 {
 	nodeStruct.clear();
-	int result = mailMsgFile->LoadData(msgNode);
+	int result = mailMsgFile->LoadData(msgNode, false);
 	if (result >= 0) {
 		result = MimeNodeProc::GetNodeStructInfo(msgNode, nodeStruct, &out_info);
 	}
@@ -135,10 +136,10 @@ int MailMsgViewer::LoadData(std::string& out_info)
 void MailMsgViewer::RefreshHeaderView()
 {
 	// Update header values
-	txtSubject->SetValue(msgNode.Header.GetField(MailMsgHdrName_Subj).GetText());
-	auto msg_time = msgNode.Header.GetField(MailMsgHdrName_Date).GetTime();
+	txtSubject->SetValue(msgNode.Header.GetField(MailHdrName_Subj).GetText());
+	auto msg_time = msgNode.Header.GetField(MailHdrName_Date).GetTime();
 	txtDate->SetValue(msg_time ? wxDateTime(*msg_time).Format() : MsgTimeFailView);
-	txtSender->SetValue(msgNode.Header.GetField(MailMsgHdrName_From).GetText());
+	txtSender->SetValue(msgNode.Header.GetField(MailHdrName_From).GetText());
 
 	// Refresh header layout
 	auto txt1 = new wxStaticText(txtDate->GetParent(), wxID_ANY, txtDate->GetValue());

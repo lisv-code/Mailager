@@ -24,9 +24,9 @@ class MainWnd: public MainWndUI, public IMailMsgViewCtrl
 	void CreateMailMainView();
 
 	// ****** IMailMsgViewCtrl ******
-	virtual void OnViewCreated(wxWindow* wnd, const TCHAR* title);
-	virtual wxWindow* GetView(int index);
-	virtual void ActivateView(int index);
+	virtual void OnViewCreated(wxWindow* wnd, const TCHAR* title) override;
+	virtual wxWindow* GetView(int index) override;
+	virtual void ActivateView(int index) override;
 public:
 	MainWnd(wxWindow* parent);
 	~MainWnd();

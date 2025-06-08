@@ -12,21 +12,6 @@
 
 #include "RfcHeaderField.h"
 
-#define MailMsgHdrName_MimeVersion "MIME-Version"
-#define MailMsgHdrData_MimeVersion1 "1.0"
-
-#define MailMsgHdrName_Date "Date"
-#define MailMsgHdrName_From "From"
-#define MailMsgHdrName_To "To"
-#define MailMsgHdrName_Subj "Subject"
-
-#define MailMsgHdrName_MessageId "Message-ID"
-
-#define MailMsgHdrName_ContentType "Content-Type"
-#define MailMsgHdrName_ContentDisposition "Content-Disposition"
-#define MailMsgHdrName_ContentTransferEncoding "Content-Transfer-Encoding"
-#define MailMsgHdrName_ContentId "Content-ID"
-
 bool MailMsgHdrName_IsDateType(const char* name);
 bool MailMsgHdrName_IsMetadata(const char* name);
 
@@ -64,6 +49,8 @@ public:
 		size_t GetTextLen() const { return hfdtText == type ? data.text->length() : 0; }
 
 		const std::time_t* GetTime() const { return hfdtTime == type ? &data.time : nullptr; }
+
+		bool GetRawStr(std::string& raw_data) const;
 	};
 
 	typedef std::unordered_map<std::string, HeaderField,

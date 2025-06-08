@@ -98,6 +98,7 @@
 		<Unit filename="../CoreAppLib/PasswordStore.h" />
 		<Unit filename="../CoreMailLib/MimeHeader.cpp" />
 		<Unit filename="../CoreMailLib/MimeHeader.h" />
+		<Unit filename="../CoreMailLib/MimeHeaderDef.h" />
 		<Unit filename="../CoreMailLib/MimeMessageDef.h" />
 		<Unit filename="../CoreMailLib/MimeNode.cpp" />
 		<Unit filename="../CoreMailLib/MimeNode.h" />

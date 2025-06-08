@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+#include <string>
 #include <LisCommon/EventDispBase.h>
 #include <LisCommon/FileSystem.h>
 #include "MailMsgFileDef.h"
@@ -18,7 +19,7 @@ enum MailMsgFile_EventType
 	etStatusChanging, // MailMsgStatus - new status value
 	etStatusChanged // MailMsgStatus - old status value
 };
-typedef FILE_PATH_CHAR* MailMsgFile_EventData_DataSaving; // pointer to current path, accepts new path to be set
+typedef std::basic_string<FILE_PATH_CHAR> MailMsgFile_EventData_DataSaving; // current path value, accepts new path to be set
 typedef EventDispatcherBase<MailMsgFile, MailMsgFile_EventType, void*> MailMsgFile_EventDispatcher;
 
 /// <summary>
@@ -32,7 +33,7 @@ class MailMsgFile : public MailMsgFile_EventDispatcher
 	MimeHeader mailInfo;
 
 	void Clear();
-	int LoadMsgData(MimeNode* data);
+	int LoadMsgData(MimeNode* data, bool raw_hdr_values);
 	int LoadMsgInfo(MimeParser& parser);
 	int SetStatus(MailMsgStatus value);
 	static int UpdateStatusField(MailMsgStatus status, MimeHeader& header, const FILE_PATH_CHAR* file_path);
@@ -46,11 +47,12 @@ public:
 	const int GetGrpId() const;
 	const FILE_PATH_CHAR* GetFilePath() const;
 	int LoadInfo(); // Load meta-data cache if not loaded yet
-	int LoadData(MimeNode& data);
+	int LoadData(MimeNode& data, bool raw_hdr_values);
 	int SaveData(const MimeNode& data, int grp_id = MailMsgGrpId_Empty);
 	int DeleteFile();
 
 	MailMsgStatus GetStatus();
+	bool CheckStatusFlags(MailMsgStatus enabled, MailMsgStatus unset) const;
 	int ChangeStatus(MailMsgStatus added, MailMsgStatus removed);
 
 	const MimeHeader& GetInfo();

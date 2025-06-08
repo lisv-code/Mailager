@@ -29,11 +29,10 @@ void MailMainView::CreateDetailViewModel(const wxDataViewItem* master_item)
 		is_parent_filter = (folder_id > 0) && !data_item->IsFolder();
 		// Load data
 		for (auto& acc : accounts) {
+			int init_code = msgFileMgr->InitGroup(acc->Id, *acc);
+			if (init_code > 0) msgFileMgr->LoadList(acc->Id);
 			MailMsgFileMgr::FilesIterator msg_list_begin, msg_list_end;
-			if (!msgFileMgr->GetIter(acc->Id, msg_list_begin, msg_list_end)) {
-				msgFileMgr->LoadList(acc->Id, acc->Directory.c_str());
-				msgFileMgr->GetIter(acc->Id, msg_list_begin, msg_list_end);
-			}
+			msgFileMgr->GetIter(acc->Id, msg_list_begin, msg_list_end);
 			for (auto it = msg_list_begin; it != msg_list_end; ++it) {
 				auto msg = *it;
 				if (!is_parent_filter) ++count_parent;

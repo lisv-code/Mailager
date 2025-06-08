@@ -32,6 +32,8 @@ int ConnectionAuth::GetAuthData(std::string& auth_data, AuthEventHandler event_h
 	int result = 0;
 	if (Connections::AuthenticationType::catUserPswd == connection.AuthType) {
 		result = GetPassword(auth_data, event_handler);
+	} else if (Connections::AuthenticationType::catPlain == connection.AuthType) {
+		result = GetPlainToken(nullptr, auth_data, event_handler);
 	} else if (Connections::AuthenticationType::catOAuth2 == connection.AuthType) {
 		result = GetOAuth2Token(OAuth2Cfg::GetCfg(connection.AuthSpec.c_str()), auth_data, event_handler);
 	} else {
@@ -43,7 +45,9 @@ int ConnectionAuth::GetAuthData(std::string& auth_data, AuthEventHandler event_h
 
 int ConnectionAuth::SetAuthData(const char* auth_data)
 {
-	if (Connections::AuthenticationType::catUserPswd == connection.AuthType) {
+	if ((Connections::AuthenticationType::catUserPswd == connection.AuthType)
+		|| (Connections::AuthenticationType::catPlain == connection.AuthType))
+	{
 		return pswdStor.SavePassword(
 			PasswordStore::GetStoreKey(connection.Server.c_str(), connection.UserName.c_str()).c_str(),
 			connection.UserName.c_str(), auth_data);
@@ -63,18 +67,31 @@ int ConnectionAuth::GetPassword(std::string& auth_data, AuthEventHandler event_h
 	auto store_key = PasswordStore::GetStoreKey(connection.Server.c_str(), connection.UserName.c_str());
 	int result = pswdStor.LoadPassword(store_key.c_str(), nullptr, auth_data);
 	if (0 > result && nullptr != event_handler) {
-		EventParams params;
-		params.Type = etDataRequest;
-		params.NeedSave = false;
-		if (event_handler(connection, params)) {
-			auth_data = params.StrData;
-			if (params.NeedSave)
+		EventData_PswdRequest evt_data;
+		evt_data.NeedSave = false;
+		if (event_handler(connection, etPswdRequest, &evt_data)) {
+			auth_data = evt_data.PswdData;
+			if (evt_data.NeedSave)
 				pswdStor.SavePassword(store_key.c_str(), connection.UserName.c_str(), auth_data.c_str());
 			result = 0;
 		} else {
 			logger->LogTxt(llWarn, Log_Scope " Authentication interrupted.");
 			result = Err_UserInterruption;
 		}
+	}
+	return result;
+}
+
+// ************************************* Plain authentication **************************************
+
+int ConnectionAuth::GetPlainToken(const char* authzid, std::string& auth_data, AuthEventHandler event_handler)
+{
+	std::string pswd;
+	int result = GetPassword(pswd, event_handler);
+	if (result >= 0) {
+		char buf[0xFFF] = { 0 };
+		result = AuthTokenProc::ComposeAuthPlainToken(buf, authzid, connection.UserName.c_str(), pswd.c_str());
+		auth_data = buf;
 	}
 	return result;
 }
@@ -89,7 +106,7 @@ std::string ConnectionAuth::GetTokenId()
 	return result;
 }
 
-int ConnectionAuth::GetOAuth2Token(OAuth2Settings config, std::string& auth_data, AuthEventHandler event_handler)
+int ConnectionAuth::GetOAuth2Token(const OAuth2Settings& config, std::string& auth_data, AuthEventHandler event_handler)
 {
 	OAuth2TokenStor auth_token_stor;
 	std::basic_string<FILE_PATH_CHAR> store_path = basePath + FILE_PATH_TEXT(TokenStoreDir);
@@ -134,10 +151,9 @@ int ConnectionAuth::RefreshOrGetToken(OAuth2Token& token, OAuth2Settings config,
 			new_token.refresh_token = token.refresh_token;
 		}
 		if (new_token.expires <= 0) {
-			EventParams params;
-			params.Type = etStopFunction;
-			params.StopFunc = [&auth_client]() { return auth_client.Stop(); };
-			if (event_handler && !event_handler(connection, params)) return Err_UserInterruption;
+			EventData_StopFunction evt_data;
+			evt_data = [&auth_client]() { return auth_client.Stop(); };
+			if (event_handler && !event_handler(connection, etStopFunction, &evt_data)) return Err_UserInterruption;
 			char buf[0xFFF] = { 0 };
 			int result = auth_client.GetCode(buf, config.code_server.c_str(),
 				config.client_id.c_str(), config.scope.c_str());

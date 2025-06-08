@@ -10,7 +10,7 @@
 
 #include "MimeNode.h"
 
-enum MimeHeaderValueType { hvtRaw, hvtAuto, hvtDecoded };
+enum MimeHeaderValueType { hvtRaw, hvtAuto };
 
 class MimeParser
 {
@@ -20,15 +20,10 @@ class MimeParser
 	static int GetHdr(const MimeEntity* mime_entity, MimeHeader& mail_data,
 		MimeHeaderValueType value_type);
 
-	static int ReadHdrRaw(const MimeEntity* mime_entity, const char* hdr_name, MimeHeader& entity_data);
-	static int ReadHdrValue(const MimeEntity* mime_entity, const char* hdr_name, MimeHeader& entity_data);
+	static int ReadHdrValue(const MimeEntity* mime_entity, const char* hdr_name, MimeHeader& entity_data,
+		MimeHeaderValueType value_type);
 
 	static int SetHdr(const MimeHeader& mail_data, MimeEntity* mime_entity, bool set_new_top);
-
-	static bool SetMimeHdrRaw(MimeEntity* mime_entity,
-		const char* field_name, const char* field_value, bool set_new_top);
-	static bool SetMimeHdrStr(MimeEntity* mime_entity,
-		const char* field_name, const TCHAR* field_value, size_t length, bool set_new_top);
 
 	static int SetNode(const MimeNode& mail_data, MimeEntity* mime_entity);
 

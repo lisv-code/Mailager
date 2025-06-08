@@ -3,6 +3,7 @@
 #include <vector>
 #include <LisCommon/HashFunc.h>
 #include <LisCommon/StrUtils.h>
+#include "../CoreMailLib/MimeHeaderDef.h"
 #include "../CoreMailLib/MimeMessageDef.h"
 #include "../CoreNetLib/Pop3Client.h"
 #include "ConnectionAuth.h"
@@ -11,7 +12,6 @@
 #include "MailMsgStatus.h"
 
 #define Log_Scope "MailRcvr"
-#define MailMsgUidl_HeaderName "X-Mailager-Uidl"
 
 using namespace LisLog;
 
@@ -35,10 +35,12 @@ int MailMsgReceiver::Receive(const char* auth_data, MailFileProc file_proc)
 	int result;
 	if (Connections::AuthenticationType::catUserPswd == connection.AuthType)
 		result = mail_client.Auth(connection.UserName.c_str(), auth_data)
-			? Connection_Result_Ok : Connection_Error_Authentication;
+			? Connection_Result_Ok : Connection_Error_AuthProcess;
 	else if (Connections::AuthenticationType::catOAuth2 == connection.AuthType)
 		result = mail_client.Auth(Pop3Client::attXOAuth2, auth_data)
-			? Connection_Result_Ok : Connection_Error_Authentication;
+			? Connection_Result_Ok : Connection_Error_AuthProcess;
+	else
+		return Connection_Error_AuthConfig;
 
 	if (result < 0) {
 		logger->LogFmt(llError, Log_Scope " grp#%i authentication failed.", grpId);
@@ -103,10 +105,10 @@ int MailMsgReceiver::Receive(const char* auth_data, MailFileProc file_proc)
 
 bool MailMsgReceiver::InitMsgStream(std::ostream& stm, const char* uidl)
 {
-	std::string status_field = MailMsgStatus_HeaderName ": " MailMsgStatus_DefaultValue MimeMessageLineEnd;
+	std::string status_field = MailHdrName_MailagerStatus ": " MailMsgStatus_DefaultValue MimeMessageLineEnd;
 	stm.write(status_field.c_str(), status_field.size());
 
-	std::string uidl_field = MailMsgUidl_HeaderName ": ";
+	std::string uidl_field = MailHdrName_MailagerUidl ": ";
 	uidl_field += uidl;
 	uidl_field += MimeMessageLineEnd;
 	stm.write(uidl_field.c_str(), uidl_field.size());

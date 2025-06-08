@@ -73,10 +73,9 @@ bool MailMsgViewMgr_Imp::is_mail_msg_editable(MailMsgFile* mail_msg)
 	if (mail_msg) {
 		if (mail_msg->GetFilePath() == nullptr) return true;
 		auto msg_status = mail_msg->GetStatus();
-		return (MailMsgStatus::mmsIsDraft & msg_status)
-			&& !(MailMsgStatus::mmsIsSent & msg_status);
+		return MailMsgStatus::mmsIsDraft & msg_status;
 	}
-	return true;
+	return false; // must be an error
 }
 
 int MailMsgViewMgr_Imp::find_std_msg_view(IMailMsgViewCtrl* view_ctrl, MailMsgFile* mail_msg,

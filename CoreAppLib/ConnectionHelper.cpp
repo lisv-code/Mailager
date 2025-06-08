@@ -9,9 +9,9 @@ namespace ConnectionHelper_Imp
 	const ProtocolType ProtTypes[ProtCount] = { cptNone, cptPop3, cptSmtp };
 	const char* ProtNames[ProtCount] = { nullptr, "POP3", "SMTP" };
 
-	const int AuthCount = 3;
-	const AuthenticationType AuthTypes[AuthCount] = { catNone, catUserPswd, catOAuth2 };
-	const char* AuthNames[AuthCount] = { nullptr, "UserPswd", "OAuth2" };
+	const int AuthCount = 4;
+	const AuthenticationType AuthTypes[AuthCount] = { catNone, catUserPswd, catPlain, catOAuth2 };
+	const char* AuthNames[AuthCount] = { nullptr, "UserPswd", "Plain", "OAuth2" };
 
 	const char AuthSpecSeparator = '.';
 	const int AuthSpecSepLen = sizeof(AuthSpecSeparator);

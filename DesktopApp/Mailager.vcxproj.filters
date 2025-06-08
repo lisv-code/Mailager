@@ -561,6 +561,9 @@
     <ClCompile Include="..\CoreAppLib\OAuth2Config.cpp">
       <Filter>Source Files\CoreAppLib</Filter>
     </ClCompile>
+    <ClCompile Include="MimeHeaderDef.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Mailager.cfg" />

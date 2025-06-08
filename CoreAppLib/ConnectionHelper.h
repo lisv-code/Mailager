@@ -6,7 +6,8 @@
 
 #define Connection_Error_Protocol -1
 #define Connection_Error_Handshake -2
-#define Connection_Error_Authentication -3
+#define Connection_Error_AuthConfig -3
+#define Connection_Error_AuthProcess -4
 
 #define Connection_Error_Interrupted -10
 

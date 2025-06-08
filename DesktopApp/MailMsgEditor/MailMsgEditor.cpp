@@ -1,6 +1,7 @@
 #pragma once
 #include "MailMsgEditor.h"
 #include <LisCommon/StrUtils.h>
+#include "../../CoreMailLib/MimeHeaderDef.h"
 #include "../../CoreMailLib/MimeNodeProc.h"
 #include "../../CoreMailLib/MimeParser.h"
 #include "../../CoreAppLib/MailMsgFileDef.h"
@@ -38,7 +39,7 @@ int MailMsgEditor::OnMailMsgFileSet()
 	int result = 0;
 	if (mailMsgFile && mailMsgFile->GetFilePath()) {
 		MimeNode msg_node;
-		result = mailMsgFile->LoadData(msg_node);
+		result = mailMsgFile->LoadData(msg_node, false);
 		//MimeNodeProc::NodeInfoContainer nodeStruct;
 		if (result >= 0) {
 			//result = MimeNodeProc::GetNodeStructInfo(msg_node, nodeStruct, nullptr);
@@ -122,7 +123,7 @@ void MailMsgEditor::LoadMsgHdrData(const MimeNode* msg_node)
 	int sender_idx = -1;
 	if (mailMsgFile) sender_idx = FindSenderIdx(mailMsgFile->GetGrpId());
 	else {
-		auto sender_fld = msg_node->Header.GetField(MailMsgHdrName_From);
+		auto sender_fld = msg_node->Header.GetField(MailHdrName_From);
 		if (sender_fld.GetRaw()) {
 			auto sender_addr = RfcHeaderFieldCodec::ReadMsgId(sender_fld.GetRaw());
 			sender_idx = FindSenderIdx(AccountId_Empty, sender_addr.c_str());
@@ -130,8 +131,8 @@ void MailMsgEditor::LoadMsgHdrData(const MimeNode* msg_node)
 	}
 	chcSender->Select(sender_idx);
 
-	txtRecipient->SetValue(msg_node->Header.GetField(MailMsgHdrName_To).GetText());
-	txtSubject->SetValue(msg_node->Header.GetField(MailMsgHdrName_Subj).GetText());
+	txtRecipient->SetValue(msg_node->Header.GetField(MailHdrName_To).GetText());
+	txtSubject->SetValue(msg_node->Header.GetField(MailHdrName_Subj).GetText());
 }
 
 void MailMsgEditor::LoadMsgBodyData(const MimeNode* msg_node)
@@ -141,20 +142,20 @@ void MailMsgEditor::LoadMsgBodyData(const MimeNode* msg_node)
 
 void MailMsgEditor::SaveMsgHdrData(MimeNode& msg_node)
 {
-	msg_node.Header.SetField(MailMsgHdrName_From, new std::basic_string<TCHAR>(chcSender->GetStringSelection()));
+	msg_node.Header.SetField(MailHdrName_From, new std::basic_string<TCHAR>(chcSender->GetStringSelection()));
     // TODO: the address list should be composed according to the specification...
 	// ? RfcHeaderFieldCodec.WriteAddresses // RFC 822 - 6. Address Specification, A.1. Addresses (appendix)
-	msg_node.Header.SetField(MailMsgHdrName_To, new std::basic_string<TCHAR>(txtRecipient->GetValue()));
-	msg_node.Header.SetField(MailMsgHdrName_Subj, new std::basic_string<TCHAR>(txtSubject->GetValue()));
-	msg_node.Header.SetField(MailMsgHdrName_Date, MimeHeaderTimeValueUndefined);
+	msg_node.Header.SetField(MailHdrName_To, new std::basic_string<TCHAR>(txtRecipient->GetValue()));
+	msg_node.Header.SetField(MailHdrName_Subj, new std::basic_string<TCHAR>(txtSubject->GetValue()));
+	msg_node.Header.SetField(MailHdrName_Date, MimeHeaderTimeValueUndefined);
 	// ...
-	msg_node.Header.SetField(MailMsgHdrName_MimeVersion, new std::string(MailMsgHdrData_MimeVersion1));
+	msg_node.Header.SetField(MailHdrName_MimeVersion, new std::string(MailHdrData_MimeVersion1));
 }
 
 void MailMsgEditor::SaveMsgBodyData(MimeNode& msg_node)
 {
-	msg_node.Header.SetField(MailMsgHdrName_ContentType, new std::string("text/plain; charset=utf-8"));
-	msg_node.Header.SetField(MailMsgHdrName_ContentTransferEncoding, new std::string("8bit"));
+	msg_node.Header.SetField(MailHdrName_ContentType, new std::string("text/plain; charset=utf-8"));
+	msg_node.Header.SetField(MailHdrName_ContentTransferEncoding, new std::string("8bit"));
 
 	msg_node.Body = txtContent->GetValue().ToUTF8();
 }
@@ -187,7 +188,7 @@ void MailMsgEditor::toolSaveMessage_OnToolClicked(wxCommandEvent& event)
 void MailMsgEditor::toolSendMessage_OnToolClicked(wxCommandEvent& event)
 {
 	// TODO: save the message file
-	//mailMsgFile->ChangeStatus(MailMsgStatus::mmsIsOutgoing, MailMsgStatus::mmsIsDraft);
+	mailMsgFile->ChangeStatus(MailMsgStatus::mmsIsOutgoing, MailMsgStatus::mmsIsDraft);
 	// TODO: close the editor window
 }
 

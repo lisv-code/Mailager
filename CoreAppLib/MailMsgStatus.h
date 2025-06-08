@@ -1,11 +1,8 @@
 #pragma once
 #include <string>
 
-#define MailMsgStatus_HeaderName "X-Mailager-Status"
 #define MailMsgStatus_DataSignature "01"
 #define MailMsgStatus_DefaultValue MailMsgStatus_DataSignature "00000000"
-
-#define MailMsgStatus_OperaHeaderName "X-Opera-Status"
 
 enum MailMsgStatus
 {
@@ -23,6 +20,11 @@ enum MailMsgStatus
 	mmsIsOutgoing = 1 << 6, // including IMAP $SubmitPending
 	mmsIsSent = 1 << 7 // similar to IMAP $Submitted
 };
+
+inline MailMsgStatus operator|(MailMsgStatus a, MailMsgStatus b)
+{
+	return static_cast<MailMsgStatus>(static_cast<int>(a) | static_cast<int>(b));
+}
 
 enum MailMsgStatusStringType
 {

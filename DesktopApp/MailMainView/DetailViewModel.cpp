@@ -1,4 +1,5 @@
 #include "DetailViewModel.h"
+#include "../../CoreMailLib/MimeHeaderDef.h"
 
 #define ColIdx_Text 0
 #define FailItemInfo "-= ? ? ? =-"
@@ -7,8 +8,8 @@
 
 bool MailMsgCompFunc(const DetailViewModel::DataItem& item1, const DetailViewModel::DataItem& item2)
 {
-	const std::time_t *tm1_ref = item1->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
-	const std::time_t *tm2_ref = item2->GetInfo().GetField(MailMsgHdrName_Date).GetTime();
+	const std::time_t *tm1_ref = item1->GetInfo().GetField(MailHdrName_Date).GetTime();
+	const std::time_t *tm2_ref = item2->GetInfo().GetField(MailHdrName_Date).GetTime();
 	if (tm1_ref && tm2_ref)
 		return *tm1_ref > *tm2_ref;
 	else
@@ -36,20 +37,20 @@ void DetailViewModel::AddItem(std::shared_ptr<MailMsgFile> item)
 
 wxString DetailViewModel::GetInfoText(const MimeHeader& info, bool is_outgoing)
 {
-	if (!info.GetField(MailMsgHdrName_From).GetText()
-		&& !info.GetField(MailMsgHdrName_To).GetText()
-		&& !info.GetField(MailMsgHdrName_Subj).GetText())
+	if (!info.GetField(MailHdrName_From).GetText()
+		&& !info.GetField(MailHdrName_To).GetText()
+		&& !info.GetField(MailHdrName_Subj).GetText())
 		return wxString(wxT(FailItemInfo));
 
-	auto msg_time = info.GetField(MailMsgHdrName_Date).GetTime();
+	auto msg_time = info.GetField(MailHdrName_Date).GetTime();
 	wxString result(msg_time
 		? wxDateTime(*msg_time).Format(DateTimeViewFmt "   ")
 		: wxT(FailItemTime "   "));
 	result += is_outgoing
-		? info.GetField(MailMsgHdrName_To).GetText()
-		: info.GetField(MailMsgHdrName_From).GetText();
+		? info.GetField(MailHdrName_To).GetText()
+		: info.GetField(MailHdrName_From).GetText();
 	result += wxT("\n");
-	result += info.GetField(MailMsgHdrName_Subj).GetText();
+	result += info.GetField(MailHdrName_Subj).GetText();
 	return result;
 }
 

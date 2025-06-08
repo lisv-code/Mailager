@@ -1,6 +1,7 @@
 ﻿#include "MailMainView.h"
 #include <vector>
 #include <wx/tglbtn.h>
+#include "../../CoreMailLib/MimeHeaderDef.h"
 #include "../../CoreAppLib/AccountCfg.h"
 #include "../../CoreAppLib/AppDef.h"
 #include "../ResMgr.h"
@@ -64,7 +65,8 @@ void MailMainView::toolStartSyncMail_OnToolClicked(wxCommandEvent& event)
 		auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
 		auto accounts = data_item->GetAccounts();
 		for (auto& account : accounts) {
-			bool result = msgFileMgr->StartMailSync(account->Id, *account);
+			msgFileMgr->InitGroup(account->Id, *account); // Refresh account info just in case
+			bool result = msgFileMgr->StartMailRecv(account->Id);
 		}
 		RefreshMasterToolsState(&item);
 	}
@@ -216,8 +218,8 @@ void MailMainView::mnuMailMsgItemDelete_OnMenuSelection(wxCommandEvent& event)
 		auto details = count > 1
 			? wxString::Format(_T("%i items"), count)
 			: wxString::Format(_T("%s\n%s"),
-				((DetailViewModel::DataItem*)items[0].m_pItem)->get()->GetInfo().GetField(MailMsgHdrName_From).GetText(),
-				((DetailViewModel::DataItem*)items[0].m_pItem)->get()->GetInfo().GetField(MailMsgHdrName_Subj).GetText());
+				((DetailViewModel::DataItem*)items[0].m_pItem)->get()->GetInfo().GetField(MailHdrName_From).GetText(),
+				((DetailViewModel::DataItem*)items[0].m_pItem)->get()->GetInfo().GetField(MailHdrName_Subj).GetText());
 		switch (wxMessageBox(
 			wxString::Format(Msg_MailDeleteQuestion, details), AppDef_Title,
 			wxICON_QUESTION | wxOK | wxOK_DEFAULT | wxCANCEL, this))

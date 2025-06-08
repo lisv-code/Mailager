@@ -11,7 +11,8 @@ namespace MasterViewModel_Def
 
 	const long Count_Unknown_Num = -1;
 
-	enum FolderId { fiNone = 0, fiInbox, fiOutbox, fiSent, fiTrash };
+	const int Folder_Count = 5;
+	enum FolderId { fiNone = 0, fiInbox, fiDrafts, fiOutbox, fiSent, fiTrash };
 }
 
 class MasterViewModel : public wxDataViewModel

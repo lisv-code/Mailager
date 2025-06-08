@@ -125,7 +125,7 @@ void MailMainView::MailMsgEvent_CredentialsRequest(
 		pswd_data->c_str(), false);
 	if (wxID_OK == wndDlg.ShowModal()) {
 		wndDlg.GetData(*pswd_data, need_save);
-		procResult = 1;
+		procResult = 1; // Credentials have been returned
 	} else {
 		procResult = -1;
 	}

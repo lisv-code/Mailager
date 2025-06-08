@@ -1,5 +1,6 @@
 #include "MailMsgFile.h"
 #include <LisCommon/StrUtils.h>
+#include "../CoreMailLib/MimeHeaderDef.h"
 #include "../CoreMailLib/MimeMessageDef.h"
 #include "../CoreMailLib/MimeParser.h"
 #include "MailMsgFileDef.h"
@@ -11,13 +12,13 @@ namespace MailMsgFile_Imp
 {
 	const size_t MailMsgHeaders_StatCount = 2;
 	const char* MailMsgHeaders_StatList[MailMsgHeaders_StatCount] = {
-		MailMsgStatus_HeaderName, MailMsgStatus_OperaHeaderName
+		MailHdrName_MailagerStatus, MailHdrName_OperaStatus
 	};
 
 	const size_t MailMsgHeaders_MainCount = 4;
 	const char* MailMsgHeaders_MainList[MailMsgHeaders_MainCount] = {
-		MailMsgHdrName_Date, MailMsgHdrName_From, MailMsgHdrName_To, MailMsgHdrName_Subj
-		//, MailMsgHdrName_MsgId, MailMsgHdrName_ContentType
+		MailHdrName_Date, MailHdrName_From, MailHdrName_To, MailHdrName_Subj
+		//, MailHdrName_MessageId, MailHdrName_ContentType
 	};
 }
 using namespace MailMsgFile_Imp;
@@ -58,7 +59,7 @@ const int MailMsgFile::GetGrpId() const { return grpId; }
 
 const FILE_PATH_CHAR* MailMsgFile::GetFilePath() const { return filePath; }
 
-int MailMsgFile::LoadMsgData(MimeNode* data)
+int MailMsgFile::LoadMsgData(MimeNode* data, bool raw_hdr_values)
 {
 	std::ifstream stm;
 	int result = MailMsgFile_Helper::init_input_stream(stm, filePath, true);
@@ -67,7 +68,7 @@ int MailMsgFile::LoadMsgData(MimeNode* data)
 		int result = parser.Load(stm, false);
 		if (result >= 0) {
 			if (mailInfo.IsEmpty()) result = LoadMsgInfo(parser); // If meta-data not loaded yet, load it
-			if (data) result = parser.GetData(*data, hvtAuto); // Load MIME node data
+			if (data) result = parser.GetData(*data, raw_hdr_values ? hvtRaw : hvtAuto); // Load MIME node data
 		}
 		result = result >= 0 ? result : result + ErrorCode_Base_MimeParser;
 	} else {
@@ -80,7 +81,7 @@ int MailMsgFile::LoadMsgData(MimeNode* data)
 
 int MailMsgFile::LoadInfo()
 {
-	if (mailInfo.IsEmpty()) return LoadMsgData(nullptr);
+	if (mailInfo.IsEmpty()) return LoadMsgData(nullptr, false);
 	else return mfrOk;
 }
 
@@ -89,11 +90,11 @@ int MailMsgFile::LoadMsgInfo(MimeParser& parser)
 	MimeHeader raw_data;
 	int result = parser.GetHdr(MailMsgHeaders_StatList, MailMsgHeaders_StatCount, raw_data, hvtRaw);
 	if (result >= 0) {
-		auto hdr_fld = raw_data.GetField(MailMsgStatus_HeaderName);
+		auto hdr_fld = raw_data.GetField(MailHdrName_MailagerStatus);
 		if (hdr_fld.GetRaw()) {
 			mailStatus = MailMsgStatusCodec::ParseStatusString(hdr_fld.GetRaw(), mstMailager);
 		} else {
-			auto hdr_fld2 = raw_data.GetField(MailMsgStatus_OperaHeaderName);
+			hdr_fld = raw_data.GetField(MailHdrName_OperaStatus);
 			if (hdr_fld.GetRaw()) {
 				mailStatus = MailMsgStatusCodec::ParseStatusString(hdr_fld.GetRaw(), mstOpera);
 			} else {
@@ -101,13 +102,13 @@ int MailMsgFile::LoadMsgInfo(MimeParser& parser)
 			}
 		}
 	}
-	result = parser.GetHdr(MailMsgHeaders_MainList, MailMsgHeaders_MainCount, mailInfo, hvtDecoded);
+	result = parser.GetHdr(MailMsgHeaders_MainList, MailMsgHeaders_MainCount, mailInfo, hvtAuto);
 	return result;
 }
 
-int MailMsgFile::LoadData(MimeNode& data)
+int MailMsgFile::LoadData(MimeNode& data, bool raw_hdr_values)
 {
-	return LoadMsgData(&data);
+	return LoadMsgData(&data, raw_hdr_values);
 }
 
 int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
@@ -115,8 +116,12 @@ int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
 	if (!filePath) { // Trying to obtain file path if not defined yet
 		if (MailMsgGrpId_Empty == grp_id) return mfrError_Initialization;
 		std::swap(grpId, grp_id); // Set new grpId
-		auto evt_prm = static_cast<MailMsgFile_EventData_DataSaving*>(&filePath);
-		if (RaiseEvent(etDataSaving, (void*)evt_prm) < 0) {
+		MailMsgFile_EventData_DataSaving evt_prm;
+		if (filePath) evt_prm = filePath;
+		if (RaiseEvent(etDataSaving, (void*)&evt_prm) >= 0 && !evt_prm.empty()) {
+			if (filePath) free(filePath);
+			filePath = LisStr::StrCopy(evt_prm.c_str());
+		} else {
 			std::swap(grpId, grp_id); // Rollback grpId
 			return mfrError_OperationInterrupted;
 		}
@@ -167,14 +172,20 @@ MailMsgStatus MailMsgFile::GetStatus()
 	return MailMsgStatus_Undefined != mailStatus ? (MailMsgStatus)mailStatus : MailMsgStatus::mmsNone;
 }
 
+bool MailMsgFile::CheckStatusFlags(MailMsgStatus enabled, MailMsgStatus unset) const
+{
+	return (enabled ? (enabled & mailStatus) : true)
+		&& !(unset ? (unset & mailStatus) : false);
+}
+
 int MailMsgFile::UpdateStatusField(MailMsgStatus status, MimeHeader& header, const FILE_PATH_CHAR* file_path)
 {
 	auto status_str = new std::string;
 	MailMsgStatusCodec::ConvertStatusToString(status, *status_str);
-	header.SetField(MailMsgStatus_HeaderName, status_str);
+	header.SetField(MailHdrName_MailagerStatus, status_str);
 
 	if (file_path)
-		return MailMsgFile_Helper::update_field_line(file_path, MailMsgStatus_HeaderName, status_str->c_str());
+		return MailMsgFile_Helper::update_field_line(file_path, MailHdrName_MailagerStatus, status_str->c_str());
 	else
 		return mfrOk;
 }

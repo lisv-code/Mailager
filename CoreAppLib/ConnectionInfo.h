@@ -4,7 +4,7 @@
 namespace Connections
 {
 	enum ProtocolType { cptNone = 0, cptPop3, cptSmtp };
-	enum AuthenticationType { catNone = 0, catUserPswd, catOAuth2 };
+	enum AuthenticationType { catNone = 0, catUserPswd, catPlain, catOAuth2 };
 
 	struct ConnectionInfo
 	{
