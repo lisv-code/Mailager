@@ -7,7 +7,7 @@ namespace RfcDateTime
 	static const int DateTimeFmtCnt = 2;
 	static const char* const DateTimeFmtStr[DateTimeFmtCnt]
 		= { "%a, %d %b %Y %H:%M:%S", "%d %b %Y %H:%M:%S" };
-	// Date and time format according to RFC 822, examples:
+	// Date and time format according to RFC 5322, examples:
 	// Mon, 19 May 1980 08:16:32 +0300
 	// 29 Aug 2022 16:31:02 -0700
 	static const char* const DateTimeTzFmt[DateTimeFmtCnt]

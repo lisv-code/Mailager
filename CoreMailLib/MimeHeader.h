@@ -54,7 +54,7 @@ public:
 	};
 
 	typedef std::unordered_map<std::string, HeaderField,
-		RfcHeaderField::KeyHash, RfcHeaderField::KeyCompare> HeaderFieldContainer;
+		RfcHeaderField::KeyHash, RfcHeaderField::KeyCompare> HeaderFieldContainer; // TODO: consider using unordered_multimap
 	typedef HeaderFieldContainer::const_iterator HeaderFieldIterator;
 private:
 	HeaderFieldContainer data;
@@ -76,4 +76,6 @@ public:
 	const HeaderField& SetField(const char* name, std::string* raw_value);
 	const HeaderField& SetField(const char* name, std::basic_string<TCHAR>* text_value);
 	const HeaderField& SetField(const char* name, std::time_t time_value);
+
+	int DelField(const char* name);
 };

@@ -21,22 +21,23 @@ LogView::LogView(wxWindow* parent) : LogViewUI(parent)
 				std::ios::binary | std::ios::in);
 			std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
 			ifs.close();
-			txtLogData->SetValue(content + "\n");
+			txtLogData->SetValue(content);
+			txtLogData->ShowPosition(txtLogData->GetLastPosition());
 			break;
 		}
 		++idx;
 	}
 
-	Connect(LOG_WRITE_EVENT, wxCommandEventHandler(LogView::LogWriteEventHandler), NULL, this);
+	Bind(LOG_WRITE_EVENT, &LogView::LogWriteEventHandler, this);
 
 	logTarget = logger->AddTarget(new LisLog::LogTargetTextFunc(
-		[this](const char* txt) { LogTargetFunc(txt); },
-		std::min(logger->GetCurrentLogLevel(), LisLog::llInfo)));
+		[this](LisLog::LogTargetBase::EventType type, const char* txt) { LogTargetFunc(txt); },
+		std::min(logger->GetCurrentLogLevel(), LisLog::llInfo), false));
 }
 
 LogView::~LogView()
 {
-	Disconnect(LOG_WRITE_EVENT, wxCommandEventHandler(LogView::LogWriteEventHandler), NULL, this);
+	Unbind(LOG_WRITE_EVENT, &LogView::LogWriteEventHandler, this);
 
 	if (logTarget != nullptr) {
 		logger->DelTarget(logTarget);
@@ -53,5 +54,6 @@ void LogView::LogTargetFunc(const char* txt)
 
 void LogView::LogWriteEventHandler(wxCommandEvent& event)
 {
+	txtLogData->AppendText('\n');
 	txtLogData->AppendText(event.GetString());
 }

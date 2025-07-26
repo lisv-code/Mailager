@@ -164,3 +164,8 @@ const MimeHeader::HeaderField& MimeHeader::SetField(const char* name, std::time_
 	hdr_fld.data.time = time_value;
 	return hdr_fld;
 }
+
+int MimeHeader::DelField(const char* name)
+{
+	return data.erase(name);
+}

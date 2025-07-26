@@ -110,8 +110,8 @@ bool DetailViewModel::GetAttr(const wxDataViewItem& item, unsigned int col, wxDa
 {
 	if (!item.IsOk()) return false;
 
-	auto status = ((DataItem*)item.m_pItem)->get()->GetStatus();
-	if (0 == (MailMsgStatus::mmsIsSeen & status)) {
+	const auto msg_file = ((DataItem*)item.m_pItem)->get();
+	if (!msg_file->CheckStatusFlags(MailMsgStatus::mmsIsSeen)) {
 		attr.SetBold(true);
 		return true;
 	}

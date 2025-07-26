@@ -143,9 +143,11 @@ void MailMsgEditor::LoadMsgBodyData(const MimeNode* msg_node)
 void MailMsgEditor::SaveMsgHdrData(MimeNode& msg_node)
 {
 	msg_node.Header.SetField(MailHdrName_From, new std::basic_string<TCHAR>(chcSender->GetStringSelection()));
-    // TODO: the address list should be composed according to the specification...
-	// ? RfcHeaderFieldCodec.WriteAddresses // RFC 822 - 6. Address Specification, A.1. Addresses (appendix)
+	// field ? Sender
+	// TODO: the address list should be composed according to the specification...
+	// ? RfcHeaderFieldCodec.WriteAddresses // RFC 5322 - 3.4. Address Specification, Appendix A.1. Addressing Examples
 	msg_node.Header.SetField(MailHdrName_To, new std::basic_string<TCHAR>(txtRecipient->GetValue()));
+	// fields ? Cc, Bcc
 	msg_node.Header.SetField(MailHdrName_Subj, new std::basic_string<TCHAR>(txtSubject->GetValue()));
 	msg_node.Header.SetField(MailHdrName_Date, MimeHeaderTimeValueUndefined);
 	// ...
@@ -187,8 +189,8 @@ void MailMsgEditor::toolSaveMessage_OnToolClicked(wxCommandEvent& event)
 
 void MailMsgEditor::toolSendMessage_OnToolClicked(wxCommandEvent& event)
 {
-	// TODO: save the message file
-	mailMsgFile->ChangeStatus(MailMsgStatus::mmsIsOutgoing, MailMsgStatus::mmsIsDraft);
+	// TODO: save the message data if needed
+	mailMsgFile->SetMailToSend();
 	// TODO: close the editor window
 }
 

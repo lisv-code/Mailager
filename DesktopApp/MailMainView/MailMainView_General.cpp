@@ -200,14 +200,14 @@ void MailMainView::mnuMailMsgItemMarkAsRead_OnMenuSelection(wxCommandEvent& even
 {
 	wxDataViewItemArray items;
 	int count = dvMailMsgList->GetSelections(items);
-	if (count > 0) UpdateMailMessageStatusFlag(items, true, MailMsgStatus::mmsIsSeen);
+	if (count > 0) SetMailMessageReadStatus(items, true);
 }
 
 void MailMainView::mnuMailMsgItemMarkUnread_OnMenuSelection(wxCommandEvent& event)
 {
 	wxDataViewItemArray items;
 	int count = dvMailMsgList->GetSelections(items);
-	if (count > 0) UpdateMailMessageStatusFlag(items, false, MailMsgStatus::mmsIsSeen);
+	if (count > 0) SetMailMessageReadStatus(items, false);
 }
 
 void MailMainView::mnuMailMsgItemDelete_OnMenuSelection(wxCommandEvent& event)

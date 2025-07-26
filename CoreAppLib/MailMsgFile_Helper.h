@@ -12,5 +12,7 @@ namespace MailMsgFile_Helper
 
 	int init_input_stream(std::ifstream& stm, const FILE_PATH_CHAR* file_path, bool normalize = false);
 
-	int update_field_line(const FILE_PATH_CHAR* file_path, const char* field_name, const char* field_value);
+	// Warning: multi-line values and multiple fields with the same name are not supported
+	int update_header_fields(const FILE_PATH_CHAR* file_path,
+		const char* field_names[], const char* field_values[], bool set_new_top);
 }

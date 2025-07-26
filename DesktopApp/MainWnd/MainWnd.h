@@ -9,6 +9,7 @@ class MainWnd: public MainWndUI, public IMailMsgViewCtrl
 	virtual void mnuFileExit_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void mnuEditNewMailMessageOnMenuSelection(wxCommandEvent& event) override;
 	virtual void mnuViewToolbar_OnMenuSelection(wxCommandEvent& event) override;
+	virtual void mnuViewStatusBar_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void mnuViewLog_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void mnuToolsAccountsConfig_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void mnuHelpAbout_OnMenuSelection(wxCommandEvent& event) override;
@@ -17,11 +18,16 @@ class MainWnd: public MainWndUI, public IMailMsgViewCtrl
 	virtual void tabCtrlMain_OnAuiNotebookPageChanged(wxAuiNotebookEvent& event) override;
 
 	LisLog::ILogger* logger = LisLog::Logger::GetInstance();
+	LisLog::ILogger::TargetHandle logTarget;
 	wxWindow* wndTabFixed;
 	MailMsgFileMgr mailMsgFileMgr;
 	MailMsgViewMgr mailMsgViewMgr;
 	void UpdateMain_ViewCreated(wxWindow* window, const wxString& title, bool fixed);
 	void CreateMailMainView();
+
+	void LogInit(bool enable);
+	void LogTargetFunc(const char* txt);
+	void LogWriteEventHandler(wxCommandEvent& event);
 
 	// ****** IMailMsgViewCtrl ******
 	virtual void OnViewCreated(wxWindow* wnd, const TCHAR* title) override;

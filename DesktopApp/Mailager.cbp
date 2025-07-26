@@ -77,6 +77,8 @@
 		<Unit filename="../CoreAppLib/ConnectionHelper.cpp" />
 		<Unit filename="../CoreAppLib/ConnectionHelper.h" />
 		<Unit filename="../CoreAppLib/ConnectionInfo.h" />
+		<Unit filename="../CoreAppLib/MailMsgDataHelper.cpp" />
+		<Unit filename="../CoreAppLib/MailMsgDataHelper.h" />
 		<Unit filename="../CoreAppLib/MailMsgFile.cpp" />
 		<Unit filename="../CoreAppLib/MailMsgFile.h" />
 		<Unit filename="../CoreAppLib/MailMsgFileDef.h" />

@@ -21,6 +21,7 @@
 #include <wx/toolbar.h>
 #include <wx/aui/auibook.h>
 #include <wx/sizer.h>
+#include <wx/statusbr.h>
 #include <wx/frame.h>
 
 ///////////////////////////////////////////////////////////////////////////
@@ -43,11 +44,13 @@ class MainWndUI : public wxFrame
 		wxToolBarToolBase* toolEditAction1;
 		wxToolBarToolBase* toolEditAction2;
 		wxAuiNotebook* tabCtrlMain;
+		wxStatusBar* sbarMain;
 
 		// Virtual event handlers, override them in your derived class
 		virtual void mnuFileExit_OnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void mnuEditNewMailMessageOnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void mnuViewToolbar_OnMenuSelection( wxCommandEvent& event ) = 0;
+		virtual void mnuViewStatusBar_OnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void mnuViewLog_OnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void mnuToolsAccountsConfig_OnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void mnuHelpAbout_OnMenuSelection( wxCommandEvent& event ) = 0;

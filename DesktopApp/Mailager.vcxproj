@@ -186,6 +186,7 @@
     <ClInclude Include="..\CoreAppLib\AppDef.h" />
     <ClInclude Include="..\CoreAppLib\ConnectionHelper.h" />
     <ClInclude Include="..\CoreAppLib\ConnectionInfo.h" />
+    <ClInclude Include="..\CoreAppLib\MailMsgDataHelper.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgFileDef.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgTransmitter.h" />
     <ClInclude Include="..\CoreMailLib\MimeHeader.h" />
@@ -252,6 +253,7 @@
     <ClInclude Include="UiHelper.h" />
     <ClInclude Include="MailMainView\MailMainView.h" />
     <ClInclude Include="MailMainView\MailMainViewUI.h" />
+    <ClCompile Include="..\CoreAppLib\MailMsgDataHelper.cpp" />
     <ClCompile Include="..\CoreMailLib\MimeHeaderDef.h" />
   </ItemGroup>
   <ItemGroup>

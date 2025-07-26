@@ -148,7 +148,7 @@ std::shared_ptr<MailMsgFile>& MailMsgFileMgr::CreateMailMsg(GrpId grp_id)
 {
 	auto msg_status = MailMsgStatus::mmsIsDraft;
 	auto draft_it = draftMessages.emplace(draftMessages.end(),
-		std::make_shared<MailMsgFile>(grp_id, nullptr, msg_status));
+		std::make_shared<MailMsgFile>(grp_id, msg_status));
 	auto& result = *draft_it;
 	auto msg_file_evt_handler = GetMailMsgFileEvtHandler(this);
 	result->EventSubscribe(MailMsgFile_EventType::etDataSaving, msg_file_evt_handler);

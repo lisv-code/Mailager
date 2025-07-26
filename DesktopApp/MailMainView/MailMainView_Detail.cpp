@@ -84,15 +84,13 @@ bool MailMainView::IsFilterMatches(const wxString& filter_value, MailMsgFile* ma
 	return false;
 }
 
-void MailMainView::UpdateMailMessageStatusFlag(wxDataViewItemArray& items,
-	bool to_add, MailMsgStatus status_flag)
+void MailMainView::SetMailMessageReadStatus(wxDataViewItemArray& items, bool is_read)
 {
 	wxBeginBusyCursor();
 	for (auto& item : items) {
 		if (item.IsOk()) {
 			auto mail_msg = ((DetailViewModel::DataItem*)item.m_pItem)->get();
-			if (to_add) mail_msg->ChangeStatus(status_flag, MailMsgStatus::mmsNone);
-			else mail_msg->ChangeStatus(MailMsgStatus::mmsNone, status_flag);
+			mail_msg->SetReadStatus(is_read);
 		}
 	}
 	dvMailMsgList->GetModel()->ItemsChanged(items);

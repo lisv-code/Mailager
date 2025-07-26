@@ -303,6 +303,9 @@
     <ClInclude Include="MailMsgFileView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\CoreAppLib\MailMsgDataHelper.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -561,8 +564,11 @@
     <ClCompile Include="..\CoreAppLib\OAuth2Config.cpp">
       <Filter>Source Files\CoreAppLib</Filter>
     </ClCompile>
-    <ClCompile Include="MimeHeaderDef.h">
+    <ClCompile Include="..\CoreMailLib\MimeHeaderDef.h">
       <Filter>Header Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\MailMsgDataHelper.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

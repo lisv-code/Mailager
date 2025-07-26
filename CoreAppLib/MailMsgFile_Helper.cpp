@@ -1,8 +1,9 @@
 #include "MailMsgFile_Helper.h"
 #include <chrono>
+#include <cstring>
 #include <fstream>
 #include <list>
-#include <string>
+#include <vector>
 #include <LisCommon/StrUtils.h>
 #include "../CoreMailLib/MimeMessageDef.h"
 #include "MailMsgFileDef.h"
@@ -19,10 +20,12 @@
 namespace MailMsgFile_Helper_Imp
 {
 	static void read_line(std::istream& ifs, std::string& line);
-	static std::string find_field_line(std::istream& inp_stm, const char* field_name,
-		std::list<std::string>* prev_lines, std::ostream* out_stm);
+	static int find_field_line(std::istream& inp_stm, const std::vector<const char*> field_names,
+		std::list<std::string>& hdr_lines);
 	static void write_field(std::ostream& ofs, const char* field_name, const char* field_value);
+	static void write_field(std::string& str, const char* field_name, const char* field_value);
 	static void move_lines(std::list<std::string>& source, std::ostream& destination, int count);
+	static std::vector<const char*> copy_array(const char* str_arr[]);
 }
 using namespace MailMsgFile_Helper_Imp;
 
@@ -67,47 +70,55 @@ int MailMsgFile_Helper::init_input_stream(std::ifstream& file_data, const FILE_P
 			while (file_data.get(c) && !file_data.eof() && ('\n' != c)) { ++pos; } // Skip first line
 		}
 	}
-	return mfrOk;
+	return file_data.is_open() ? mfrOk : mfrError_FileOperation;
 }
 
-int MailMsgFile_Helper::update_field_line(const FILE_PATH_CHAR* file_path,
-	const char* field_name, const char* field_value)
+int MailMsgFile_Helper::update_header_fields(const FILE_PATH_CHAR* file_path,
+	const char* field_names[], const char* field_values[], bool set_new_top)
 {
-	if (!file_path)
-		return mfrError_Initialization;
+	if (!file_path) return mfrError_Initialization;
+	auto fld_names = copy_array(field_names);
+	auto fld_values = copy_array(field_values);
+	if (fld_names.size() != fld_values.size()) return mfrError_Initialization;
 
-	int result = 0;
 	std::ifstream ifs(file_path, std::ios::in);
-	std::list<std::string> prev_lines;
-	std::string field_line = find_field_line(ifs, field_name, &prev_lines, nullptr); // Searching for the 1st (single) entry
+	if (!ifs.is_open()) return mfrError_FileOperation;
+
+	std::list<std::string> hdr_lines;
+	int fld_idx = -1;
+	while (0 <= (fld_idx = find_field_line(ifs, fld_names, hdr_lines))) { // Find a line that contains any of the field
+		write_field(hdr_lines.back(), fld_names[fld_idx], fld_values[fld_idx]); // Replace the field line found
+		// Remove the field name and value from the search list
+		fld_names.erase(fld_names.begin() + fld_idx);
+		fld_values.erase(fld_values.begin() + fld_idx);
+	}
 
 	std::basic_string<FILE_PATH_CHAR> tmp_file(file_path);
 	tmp_file += FILE_PATH_TEXT(".tmp");
 	std::ofstream ofs(tmp_file, std::ios::binary | std::ios::out | std::ios::trunc);
-	if (!ofs.is_open())
-		return mfrError_FileOperation;
+	if (!ofs.is_open()) return mfrError_FileOperation;
 
-	if (field_line.empty()) { // If not found, insert it to the header top
-		move_lines(prev_lines, ofs, is_opera_mail_file(file_path) ? 1 : 0);
-		write_field(ofs, field_name, field_value);
+	if (!fld_names.empty()) {
+		move_lines(hdr_lines, ofs, set_new_top ? (is_opera_mail_file(file_path) ? 1 : 0) : -1);
+		for (size_t i = 0; i < fld_names.size(); ++i)
+			write_field(ofs, fld_names[i], fld_values[i]);
 	}
-	move_lines(prev_lines, ofs, -1);
-	if (!field_line.empty()) write_field(ofs, field_name, field_value);
+	move_lines(hdr_lines, ofs, -1);
+	ofs << MimeMessageLineEnd; // Add a header end line, because the entire header has already been processed
 
 	std::string line_buf; // Just copy the rest of the lines
 	read_line(ifs, line_buf);
-	while (!line_buf.empty() || !ifs.eof()) {
+	while (!ifs.eof()) {
 		ofs << line_buf << MimeMessageLineEnd;
 		read_line(ifs, line_buf);
 	}
 	ifs.close();
 	ofs.close();
 
-	if (result >= 0) {
-		LisFileSys::FileDelete(file_path);
-		LisFileSys::FileRename(tmp_file.c_str(), file_path);
-	}
-	return result;
+	LisFileSys::FileDelete(file_path);
+	LisFileSys::FileRename(tmp_file.c_str(), file_path);
+
+	return mfrOk;
 }
 
 // ******************************* Internal functions implementation *******************************
@@ -115,7 +126,7 @@ int MailMsgFile_Helper::update_field_line(const FILE_PATH_CHAR* file_path,
 void MailMsgFile_Helper_Imp::read_line(std::istream& ifs, std::string& line)
 {
 	std::getline(ifs, line);
-#ifndef _WINDOWS // non-Windows OS may return '\r' symbol in the end
+#ifndef _WINDOWS // non-Windows OS may return single '\r' symbol in the end
 	if (!line.empty()) { // right trim
 		auto pos = line.find_last_not_of("\r");
 		if (std::string::npos == pos) line.clear();
@@ -124,28 +135,43 @@ void MailMsgFile_Helper_Imp::read_line(std::istream& ifs, std::string& line)
 #endif
 }
 
-std::string MailMsgFile_Helper_Imp::find_field_line(std::istream& inp_stm, const char* field_name,
-	std::list<std::string>* prev_lines, std::ostream* out_stm)
+int MailMsgFile_Helper_Imp::find_field_line(std::istream& inp_stm, const std::vector<const char*> field_names,
+	std::list<std::string>& hdr_lines)
 {
 	std::string cur_line;
 	read_line(inp_stm, cur_line);
-	while (!cur_line.empty() || !inp_stm.eof()) {
-		auto hdr_pos = cur_line.rfind(field_name, 0);
-		if (std::string::npos == hdr_pos) {
-			if (prev_lines) prev_lines->push_back(cur_line);
-			if (out_stm) *out_stm << cur_line << MimeMessageLineEnd;
-		} else {
-			return cur_line;
+	while (!cur_line.empty() && !inp_stm.eof()) {
+		int name_idx = 0;
+		bool is_matched = false;
+		while (name_idx < field_names.size()) {
+			auto fld_str_pos = cur_line.rfind(field_names[name_idx], 0);
+			if ((std::string::npos != fld_str_pos)
+				&& (':' == cur_line[fld_str_pos + std::strlen(field_names[name_idx])]))
+			{
+				is_matched = true;
+				break;
+			}
+			++name_idx;
 		}
+		hdr_lines.push_back(cur_line);
+		if (is_matched) return name_idx;
 		read_line(inp_stm, cur_line);
 	}
-	return {};
+	return -1;
 }
 
 void MailMsgFile_Helper_Imp::write_field(std::ostream& out_stm,
 	const char* field_name, const char* field_value)
 {
 	out_stm << field_name << ": " << field_value << MimeMessageLineEnd;
+}
+
+void MailMsgFile_Helper_Imp::write_field(std::string& str,
+	const char* field_name, const char* field_value)
+{
+	str = field_name;
+	str += ": ";
+	str += field_value;
 }
 
 void MailMsgFile_Helper_Imp::move_lines(std::list<std::string>& source, std::ostream& destination, int count)
@@ -160,4 +186,17 @@ void MailMsgFile_Helper_Imp::move_lines(std::list<std::string>& source, std::ost
 			if (0 == line_cnt) break;
 		}
 	if (count < 0) source.clear();
+}
+
+std::vector<const char*> MailMsgFile_Helper_Imp::copy_array(const char* str_arr[])
+{
+	std::vector<const char*> result;
+	if (str_arr) {
+		size_t i = 0;
+		while (str_arr[i]) {
+			result.push_back(str_arr[i]);
+			++i;
+		}
+	}
+	return result;
 }

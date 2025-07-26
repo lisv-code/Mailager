@@ -58,7 +58,7 @@ private:
 	void CreateDetailViewModel(const wxDataViewItem* master_item);
 	bool ApplyMailMsgFilter(const wxString& value);
 	static bool IsFilterMatches(const wxString& filter_value, MailMsgFile* mail_msg, bool case_sensitive);
-	void UpdateMailMessageStatusFlag(wxDataViewItemArray& items, bool to_add, MailMsgStatus status_flag);
+	void SetMailMessageReadStatus(wxDataViewItemArray& items, bool is_read);
 	void DeleteMailMessages(wxDataViewItemArray& items);
 	void OpenMailMsgItem(const wxDataViewItem* mail_msg_item);
 

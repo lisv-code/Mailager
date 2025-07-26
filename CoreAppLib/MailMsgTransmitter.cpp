@@ -11,6 +11,7 @@
 using namespace LisLog;
 namespace MailMsgTransmitter_Imp
 {
+	static void prepare_msg_to_send(MimeNode& mail_msg);
 	static int send_mail_msg(SmtpClient& mail_client, const char* mailbox, MimeNode& mail_msg);
 }
 using namespace MailMsgTransmitter_Imp;
@@ -79,9 +80,19 @@ int MailMsgTransmitter::Transmit(const char* auth_data, const char* mailbox, Mai
 	return result;
 }
 
+void MailMsgTransmitter_Imp::prepare_msg_to_send(MimeNode& mail_msg)
+{
+	// Remove header fields intended for internal use
+	mail_msg.Header.DelField(MailHdrName_MailagerStatus);
+	// Set the origination date if not already set
+	if (!mail_msg.Header.GetField(MailHdrName_Date).GetRaw())
+		mail_msg.Header.SetField(MailHdrName_Date, MimeHeaderTimeValueUndefined);
+}
+
 int MailMsgTransmitter_Imp::send_mail_msg(SmtpClient& mail_client, const char* mailbox, MimeNode& mail_msg)
 {
 	bool result = true;
+	prepare_msg_to_send(mail_msg);
 	// Sender
 	result = result && mail_client.MailFrom(mailbox);
 	// Recipients
@@ -96,7 +107,6 @@ int MailMsgTransmitter_Imp::send_mail_msg(SmtpClient& mail_client, const char* m
 					result = result && mail_client.RcptTo(mbox.addr.c_str());
 	}	}	}	}
 	// Data
-	// TODO: remove internal headers (X-Mailager-), update the message sending date, ...
 	MimeParser parser;
 	parser.SetData(mail_msg);
 	std::stringstream stm;

@@ -34,6 +34,10 @@ MainWndUI::MainWndUI( wxWindow* parent, wxWindowID id, const wxString& title, co
 	mnuViewToolbar = new wxMenuItem( mnuView, wxID_ANY, wxString( wxT("Toolbar") ) , wxEmptyString, wxITEM_NORMAL );
 	mnuView->Append( mnuViewToolbar );
 
+	wxMenuItem* mnuViewStatusBar;
+	mnuViewStatusBar = new wxMenuItem( mnuView, wxID_ANY, wxString( wxT("Status bar") ) , wxEmptyString, wxITEM_NORMAL );
+	mnuView->Append( mnuViewStatusBar );
+
 	wxMenuItem* mnuViewLog;
 	mnuViewLog = new wxMenuItem( mnuView, wxID_ANY, wxString( wxT("Log") ) , wxEmptyString, wxITEM_NORMAL );
 	mnuView->Append( mnuViewLog );
@@ -74,6 +78,7 @@ MainWndUI::MainWndUI( wxWindow* parent, wxWindowID id, const wxString& title, co
 
 	this->SetSizer( bSizer1 );
 	this->Layout();
+	sbarMain = this->CreateStatusBar( 1, wxSTB_DEFAULT_STYLE, wxID_ANY );
 
 	this->Centre( wxBOTH );
 
@@ -81,6 +86,7 @@ MainWndUI::MainWndUI( wxWindow* parent, wxWindowID id, const wxString& title, co
 	mnuFile->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuFileExit_OnMenuSelection ), this, mnuFileExit->GetId());
 	mnuEdit->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuEditNewMailMessageOnMenuSelection ), this, mnuEditNewMailMessage->GetId());
 	mnuView->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuViewToolbar_OnMenuSelection ), this, mnuViewToolbar->GetId());
+	mnuView->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuViewStatusBar_OnMenuSelection ), this, mnuViewStatusBar->GetId());
 	mnuView->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuViewLog_OnMenuSelection ), this, mnuViewLog->GetId());
 	mnuTools->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuToolsAccountsConfig_OnMenuSelection ), this, mnuToolsAccountsConfig->GetId());
 	mnuHelp->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuHelpAbout_OnMenuSelection ), this, mnuHelpAbout->GetId());

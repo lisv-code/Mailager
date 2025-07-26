@@ -49,29 +49,25 @@ namespace RfcHeaderField
 	// std values: 7bit, 8bit, binary, quoted-printable, base64, ietf-token / x-token
 	// ... (looks like no need to be implemented here)
 
-	// RFC 822 - Standard for ARPA Internet Text Messages (6. Address Specification)
+	// RFC 5322 - Internet Message Format (3.4. Address Specification)
 	// addr-spec = local-part "@" domain
-	typedef std::string AddrSpec;
-	// route-addr = "<" [route] addr-spec ">" (the route is quite optional)
-	typedef std::string MailAddr; // includes AddrSpec (could be named RouteAddr)
-	// mailbox = addr-spec         (simple address)
-	//         | phrase route-addr (name & addr-spec)
+	typedef std::string MailAddr; // includes addr-spec, could be with angle brackets ("<", ">")
+	// mailbox = addr-spec | [display-name] angle-addr (simple address or with name plus angles)
 	struct Mailbox {
 		std::string name;
 		MailAddr addr;
 	};
-	// address = mailbox (one addressee)
-	//         | group   (named list)
-	// group = phrase ":" [#mailbox] ";" (the mailbox list is optional)
+	// address = mailbox | group (one addressee or named list)
+	// group = display-name ":" [mailbox-list] ";" (the mailbox list is optional)
 	struct Address {
 		std::string group;
 		std::vector<Mailbox> mailboxes;
 	};
 	typedef std::vector<Address> AddressList;
 
-	// RFC 822 - Standard for ARPA Internet Text Messages (4. Message Specification)
-	// msg-id = "<" addr-spec ">"
-	typedef AddrSpec MsgId;
+	// RFC 5322 - Internet Message Format (3.6.4. Identification Fields)
+	// msg-id = "<" id-left "@" id-right ">" (alike the addr-spec enclosed in angle brackets)
+	typedef std::string MsgId;
 }
 
 class RfcHeaderFieldCodec

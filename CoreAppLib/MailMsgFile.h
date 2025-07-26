@@ -7,8 +7,6 @@
 #include "MailMsgStatus.h"
 #include "../CoreMailLib/MimeParser.h"
 
-#define MailMsgStatus_Undefined 0xFFFF
-
 class MailMsgFile; // forward declaration
 
 enum MailMsgFile_EventType
@@ -23,7 +21,7 @@ typedef std::basic_string<FILE_PATH_CHAR> MailMsgFile_EventData_DataSaving; // c
 typedef EventDispatcherBase<MailMsgFile, MailMsgFile_EventType, void*> MailMsgFile_EventDispatcher;
 
 /// <summary>
-/// Mail message basic metadata container and data access
+/// Mail message basic metadata container, data access and mail operations
 /// </summary>
 class MailMsgFile : public MailMsgFile_EventDispatcher
 {
@@ -35,11 +33,11 @@ class MailMsgFile : public MailMsgFile_EventDispatcher
 	void Clear();
 	int LoadMsgData(MimeNode* data, bool raw_hdr_values);
 	int LoadMsgInfo(MimeParser& parser);
-	int SetStatus(MailMsgStatus value);
-	static int UpdateStatusField(MailMsgStatus status, MimeHeader& header, const FILE_PATH_CHAR* file_path);
+	MailMsgStatus _GetStatus() const;
+	int ChangeStatus(MailMsgStatus added, MailMsgStatus removed);
 public:
-	MailMsgFile(int grp_id,
-		const FILE_PATH_CHAR* file_path = nullptr, MailMsgStatus msg_status = (MailMsgStatus)MailMsgStatus_Undefined);
+	MailMsgFile(int grp_id, const FILE_PATH_CHAR* file_path);
+	MailMsgFile(int grp_id, MailMsgStatus msg_status);
 	MailMsgFile(const MailMsgFile& src) noexcept;
 	MailMsgFile(MailMsgFile&& src) noexcept;
 	~MailMsgFile();
@@ -47,13 +45,13 @@ public:
 	const int GetGrpId() const;
 	const FILE_PATH_CHAR* GetFilePath() const;
 	int LoadInfo(); // Load meta-data cache if not loaded yet
+	const MimeHeader& GetInfo();
+	MailMsgStatus GetStatus();
+	bool CheckStatusFlags(MailMsgStatus enabled, MailMsgStatus unset = MailMsgStatus::mmsNone) const;
+
 	int LoadData(MimeNode& data, bool raw_hdr_values);
 	int SaveData(const MimeNode& data, int grp_id = MailMsgGrpId_Empty);
 	int DeleteFile();
-
-	MailMsgStatus GetStatus();
-	bool CheckStatusFlags(MailMsgStatus enabled, MailMsgStatus unset) const;
-	int ChangeStatus(MailMsgStatus added, MailMsgStatus removed);
-
-	const MimeHeader& GetInfo();
+	int SetReadStatus(bool is_read);
+	int SetMailToSend();
 };

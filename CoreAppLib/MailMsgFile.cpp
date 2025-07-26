@@ -3,10 +3,12 @@
 #include "../CoreMailLib/MimeHeaderDef.h"
 #include "../CoreMailLib/MimeMessageDef.h"
 #include "../CoreMailLib/MimeParser.h"
+#include "MailMsgDataHelper.h"
 #include "MailMsgFileDef.h"
 #include "MailMsgFile_Helper.h"
 
 #define ErrorCode_Base_MimeParser -10
+#define MailMsgStatus_Undefined 0xFFFF
 
 namespace MailMsgFile_Imp
 {
@@ -20,18 +22,24 @@ namespace MailMsgFile_Imp
 		MailHdrName_Date, MailHdrName_From, MailHdrName_To, MailHdrName_Subj
 		//, MailHdrName_MessageId, MailHdrName_ContentType
 	};
+
+	static const char* header_update_status(MimeHeader& header, const MailMsgStatus status);
+	static const MimeHeader::HeaderField& header_update_date(MimeHeader& header, const std::time_t* date_time);
 }
 using namespace MailMsgFile_Imp;
 
-MailMsgFile::MailMsgFile(int grp_id, const FILE_PATH_CHAR* file_path, MailMsgStatus msg_status)
+MailMsgFile::MailMsgFile(int grp_id, const FILE_PATH_CHAR* file_path)
 	: MailMsgFile_EventDispatcher(),
-	grpId(grp_id), mailStatus(msg_status)
+	grpId(grp_id), mailStatus(MailMsgStatus_Undefined)
 {
 	if (file_path) filePath = LisStr::StrCopy(file_path);
 	else filePath = nullptr;
-
-	if (MailMsgStatus_Undefined != mailStatus) UpdateStatusField((MailMsgStatus)mailStatus, mailInfo, filePath);
 }
+
+MailMsgFile::MailMsgFile(int grp_id, MailMsgStatus msg_status)
+	: MailMsgFile_EventDispatcher(),
+	grpId(grp_id), filePath(nullptr), mailStatus(msg_status)
+{ }
 
 MailMsgFile::MailMsgFile(const MailMsgFile& src) noexcept
 	: MailMsgFile_EventDispatcher(src),
@@ -85,6 +93,12 @@ int MailMsgFile::LoadInfo()
 	else return mfrOk;
 }
 
+const MimeHeader& MailMsgFile::GetInfo()
+{
+	LoadInfo();
+	return mailInfo;
+}
+
 int MailMsgFile::LoadMsgInfo(MimeParser& parser)
 {
 	MimeHeader raw_data;
@@ -106,6 +120,41 @@ int MailMsgFile::LoadMsgInfo(MimeParser& parser)
 	return result;
 }
 
+MailMsgStatus MailMsgFile::_GetStatus() const
+{
+	return MailMsgStatus_Undefined != mailStatus ? (MailMsgStatus)mailStatus : MailMsgStatus::mmsNone;
+}
+
+int MailMsgFile::ChangeStatus(MailMsgStatus added, MailMsgStatus removed)
+{
+	auto old_status = _GetStatus();
+	auto new_status = (MailMsgStatus)((old_status | added) & ~removed);
+	if (old_status == new_status) return mfrOk; // No actual changes
+
+	if (RaiseEvent(etStatusChanging, (void*)new_status) < 0) return mfrError_OperationInterrupted;
+	int result = mfrOk;
+	const char* status_str = header_update_status(mailInfo, new_status);
+	mailStatus = new_status;
+	if (filePath) {
+		const char *fld_names[] = { MailHdrName_MailagerStatus, 0 }, *fld_values[] = { status_str, 0 };
+		result = MailMsgFile_Helper::update_header_fields(filePath, fld_names, fld_values, true);
+	}
+	if (result >= 0)
+		RaiseEvent(etStatusChanged, (void*)old_status);
+	return result;
+}
+
+MailMsgStatus MailMsgFile::GetStatus()
+{
+	LoadInfo();
+	return _GetStatus();
+}
+
+bool MailMsgFile::CheckStatusFlags(MailMsgStatus enabled, MailMsgStatus unset) const
+{
+	return (enabled ? (enabled & _GetStatus()) : true)
+		&& !(unset ? (unset & _GetStatus()) : false);
+}
 int MailMsgFile::LoadData(MimeNode& data, bool raw_hdr_values)
 {
 	return LoadMsgData(&data, raw_hdr_values);
@@ -133,9 +182,9 @@ int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
 	if (MailMsgFile_Helper::is_opera_mail_file(filePath)) file << "From ..." << MimeMessageLineEnd;
 	MimeParser parser;
 	parser.SetData(data);
-	// Updating message metadata (status value) to save
+	// Updating message required metadata before file save
 	MimeHeader header;
-	UpdateStatusField((MailMsgStatus)mailStatus, header, nullptr);
+	header_update_status(header, _GetStatus());
 	parser.AddHdr(header, true);
 	// Saving data and closing stream
 	parser.Save(file);
@@ -155,62 +204,54 @@ int MailMsgFile::DeleteFile()
 {
 	if (!filePath) return mfrError_Initialization;
 	int result = mfrError_FileOperation;
-	if (MailMsgStatus::mmsIsDeleted & mailStatus) {
+	if (CheckStatusFlags(MailMsgStatus::mmsIsDeleted)) {
 		if (LisFileSys::FileDelete(filePath)) {
 			result = mfrOk;
 			RaiseEvent(etFileDeleted, nullptr);
 		}
 	} else {
-		result = SetStatus((MailMsgStatus)(mailStatus | MailMsgStatus::mmsIsDeleted));
+		result = ChangeStatus(MailMsgStatus::mmsIsDeleted, MailMsgStatus::mmsNone);
 	}
 	return result;
 }
 
-MailMsgStatus MailMsgFile::GetStatus()
+int MailMsgFile::SetReadStatus(bool is_read)
 {
-	LoadInfo();
-	return MailMsgStatus_Undefined != mailStatus ? (MailMsgStatus)mailStatus : MailMsgStatus::mmsNone;
+	auto status_add = is_read ? MailMsgStatus::mmsIsSeen : MailMsgStatus::mmsNone;
+	auto status_del = !is_read ? MailMsgStatus::mmsIsSeen : MailMsgStatus::mmsNone;
+	return ChangeStatus(status_add, status_del);
 }
 
-bool MailMsgFile::CheckStatusFlags(MailMsgStatus enabled, MailMsgStatus unset) const
+int MailMsgFile::SetMailToSend()
 {
-	return (enabled ? (enabled & mailStatus) : true)
-		&& !(unset ? (unset & mailStatus) : false);
-}
+	auto date_fld = header_update_date(mailInfo, nullptr); // Update the origination "Date" field value
+	std::string date_str;
+	date_fld.GetRawStr(date_str);
 
-int MailMsgFile::UpdateStatusField(MailMsgStatus status, MimeHeader& header, const FILE_PATH_CHAR* file_path)
-{
-	auto status_str = new std::string;
-	MailMsgStatusCodec::ConvertStatusToString(status, *status_str);
-	header.SetField(MailHdrName_MailagerStatus, status_str);
+	std::string msg_id_str = MailMsgDataHelper::generate_message_id();
 
-	if (file_path)
-		return MailMsgFile_Helper::update_field_line(file_path, MailHdrName_MailagerStatus, status_str->c_str());
-	else
-		return mfrOk;
-}
+	const char* fld_names[] = { MailHdrName_Date, MailHdrName_MessageId, 0 };
+	const char* fld_values[] = { date_str.c_str(), msg_id_str.c_str(), 0};
+	int result = MailMsgFile_Helper::update_header_fields(filePath, fld_names, fld_values, false);
 
-int MailMsgFile::SetStatus(MailMsgStatus value)
-{
-	if (value == mailStatus) return mfrOk; // No actual changes
-	if (RaiseEvent(etStatusChanging, (void*)value) < 0) return mfrError_OperationInterrupted;
-	int result = mfrOk;
-	auto prev = mailStatus;
-	mailStatus = value;
-	UpdateStatusField((MailMsgStatus)mailStatus, mailInfo, filePath);
-	RaiseEvent(etStatusChanged, (void*)prev);
+	if (result)
+		result = ChangeStatus(MailMsgStatus::mmsIsOutgoing, MailMsgStatus::mmsIsDraft);
+
 	return result;
 }
 
-int MailMsgFile::ChangeStatus(MailMsgStatus added, MailMsgStatus removed)
+// *********************************** MailMsgFile_Imp functions ***********************************
+
+static const char* MailMsgFile_Imp::header_update_status(
+	MimeHeader& header, const MailMsgStatus status)
 {
-	auto new_status = mailStatus | added;
-	new_status = new_status & ~removed;
-	return SetStatus((MailMsgStatus)new_status);
+	auto status_str = new std::string;
+	MailMsgStatusCodec::ConvertStatusToString(status, *status_str);
+	return header.SetField(MailHdrName_MailagerStatus, status_str).GetRaw();
 }
 
-const MimeHeader& MailMsgFile::GetInfo()
+static const MimeHeader::HeaderField& MailMsgFile_Imp::header_update_date(
+	MimeHeader& header, const std::time_t* date_time)
 {
-	LoadInfo();
-	return mailInfo;
+	return header.SetField(MailHdrName_Date, date_time ? *date_time : MimeHeaderTimeValueUndefined);
 }

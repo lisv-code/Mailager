@@ -10,6 +10,9 @@
 
 #define Res_AppMainIcon "IcoAppMain"
 #define Log_Scope "DspMain"
+#define SBar_FldIdx_TxtLog 0
+
+wxDEFINE_EVENT(LOG_WRITE_EVENT, wxCommandEvent);
 
 MainWnd::MainWnd(wxWindow* parent) : MainWndUI(parent)
 {
@@ -28,6 +31,8 @@ MainWnd::MainWnd(wxWindow* parent) : MainWndUI(parent)
 
 	CreateMailMainView();
 
+	LogInit(true);
+
 	auto data = ResMgr::GetVersionInfo();
 	logger->LogFmt(LisLog::llInfo, Log_Scope " application started %s.",
 		(char*)LisStr::CStrConvert(data.Version));
@@ -39,6 +44,7 @@ MainWnd::MainWnd(wxWindow* parent) : MainWndUI(parent)
 MainWnd::~MainWnd()
 {
 	// tabCtrlMain->DeleteAllPages(); // Views are freed before the MailMsgFile collection
+	LogInit(false);
 }
 
 void MainWnd::UpdateMain_ViewCreated(wxWindow* window, const wxString& title, bool fixed)
@@ -65,6 +71,13 @@ void MainWnd::mnuViewToolbar_OnMenuSelection(wxCommandEvent& event)
 {
 	if (tbarMain->IsShown()) tbarMain->Hide(); else { tbarMain->Show(); tbarMain->Realize(); }
 	this->Layout();
+}
+
+void MainWnd::mnuViewStatusBar_OnMenuSelection(wxCommandEvent& event)
+{
+	if (sbarMain->IsShown()) { sbarMain->Hide(); LogInit(false); }
+	else { sbarMain->Show(); LogInit(true); }
+	this->SendSizeEvent();
 }
 
 void MainWnd::mnuViewLog_OnMenuSelection(wxCommandEvent& event)
@@ -111,6 +124,35 @@ void MainWnd::tabCtrlMain_OnAuiNotebookPageChanged(wxAuiNotebookEvent& event)
 	if (tab_ctrl_0 != tab_ctrl_x) {
 		tab_ctrl_0->SetFlags(tab_ctrl_0->GetFlags() | wxAUI_NB_CLOSE_ON_ACTIVE_TAB);
 	}
+}
+
+void MainWnd::LogInit(bool enable)
+{
+	if (enable) {
+		sbarMain->SetStatusText("");
+		Bind(LOG_WRITE_EVENT, &MainWnd::LogWriteEventHandler, this);
+		logTarget = logger->AddTarget(new LisLog::LogTargetTextFunc(
+			[this](LisLog::LogTargetBase::EventType type, const char* txt) { LogTargetFunc(txt); },
+			LisLog::llInfo, false));
+	} else {
+		Unbind(LOG_WRITE_EVENT, &MainWnd::LogWriteEventHandler, this);
+		if (logTarget != nullptr) {
+			logger->DelTarget(logTarget);
+			logTarget = nullptr;
+		}
+	}
+}
+
+void MainWnd::LogTargetFunc(const char* txt)
+{
+	auto evt = new wxCommandEvent(LOG_WRITE_EVENT);
+	evt->SetString(txt);
+	wxQueueEvent(this, evt);
+}
+
+void MainWnd::LogWriteEventHandler(wxCommandEvent& event)
+{
+	sbarMain->SetStatusText(event.GetString(), SBar_FldIdx_TxtLog);
 }
 
 #include <wx/aboutdlg.h>
