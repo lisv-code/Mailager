@@ -2,28 +2,19 @@
 #include <algorithm>
 #include <future>
 #include <utility>
+#include "../CoreAppLib/AppResCodes.h"
 #include "../CoreAppLib/AccountCfg.h"
 #include "../CoreAppLib/MailMsgReceiver.h"
 #include "../CoreAppLib/MailMsgStore.h"
 #include "../CoreAppLib/MailMsgTransmitter.h"
 #include "AppCfg.h"
 
-#define Log_Scope "MsgFileMgr"
+#define Log_Scope_Gen "MsgMgr"
+#define Log_Scope_Rcv "MsgMgr.Rcv"
+#define Log_Scope_Snd "MsgMgr.Snd"
 
 namespace MailMsgFileMgr_Imp
 {
-	const int ThreadRetCode_Interrupted = -1023;
-	const int ThreadRetCode_Failure = -1024;
-
-	const int Result_Ok = 0;
-	const int Result_NewItemCreated = 1;
-	const int Result_NoDataToProcess = 2;
-
-	const int Err_MailGrpNotFound = -1;
-	const int Err_EventParamType = -2;
-	const int Err_EventParamData = -3;
-	const int Err_TaskStartFailed = -4;
-
 	static bool is_mail_msg_to_send(const MailMsgFile* mail_msg);
 	static bool is_mail_msg_status_needs_monitoring(const MailMsgFile* mail_msg);
 }
@@ -55,7 +46,7 @@ int MailMsgFileMgr::InitGroup(GrpId grp_id, const AccountSettings& account)
 	if (!grp_item) {
 		auto item = mailGroups.emplace(grp_id, new GrpDataItem());
 		grp_item = (*item.first).second;
-		result = Result_NewItemCreated;
+		result = ResCode_Created;
 	}
 	grp_item->MailAcc = account;
 	return result;
@@ -63,10 +54,12 @@ int MailMsgFileMgr::InitGroup(GrpId grp_id, const AccountSettings& account)
 
 MailMsgFileMgr::GrpProcStatus MailMsgFileMgr::GetProcStatus(GrpId grp_id)
 {
-	bool is_processing =
-		(taskMgr.GetTaskStatus(GetGrpTaskProcId(grp_id, false)) == LisThread::TaskProcStatus::tpsProcessing)
-		|| (taskMgr.GetTaskStatus(GetGrpTaskProcId(grp_id, true)) == LisThread::TaskProcStatus::tpsProcessing);
-	return is_processing ? GrpProcStatus::gpsProcessing : GrpProcStatus::gpsNone;
+	auto result = GrpProcStatus::gpsNone;
+	if (taskMgr.GetTaskStatus(GetGrpTaskProcId(grp_id, true)) == LisThread::TaskProcStatus::tpsProcessing)
+		result = (GrpProcStatus)(result | GrpProcStatus::gpsProcReceiving);
+	if (taskMgr.GetTaskStatus(GetGrpTaskProcId(grp_id, false)) == LisThread::TaskProcStatus::tpsProcessing)
+		result = (GrpProcStatus)(result | GrpProcStatus::gpsProcSending);
+	return result;
 }
 
 bool MailMsgFileMgr::GetIter(GrpId grp_id, FilesIterator& begin, FilesIterator& end)
@@ -83,7 +76,7 @@ bool MailMsgFileMgr::GetIter(GrpId grp_id, FilesIterator& begin, FilesIterator& 
 int MailMsgFileMgr::LoadList(GrpId grp_id)
 {
 	auto grp_data = GetGrpData(grp_id);
-	if (!grp_data) return Err_MailGrpNotFound;
+	if (!grp_data) return Error_Gen_ItemNotFound;
 	auto store_path = MailMsgStore::GetStoreDirPath(AppCfg.Get().AppDataDir.c_str(), grp_data->MailAcc.Directory.c_str());
 	MailMsgStore mail_store;
 	int res_code = mail_store.SetLocation(store_path.c_str(), grp_id);
@@ -95,24 +88,30 @@ int MailMsgFileMgr::LoadList(GrpId grp_id)
 				std::make_shared<MailMsgFile>(std::move(file))); // TODO: multithreading warning - collection modification
 			AfterMailMsgFileAdded(&(*file_grp_it), this, false);
 		}
-		logger->LogFmt(llInfo, Log_Scope " grp#%i Loaded mail message files: %i.",
+		logger->LogFmt(llInfo, Log_Scope_Gen " grp#%i Loaded mail message files: %i.",
 			grp_id, files.size());
 	} else
-		logger->LogFmt(llError, Log_Scope " grp#%i Failed to load mail message files: %i.",
+		logger->LogFmt(llError, Log_Scope_Gen " grp#%i Failed to load mail message files: %i.",
 			grp_id, res_code);
 	return res_code;
 }
 
-bool MailMsgFileMgr::StopProcessing(GrpId grp_id)
+bool MailMsgFileMgr::StopMailRecv(GrpId grp_id)
 {
-	return taskMgr.StopTask(GetGrpTaskProcId(grp_id, true)) && taskMgr.StopTask(GetGrpTaskProcId(grp_id, false));
+	return taskMgr.StopTask(GetGrpTaskProcId(grp_id, true));
+}
+
+bool MailMsgFileMgr::StopMailSend(GrpId grp_id)
+{
+	return taskMgr.StopTask(GetGrpTaskProcId(grp_id, false));
 }
 
 bool MailMsgFileMgr::RemoveGroup(GrpId grp_id)
 {
 	auto grp_data = GetGrpData(grp_id);
 	if (grp_data) {
-		StopProcessing(grp_id);
+		StopMailSend(grp_id);
+		StopMailRecv(grp_id);
 		FreeGrpData(grp_data);
 		mailGroups.erase(grp_id);
 		return true;
@@ -123,25 +122,35 @@ bool MailMsgFileMgr::RemoveGroup(GrpId grp_id)
 int MailMsgFileMgr::StartMailRecv(GrpId grp_id)
 {
 	auto grp_data = GetGrpData(grp_id);
-	if (!grp_data) return Err_MailGrpNotFound;
+	if (!grp_data) return Error_Gen_ItemNotFound;
 	auto proc = std::bind(&MailMsgFileMgr::MailRecvProc, std::placeholders::_1, std::placeholders::_2);
 	auto data = new MailSyncProcPrm{ this, grp_id };
-	auto result = taskMgr.StartTask(GetGrpTaskProcId(grp_id, true), proc, data);
-	if (result) logger->LogFmt(llInfo, Log_Scope " acc#%i Mail recv started...", grp_id);
-	else logger->LogFmt(llError, Log_Scope " acc#%i Failed to start mail recv.", grp_id);
-	return result != false ? Result_Ok : Err_TaskStartFailed;
+	auto fin_callback = [grp_id, this](LisThread::TaskProcResult proc_result) {
+		MailMsgFileMgr_EventData_SyncFinish sync_event_data(grp_id, proc_result);
+		this->RaiseEvent(etRecvFinished, &sync_event_data);
+		logger->LogFmt(llInfo, Log_Scope_Gen " acc#%i Mail recv finished, result: %i.", grp_id, proc_result);
+	};
+	logger->LogFmt(llInfo, Log_Scope_Gen " acc#%i Mail recv start...", grp_id);
+	bool result = taskMgr.StartTask(GetGrpTaskProcId(grp_id, true), proc, data, fin_callback);
+	if (!result) logger->LogFmt(llError, Log_Scope_Gen " acc#%i Failed to start mail recv.", grp_id);
+	return result != false ? ResCode_Ok : Error_Gen_Undefined;
 }
 
 int MailMsgFileMgr::StartMailSend(GrpId grp_id)
 {
 	auto grp_data = GetGrpData(grp_id);
-	if (!grp_data) return Err_MailGrpNotFound;
+	if (!grp_data) return Error_Gen_ItemNotFound;
 	auto proc = std::bind(&MailMsgFileMgr::MailSendProc, std::placeholders::_1, std::placeholders::_2);
 	auto data = new MailSyncProcPrm{ this, grp_id };
-	auto result = taskMgr.StartTask(GetGrpTaskProcId(grp_id, false), proc, data);
-	if (result) logger->LogFmt(llInfo, Log_Scope " acc#%i Mail send started...", grp_id);
-	else logger->LogFmt(llError, Log_Scope " acc#%i Failed to start mail send.", grp_id);
-	return result != false ? Result_Ok : Err_TaskStartFailed;
+	auto fin_callback = [grp_id, this](LisThread::TaskProcResult proc_result) {
+		MailMsgFileMgr_EventData_SyncFinish sync_event_data(grp_id, proc_result);
+		this->RaiseEvent(etSendFinished, &sync_event_data);
+		logger->LogFmt(llInfo, Log_Scope_Gen " acc#%i Mail send finished, result: %i.", grp_id, proc_result);
+	};
+	logger->LogFmt(llInfo, Log_Scope_Gen " acc#%i Mail send start...", grp_id);
+	bool result = taskMgr.StartTask(GetGrpTaskProcId(grp_id, false), proc, data, fin_callback);
+	if (!result) logger->LogFmt(llError, Log_Scope_Gen " acc#%i Failed to start mail send.", grp_id);
+	return result != false ? ResCode_Ok : Error_Gen_Undefined;
 }
 
 std::shared_ptr<MailMsgFile>& MailMsgFileMgr::CreateMailMsg(GrpId grp_id)
@@ -158,7 +167,7 @@ std::shared_ptr<MailMsgFile>& MailMsgFileMgr::CreateMailMsg(GrpId grp_id)
 
 int MailMsgFileMgr::MailMsgFile_EventHandler(const MailMsgFile* mail_msg, const MailMsgFile::EventInfo& evt_info)
 {
-	int result = Result_Ok;
+	int result = ResCode_Ok;
 	if (MailMsgFile_EventType::etFileDeleted == evt_info.type) {
 		// Remove file from the group list
 		auto grp_data = GetGrpData(mail_msg->GetGrpId());
@@ -172,9 +181,9 @@ int MailMsgFileMgr::MailMsgFile_EventHandler(const MailMsgFile* mail_msg, const 
 		std::basic_string<FILE_PATH_CHAR> *evt_prm = static_cast<MailMsgFile_EventData_DataSaving*>(evt_info.data);
 		if (evt_prm) {
 			auto acc = AccCfg.FindAccount(mail_msg->GetGrpId());
-			if (!acc) return Err_EventParamData;
-			*evt_prm = MailMsgStore::GenerateFilePath(AppCfg.Get().AppDataDir.c_str(), acc->Directory.c_str());
-		} else result = Err_EventParamType;
+			if (acc) *evt_prm = MailMsgStore::GenerateFilePath(AppCfg.Get().AppDataDir.c_str(), acc->Directory.c_str());
+			else result = Error_Gen_ItemNotFound; // Event parameter data is probably incorrect
+		} else result = Error_Gen_Undefined;
 	} else if (MailMsgFile_EventType::etDataSaved == evt_info.type) {
 		// Move file from draft list to group
 		auto draft_it = std::find_if(draftMessages.begin(), draftMessages.end(),
@@ -190,8 +199,8 @@ int MailMsgFileMgr::MailMsgFile_EventHandler(const MailMsgFile* mail_msg, const 
 			// This can happen if the file has been handled already and moved to some group
 		}
 	} else if (MailMsgFile_EventType::etStatusChanged == evt_info.type) {
-		if (is_mail_msg_to_send(mail_msg))
-		{
+		// Check if message is ready to be sent and enqueue it
+		if (is_mail_msg_to_send(mail_msg)) {
 			StartMailSend(mail_msg->GetGrpId());
 		}
 	}
@@ -233,59 +242,54 @@ LisThread::TaskProcResult MailMsgFileMgr::MailRecvProc(
 	delete prm;
 
 	auto mail_grp = mgr->GetGrpData(grp_id);
-	if (!mail_grp) return ThreadRetCode_Interrupted | Err_MailGrpNotFound;
+	if (!mail_grp) return Error_Gen_ItemNotFound;
 
-	LisThread::TaskProcResult res_code = ThreadRetCode_Interrupted;
-
+	if (proc_ctrl->StopFlag) return Error_Gen_Operation_Interrupted;
+	// ** Authenticating...
 	std::string auth_data;
-	if (!proc_ctrl->StopFlag) {
-		// ** Authenticating...
-		res_code = GetAuthData(auth_data, mail_grp->MailAcc.Incoming, proc_ctrl, mgr);
-		if (res_code < 0) {
-			mgr->logger->LogFmt(llError, Log_Scope " grp#%i Authentication failed, can't receive mail: %i.",
-				grp_id, res_code);
-		}
+	int res_code = GetAuthData(auth_data, mail_grp->MailAcc.Incoming, proc_ctrl, mgr);
+	if (res_code < 0) {
+		mgr->logger->LogFmt(llError, Log_Scope_Rcv " grp#%i Authentication failed, can't receive mail: %i.",
+			grp_id, res_code);
+		return res_code;
 	}
 
+	if (proc_ctrl->StopFlag) return Error_Gen_Operation_Interrupted;
+	// ** Receiving mail...
 	int file_count = 0;
-	if (!proc_ctrl->StopFlag && (res_code >= 0)) {
-		// ** Receiving mail...
-		MailMsgReceiver rcvr;
-		res_code = rcvr.SetLocation(AppCfg.Get().TmpDataDir.c_str(), mail_grp->MailAcc.Incoming, grp_id);
-		if (res_code >= 0) {
-			auto mail_store_path = MailMsgStore::GetStoreDirPath(
-				AppCfg.Get().AppDataDir.c_str(), mail_grp->MailAcc.Directory.c_str());
-			MailMsgStore mail_store;
-			mail_store.SetLocation(mail_store_path.c_str(), grp_id);
-			auto grp_files = &mail_grp->MsgFiles;
-			auto file_proc = [&mail_store, grp_files, proc_ctrl, mgr, &file_count]
-				(const FILE_PATH_CHAR* file_path)
-				{
-					auto msg_file = mail_store.SaveMsgFile(file_path, true);
-					if (msg_file.LoadInfo() >= 0) {
-						auto file_grp_it = grp_files->emplace(grp_files->end(),
-							std::make_shared<MailMsgFile>(std::move(msg_file))); // TODO: multithreading warning - collection modification
-						++file_count;
-						AfterMailMsgFileAdded(&(*file_grp_it), mgr, true);
-					} else {
-						// TODO: Handle the error (broken message file)
-					}
-					return !proc_ctrl->StopFlag;
-				};
-			res_code = rcvr.Receive(auth_data.c_str(), file_proc);
-		}
+	MailMsgReceiver rcvr;
+	res_code = rcvr.SetLocation(AppCfg.Get().TmpDataDir.c_str(), mail_grp->MailAcc.Incoming, grp_id);
+	if (res_code >= 0) {
+		auto mail_store_path = MailMsgStore::GetStoreDirPath(
+			AppCfg.Get().AppDataDir.c_str(), mail_grp->MailAcc.Directory.c_str());
+		MailMsgStore mail_store;
+		mail_store.SetLocation(mail_store_path.c_str(), grp_id);
+		auto grp_files = &mail_grp->MsgFiles;
+		auto file_proc = [&mail_store, grp_files, proc_ctrl, mgr, &file_count] (const FILE_PATH_CHAR* file_path)
+		{
+			auto msg_file = mail_store.SaveMsgFile(file_path, true);
+			if (msg_file.LoadInfo() >= 0) {
+				auto file_grp_it = grp_files->emplace(grp_files->end(),
+					std::make_shared<MailMsgFile>(std::move(msg_file))); // TODO: multithreading warning - collection modification
+				++file_count;
+				AfterMailMsgFileAdded(&(*file_grp_it), mgr, true);
+			} else {
+				// TODO: Handle the error (broken message file)
+			}
+			return !proc_ctrl->StopFlag;
+		};
+		res_code = rcvr.Receive(auth_data.c_str(), file_proc);
 	}
 
 	// ** Finishing execution...
 	if (res_code >= 0) {
-		mgr->logger->LogFmt(llInfo, Log_Scope " grp#%i Mail messages received: %i.",
+		mgr->logger->LogFmt(llInfo, Log_Scope_Rcv " grp#%i Mail messages received: %i.",
 			grp_id, file_count);
+		res_code = file_count;
 	} else {
-		mgr->logger->LogFmt(llError, Log_Scope " grp#%i Failed to receive mail: %i.",
+		mgr->logger->LogFmt(llError, Log_Scope_Rcv " grp#%i Couldn't receive mail messages, code: %i.",
 			grp_id, res_code);
 	}
-	MailMsgFileMgr_EventData_SyncFinish sync_event_data{ grp_id, static_cast<size_t>(file_count) };
-	mgr->RaiseEvent(etSyncFinished, &sync_event_data);
 
 	return res_code;
 }
@@ -299,59 +303,61 @@ LisThread::TaskProcResult MailMsgFileMgr::MailSendProc(
 	delete prm;
 
 	auto mail_grp = mgr->GetGrpData(grp_id);
-	if (!mail_grp) return ThreadRetCode_Interrupted | Err_MailGrpNotFound;
+	if (!mail_grp) return Error_Gen_ItemNotFound;
 
-	LisThread::TaskProcResult res_code = ThreadRetCode_Interrupted;
-
+	if (proc_ctrl->StopFlag) return Error_Gen_Operation_Interrupted;
+	// ** Loading mail messages list...
 	std::vector<std::shared_ptr<MailMsgFile>> mail_msg_list;
-	if (!proc_ctrl->StopFlag) {
-		// ** Loading mail list...
-		MailMsgFileMgr::FilesIterator msg_list_begin, msg_list_end;
-		if (!mgr->GetIter(grp_id, msg_list_begin, msg_list_end)) return ThreadRetCode_Failure;
-		for (auto it = msg_list_begin; it != msg_list_end; ++it) {
-			if (is_mail_msg_to_send(it->get())) mail_msg_list.push_back(*it);
-		}
-		if (mail_msg_list.empty()) return Result_NoDataToProcess;
+	MailMsgFileMgr::FilesIterator msg_list_begin, msg_list_end;
+	if (!mgr->GetIter(grp_id, msg_list_begin, msg_list_end)) return Error_Gen_ItemNotFound;
+	for (auto it = msg_list_begin; it != msg_list_end; ++it) {
+		if (is_mail_msg_to_send(it->get())) mail_msg_list.push_back(*it);
 	}
+	if (mail_msg_list.empty()) return ResCode_NoContent;
 
+	if (proc_ctrl->StopFlag) return Error_Gen_Operation_Interrupted;
+	// ** Authenticating...
 	std::string auth_data;
-	if (!proc_ctrl->StopFlag) {
-		// ** Authenticating...
-		res_code = GetAuthData(auth_data, mail_grp->MailAcc.Outgoing, proc_ctrl, mgr);
-		if (res_code < 0) {
-			mgr->logger->LogFmt(llError, Log_Scope " grp#%i Authentication failed, can't send mail: %i.",
-				grp_id, res_code);
-		}
+	int res_code = GetAuthData(auth_data, mail_grp->MailAcc.Outgoing, proc_ctrl, mgr);
+	if (res_code < 0) {
+		mgr->logger->LogFmt(llError, Log_Scope_Snd " grp#%i Authentication failed, can't send mail: %i.",
+			grp_id, res_code);
+		return res_code;
 	}
 
+	if (proc_ctrl->StopFlag) return Error_Gen_Operation_Interrupted;
+	// ** Sending mail...
 	int file_count = 0;
-	if (!proc_ctrl->StopFlag && (res_code >= 0)) {
-		// ** Sending mail...
-		MailMsgTransmitter trns;
-		res_code = trns.SetLocation(mail_grp->MailAcc.Outgoing, grp_id);
-		if (res_code >= 0) {
-			auto file_proc = [&mail_msg_list, proc_ctrl, &file_count] ()
-			{
-				MailMsgFile* result = !proc_ctrl->StopFlag && (file_count < mail_msg_list.size())
-					? mail_msg_list[file_count].get()
-					: nullptr;
+	MailMsgTransmitter trns;
+	MailMsgTransmitter::TransmissionHandle trn_handle;
+	res_code = trns.BeginTransmition(grp_id,
+		mail_grp->MailAcc.Outgoing, auth_data.c_str(), mail_grp->MailAcc.GetMailbox(), trn_handle);
+	if (res_code >= 0) {
+		for (auto& mail_msg_item : mail_msg_list) {
+			MailMsgFile* mail_msg_file = mail_msg_item.get();
+			int send_res = trns.SendMailMessage(trn_handle, *mail_msg_file);
+			if (send_res >= 0) {
+				mail_msg_file->SetMailAsSent();
+				mgr->logger->LogFmt(llInfo, Log_Scope_Snd " grp#%i Mail message has been sent: ", grp_id);
 				++file_count;
-				return result;
-			};
-			res_code = trns.Transmit(auth_data.c_str(), mail_grp->MailAcc.GetMailbox(), file_proc);
+			} else {
+				// TODO: provide some name or id to the log
+				mgr->logger->LogFmt(llError, Log_Scope_Snd " grp#%i Mail message send failed %i.", grp_id, send_res);
+			}
+			if (proc_ctrl->StopFlag) { res_code = Error_Gen_Operation_Interrupted;  break; }
 		}
 	}
+	trns.EndTransmission(trn_handle);
 
 	// ** Finishing execution...
 	if (res_code >= 0) {
-		mgr->logger->LogFmt(llInfo, Log_Scope " grp#%i Mail messages sent: %i.",
+		mgr->logger->LogFmt(llInfo, Log_Scope_Snd " grp#%i Mail messages sent: %i.",
 			grp_id, file_count);
+		res_code = file_count;
 	} else {
-		mgr->logger->LogFmt(llError, Log_Scope " grp#%i Failed to send mail: %i.",
+		mgr->logger->LogFmt(llError, Log_Scope_Snd " grp#%i Couldn't send mail messages, code: %i.",
 			grp_id, res_code);
 	}
-	MailMsgFileMgr_EventData_SyncFinish sync_event_data{ grp_id, static_cast<size_t>(file_count) };
-	mgr->RaiseEvent(etSyncFinished, &sync_event_data);
 
 	return res_code;
 }
@@ -360,7 +366,7 @@ int MailMsgFileMgr::GetAuthData(std::string& auth_data, const Connections::Conne
 	LisThread::TaskProcCtrl* proc_ctrl, const MailMsgFileMgr* mgr)
 {
 	bool stop_func_reset = false;
-	auto auth_event_proc = [proc_ctrl, &stop_func_reset, &mgr]
+	auto auth_event_handler = [proc_ctrl, &stop_func_reset, &mgr]
 	(const Connections::ConnectionInfo& connection, ConnectionAuth::EventType evt_type, void* evt_data)
 		{
 			if (proc_ctrl->StopFlag) return false;
@@ -376,7 +382,7 @@ int MailMsgFileMgr::GetAuthData(std::string& auth_data, const Connections::Conne
 		};
 
 	ConnectionAuth auth(AppCfg.Get().AppDataDir.c_str(), connection);
-	int result = auth.GetAuthData(auth_data, auth_event_proc);
+	int result = auth.GetAuthData(auth_data, auth_event_handler);
 	if (stop_func_reset) proc_ctrl->StopFunc = nullptr; // The auth call has finished, so the function is not valid anymore
 	return result;
 }

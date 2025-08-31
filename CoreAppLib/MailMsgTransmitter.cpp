@@ -1,86 +1,113 @@
+#include <memory>
 #include <sstream>
 #include "MailMsgTransmitter.h"
 #include "../CoreNetLib/SmtpClient.h"
 #include "../CoreMailLib/MimeHeaderDef.h"
+#include "AppResCodes.h"
 #include "ConnectionAuth.h"
 #include "ConnectionHelper.h"
 
 #define Log_Scope "MailTrns"
-#define SmtpHeloDomain "localhost"
-
 using namespace LisLog;
+
+struct MailMsgTransmitter::TransmissionInfo {
+	int GrpId; SmtpClient MailClient; std::string Mailbox;
+	TransmissionInfo(int grp_id, const char* mail_url, const char* mailbox)
+		: GrpId(grp_id), MailClient(mail_url), Mailbox(mailbox)
+	{ }
+};
+
 namespace MailMsgTransmitter_Imp
 {
+#define SmtpHeloDomain "localhost"
+
+	static int init_auth(SmtpClient& mail_client,
+		const Connections::ConnectionInfo& connection, const char* auth_data);
 	static void prepare_msg_to_send(MimeNode& mail_msg);
 	static int send_mail_msg(SmtpClient& mail_client, const char* mailbox, MimeNode& mail_msg);
 }
 using namespace MailMsgTransmitter_Imp;
 
-int MailMsgTransmitter::SetLocation(const Connections::ConnectionInfo& connection, int grp_id)
+MailMsgTransmitter::~MailMsgTransmitter()
 {
-	this->connection = connection;
-	this->grpId = grp_id;
-	logger->LogFmt(llInfo, Log_Scope " Intialized: grp#%i, %s - %s.",
-		grp_id, connection.Server.c_str(), connection.UserName.c_str());
-	return 0;
+	if (trnInf) delete trnInf;
 }
 
-int MailMsgTransmitter::Transmit(const char* auth_data, const char* mailbox, MailFileProc file_proc)
+int MailMsgTransmitter::BeginTransmition(int grp_id,
+	const Connections::ConnectionInfo& connection, const char* auth_data, const char* mailbox,
+	TransmissionHandle& handle)
 {
 	if (Connections::ProtocolType::cptSmtp != connection.Protocol)
-		return Connection_Error_Protocol;
+		return Error_Conn_Protocol;
 
-	SmtpClient mail_client(ConnectionHelper::GetUrl(connection).c_str());
-	
-	if (!mail_client.Ehlo(SmtpHeloDomain)) {
-		logger->LogFmt(llError, Log_Scope " grp#%i handshake failed.", grpId);
-		return Connection_Error_Handshake;
+	auto trn_inf_ptr = std::make_unique<TransmissionInfo>(
+		grp_id, ConnectionHelper::GetUrl(connection).c_str(), mailbox);
+	TransmissionInfo *trn_inf = trn_inf_ptr.get();
+
+	if (!trn_inf->MailClient.Ehlo(SmtpHeloDomain)) {
+		logger->LogFmt(llError, Log_Scope " grp#%i handshake failed.", trn_inf->GrpId);
+		return Error_Conn_Handshake;
 	}
 
+	int result = init_auth(trn_inf->MailClient, connection, auth_data);
+	if (result < 0) {
+		logger->LogFmt(llError, Log_Scope " grp#%i authentication failed.", trn_inf->GrpId);
+		return result;
+	}
+
+	logger->LogFmt(llInfo, Log_Scope " grp#%i connected to the server.", trn_inf->GrpId);
+	if (!mailbox) mailbox = connection.UserName.c_str();
+	trn_inf->MailClient.Vrfy(mailbox);
+
+	if (trnInf) delete trnInf;
+	trnInf = trn_inf_ptr.release();
+	handle = trnInf;
+
+	return ResCode_Ok;
+}
+
+int MailMsgTransmitter::SendMailMessage(TransmissionHandle handle, MailMsgFile& message)
+{
+	if (handle != trnInf) return Error_Gen_ItemNotFound;
+
+	MimeNode mail_msg;
+	int result = message.LoadData(mail_msg, true);
+	if (result >= 0) {
+		prepare_msg_to_send(mail_msg);
+		result = send_mail_msg(trnInf->MailClient, trnInf->Mailbox.c_str(), mail_msg);
+	} else {
+		logger->LogFmt(llError, Log_Scope " grp#%i mail message load failed %i.", trnInf->GrpId, result);
+	}
+	return result;
+}
+
+int MailMsgTransmitter::EndTransmission(TransmissionHandle handle)
+{
+	if (handle != trnInf) return Error_Gen_ItemNotFound;
+
+	if (trnInf) {
+		trnInf->MailClient.Quit();
+		delete trnInf;
+		trnInf = nullptr;
+	}
+	return ResCode_Ok;
+}
+
+static int MailMsgTransmitter_Imp::init_auth(SmtpClient& mail_client,
+	const Connections::ConnectionInfo& connection, const char* auth_data)
+{
 	SmtpClient::AuthTokenType auth_token_type = SmtpClient::attNone;
 	if (Connections::AuthenticationType::catPlain == connection.AuthType)
 		auth_token_type = SmtpClient::attPlain;
 	else if (Connections::AuthenticationType::catOAuth2 == connection.AuthType)
 		auth_token_type = SmtpClient::attXOAuth2;
 	else
-		return Connection_Error_AuthConfig;
+		return Error_Conn_AuthConfig;
 
-	int result = mail_client.Auth(auth_token_type, auth_data)
-		? Connection_Result_Ok : Connection_Error_AuthProcess;
-	if (result < 0) {
-		logger->LogFmt(llError, Log_Scope " grp#%i authentication failed.", grpId);
-	}
-
-	if (result >= 0) {
-		logger->LogFmt(llInfo, Log_Scope " grp#%i connected to the server.", grpId);
-
-		if (!mailbox) mailbox = connection.UserName.c_str();
-		mail_client.Vrfy(mailbox);
-
-		MailMsgFile *msg_file;
-		while (msg_file = file_proc()) {
-			MimeNode mail_msg;
-			int msg_result = msg_file->LoadData(mail_msg, true);
-			if (msg_result >= 0) {
-				msg_result = send_mail_msg(mail_client, mailbox, mail_msg);
-				if (msg_result >= 0) {
-					// TODO: change message status and provide name to the log
-					logger->LogFmt(llInfo, Log_Scope " grp#%i mail message has been sent %i.", grpId);
-				} else {
-					logger->LogFmt(llError, Log_Scope " grp#%i mail message send failed %i.", grpId, msg_result);
-				}
-			} else {
-				logger->LogFmt(llError, Log_Scope " grp#%i mail message load failed %i.", grpId, msg_result);
-			}
-		}
-
-		mail_client.Quit();
-	}
-
-	return result;
+	return mail_client.Auth(auth_token_type, auth_data) ? ResCode_Ok : Error_Conn_AuthProcess;
 }
 
-void MailMsgTransmitter_Imp::prepare_msg_to_send(MimeNode& mail_msg)
+static void MailMsgTransmitter_Imp::prepare_msg_to_send(MimeNode& mail_msg)
 {
 	// Remove header fields intended for internal use
 	mail_msg.Header.DelField(MailHdrName_MailagerStatus);
@@ -89,10 +116,9 @@ void MailMsgTransmitter_Imp::prepare_msg_to_send(MimeNode& mail_msg)
 		mail_msg.Header.SetField(MailHdrName_Date, MimeHeaderTimeValueUndefined);
 }
 
-int MailMsgTransmitter_Imp::send_mail_msg(SmtpClient& mail_client, const char* mailbox, MimeNode& mail_msg)
+static int MailMsgTransmitter_Imp::send_mail_msg(SmtpClient& mail_client, const char* mailbox, MimeNode& mail_msg)
 {
 	bool result = true;
-	prepare_msg_to_send(mail_msg);
 	// Sender
 	result = result && mail_client.MailFrom(mailbox);
 	// Recipients

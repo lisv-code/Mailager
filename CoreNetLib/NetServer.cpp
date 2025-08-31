@@ -15,24 +15,19 @@
 #define SocketErrorCode errno
 #endif
 
-namespace NetServer_Imp {
-#define Err_Socket_Init -1
-#define Err_Socket_Create -2
-#define Err_Socket_Address -3
-#define Err_Socket_Bind -4
-#define Err_Socket_Listen -5
-#define Err_Socket_Accept -6
-#define Err_Socket_Send -7
-#define Err_Socket_Read -8
+#include "NetResCodes.h"
+using namespace NetLibGen_ResCodes;
+using namespace NetServer_ResCodes;
 
-#define Log_Scope "NetServer"
+namespace NetServer_Imp {
+#define Log_Scope "NetSrvr"
 }
 using namespace NetServer_Imp;
 using namespace LisLog;
 
 NetServer::NetServer()
 {
-	initErrCode = 0;
+	initErrCode = ResCode_Ok;
 	sockSvr = sockClient = NULL;
 #ifdef _WINDOWS
 	WSADATA wsaData;
@@ -40,7 +35,7 @@ NetServer::NetServer()
 	if (wsa_start_code) {
 		// WSAStartup errors: WSASYSNOTREADY, WSAVERNOTSUPPORTED, WSAEINPROGRESS, WSAEPROCLIM, WSAEFAULT.
 		logger->LogFmt(llError, Log_Scope " Winsock initialization failed: %ld.", WSAGetLastError());
-		initErrCode = Err_Socket_Init;
+		initErrCode = Error_Socket_Init;
 	}
 #endif
 }
@@ -56,7 +51,7 @@ NetServer::~NetServer()
 int NetServer::Start(const char* addr, unsigned short port)
 {
 	sockSvr = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (INVALID_SOCKET == sockSvr) return Err_Socket_Create;
+	if (INVALID_SOCKET == sockSvr) return Error_Socket_Create;
 
 	memset(&sockAddrSvr, 0, sizeof(sockAddrSvr));
 	sockAddrSvr.sin_family = AF_INET;
@@ -64,22 +59,22 @@ int NetServer::Start(const char* addr, unsigned short port)
 	sockAddrSvr.sin_addr.s_addr = inet_addr(addr);
 	if (INADDR_NONE == sockAddrSvr.sin_addr.s_addr) {
 		Stop();
-		return Err_Socket_Address;
+		return Error_Socket_Address;
 	}
 
 	if (SOCKET_ERROR == bind(sockSvr, (struct sockaddr*)&sockAddrSvr, sizeof(sockAddrSvr))) {
 		logger->LogFmt(llError, Log_Scope " Socket bind failed: %ld.", SocketErrorCode);
 		Stop();
-		return Err_Socket_Bind;
+		return Error_Socket_Bind;
 	}
 
 	if (SOCKET_ERROR == listen(sockSvr, 1)) {
 		logger->LogFmt(llError, Log_Scope " Socket listen failed: %ld.", SocketErrorCode);
 		Stop();
-		return Err_Socket_Listen;
+		return Error_Socket_Listen;
 	}
 
-	return 0;
+	return ResCode_Ok;
 }
 
 int NetServer::Connect()
@@ -91,18 +86,18 @@ int NetServer::Connect()
 	sockClient = accept(sockSvr, (struct sockaddr*)&sockAddrClient, &sock_addr_len);
 	if (SOCKET_ERROR == sockClient) {
 		logger->LogFmt(llError, Log_Scope " Socket accept failed: %ld.", SocketErrorCode);
-		return Err_Socket_Accept;
+		return Error_Socket_Accept;
 	}
-	return 0;
+	return ResCode_Ok;
 }
 
 int NetServer::Send(const char* data)
 {
 	int result = send(sockClient, data, strlen(data), 0);
-	if (SOCKET_ERROR != result) { return 0;	}
+	if (SOCKET_ERROR != result) { return ResCode_Ok;	}
 	else {
 		logger->LogFmt(llError, Log_Scope " Socket send failed: %ld.", SocketErrorCode);
-		return Err_Socket_Send;
+		return Error_Socket_Send;
 	}
 }
 
@@ -115,16 +110,16 @@ int NetServer::Recv(char* buffer, size_t buffer_size, size_t& size_read)
 #endif
 	if (SOCKET_ERROR != result) {
 		size_read = result;
-		return 0;
+		return ResCode_Ok;
 	} else {
 		logger->LogFmt(llError, Log_Scope " Socket read failed: %ld.", SocketErrorCode);
-		return Err_Socket_Read;
+		return Error_Socket_Read;
 	}
 }
 
 int NetServer::Stop()
 {
-	int result = 0;
+	int result = ResCode_Ok;
 
 	if (sockClient && SOCKET_ERROR != sockClient) { result = close(sockClient); }
 	sockClient = NULL;

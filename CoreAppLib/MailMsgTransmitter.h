@@ -1,6 +1,4 @@
 #pragma once
-#include <functional>
-#include <string>
 #include <LisCommon/Logger.h>
 #include "ConnectionInfo.h"
 #include "MailMsgFile.h"
@@ -8,12 +6,16 @@
 class MailMsgTransmitter
 {
 public:
-	typedef std::function<MailMsgFile*()> MailFileProc;
+	typedef struct TransmissionInfo; // The implementation is not exposed here in the declaration
+	typedef const TransmissionInfo* TransmissionHandle;
 private:
 	LisLog::ILogger* logger = LisLog::Logger::GetInstance();
-	Connections::ConnectionInfo connection;
-	int grpId;
+	TransmissionInfo* trnInf = nullptr;
 public:
-	int SetLocation(const Connections::ConnectionInfo& connection, int grp_id);
-	int Transmit(const char* auth_data, const char* mailbox, MailFileProc file_proc);
+	~MailMsgTransmitter();
+	int BeginTransmition(int grp_id,
+		const Connections::ConnectionInfo& connection, const char* auth_data, const char* mailbox,
+		TransmissionHandle& handle);
+	int SendMailMessage(TransmissionHandle handle, MailMsgFile& message);
+	int EndTransmission(TransmissionHandle handle);
 };

@@ -3,11 +3,6 @@
 #include "NetClient.h"
 #include "NetServer.h"
 
-namespace OAuth2Client_Def
-{
-	const int ErrCode_ResponseIsError = -6;
-}
-
 class OAuth2Client
 {
 	NetClient netClient;

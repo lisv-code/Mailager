@@ -60,12 +60,14 @@ void DetailViewModel::GetValue(wxVariant& val, const wxDataViewItem& item, unsig
 {
 	if (!item.IsOk()) return;
 
-	auto status = ((DataItem*)item.m_pItem)->get()->GetStatus();
-	auto& info = ((DataItem*)item.m_pItem)->get()->GetInfo();
+	MailMsgFile* msg_file = ((DataItem*)item.m_pItem)->get();
+	auto& info = msg_file->GetInfo();
 
 	switch (col) {
 	case ColIdx_Text:
-		val = wxVariant(GetInfoText(info, status & MailMsgStatus::mmsIsOutgoing));
+		val = wxVariant(GetInfoText(info,
+			msg_file->CheckStatusFlags(MailMsgStatus::mmsIsDraft)
+				| msg_file->CheckStatusFlags(MailMsgStatus::mmsIsOutgoing)));
 		break;
 	}
 }

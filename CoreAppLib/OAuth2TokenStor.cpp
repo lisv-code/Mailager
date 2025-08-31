@@ -6,6 +6,7 @@
 using json = nlohmann::json;
 
 #include <LisCommon/StrUtils.h>
+#include "AppResCodes.h"
 
 OAuth2TokenStor::OAuth2TokenStor() { }
 
@@ -17,9 +18,9 @@ int OAuth2TokenStor::SetLocation(const FILE_PATH_CHAR* path)
 		storeLocation = path;
 		if (FILE_PATH_SEPARATOR_CHR != storeLocation[storeLocation.length() - 1])
 			storeLocation += FILE_PATH_SEPARATOR_CHR;
-		return 0;
+		return ResCode_Ok;
 	}
-	return -1; // ERROR: bad directory
+	return Error_File_Initialization; // ERROR: bad directory
 }
 
 int OAuth2TokenStor::SaveToken(const char* id, const OAuth2Token token)
@@ -33,15 +34,15 @@ int OAuth2TokenStor::SaveToken(const char* id, const OAuth2Token token)
 		file_data["refresh_token"] = token.refresh_token;
 		file_data["created"] = token.created;
 		file << file_data.dump();
-		return 0;
+		return ResCode_Ok;
 	}
-	return -1; // ERROR: file save
+	return Error_File_DataOperation; // ERROR: file save
 }
 
 OAuth2Token OAuth2TokenStor::LoadToken(const char* id)
 {
 	OAuth2Token result;
-	result.expires = 0;
+	result.expires = 0; // ResCode_Ok
 
 	std::ifstream file(storeLocation + (FILE_PATH_CHAR*)LisStr::CStrConvert(id), std::ios::in);
 	if (!file.fail()) {
@@ -53,10 +54,10 @@ OAuth2Token OAuth2TokenStor::LoadToken(const char* id)
 			result.refresh_token = file_data["refresh_token"].get<std::string>();
 			result.created = file_data["created"].get<std::time_t>();
 		} else {
-			result.expires = -2; // ERROR: data can't be parsed
+			result.expires = Error_File_DataFormat; // ERROR: data can't be parsed
 		}
 	} else {
-		result.expires = -1; // ERROR: file open
+		result.expires = Error_File_DataOperation; // ERROR: file open
 	}
 	return result;
 }

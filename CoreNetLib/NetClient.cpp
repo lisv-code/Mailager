@@ -1,19 +1,26 @@
 #include "NetClient.h"
 #include <atomic>
 #include <string.h>
+#include <utility>
+#include "NetResCodes.h"
 
-using namespace NetClient_Def;
+#define _AsErrorCode *(-1)
+#define IsCurlError(res_code) ((res_code < 0) && (res_code > (CURL_LAST _AsErrorCode)))
+namespace NetClient_ResCodes
+{
+	extern int Error_1st_Value = CURL_LAST _AsErrorCode;
+}
+using namespace NetClient_ResCodes;
+using namespace NetLibGen_ResCodes;
+
 namespace NetClient_Imp
 {
-
-#define Err_Write_UnknownDestination CURL_LAST + 21
-#define Err_Write_InterruptedByCaller CURL_LAST + 22
-#define Err_Write_InsufficientBuffer CURL_LAST + 23
-#define Err_Socket_Timeout CURL_LAST + 31
-
-#define Log_Scope "NetClient"
+#define Log_Scope "NetClnt"
 
 	static std::atomic_int NetClientInstanceGlobalCount(0);
+
+	const size_t Data_Recv_Buffer_Size = 4096;
+	const long Socket_Wait_Timeout_Ms = 60000;
 }
 using namespace NetClient_Imp;
 using namespace LisLog;
@@ -23,15 +30,20 @@ size_t curl_write_data(char* ptr, size_t size, size_t nmemb, void* userdata);
 static int curl_wait_on_socket(curl_socket_t sockfd, bool for_recv, long timeout_ms);
 
 NetClient::NetClient()
+	: hConnection(NULL), hSocket(NULL), defTimeoutMs(0), defUserAgent()
 {
-	hConnection = NULL;
-	hSocket = NULL;
-	defTimeoutMs = 0;
-
 	int inst_count = NetClientInstanceGlobalCount++;
 	if (0 == inst_count) {
 		curl_global_init(CURL_GLOBAL_DEFAULT);
 	}
+}
+
+NetClient::NetClient(NetClient&& src) noexcept
+	: hConnection(std::exchange(src.hConnection, (CURL*)nullptr)),
+	hSocket(std::exchange(src.hSocket, (curl_socket_t)nullptr)),
+	defTimeoutMs(src.defTimeoutMs), defUserAgent(src.defUserAgent)
+{
+	if (hConnection) SetCurlDebugFunction(hConnection); // Calling it to update `this` reference
 }
 
 NetClient::~NetClient()
@@ -115,7 +127,7 @@ int NetClient::Open(const char* url)
 		}
 	}
 
-	return result;
+	return result _AsErrorCode;
 }
 
 void NetClient::Close()
@@ -140,7 +152,7 @@ int NetClient::Send(const char* data, size_t size)
 
 			if (result == CURLE_AGAIN && !curl_wait_on_socket(hSocket, false, Socket_Wait_Timeout_Ms)) {
 				logger->LogTxt(llError, Log_Scope " Send timeout.");
-				return Err_Socket_Timeout;
+				return Error_Socket_Timeout;
 			}
 		} while (result == CURLE_AGAIN);
 
@@ -154,10 +166,10 @@ int NetClient::Send(const char* data, size_t size)
 
 	} while (nsent_total < size);
 
-	return result;
+	return result _AsErrorCode;
 }
 
-int NetClient::Recv(data_callback callback_func, void* user_param)
+int NetClient::Recv(DataWriteCallback callback_func, void* user_param)
 {
 	TDataDest dest = {};
 	dest.Type = ddtCallback;
@@ -196,31 +208,36 @@ int NetClient::Recv(TDataDest dest)
 	size_t nread;
 	do {
 		nread = 0;
-		result = curl_easy_recv(hConnection, buf, buflen, &nread);
+		result = curl_easy_recv(hConnection, buf, buflen, &nread) _AsErrorCode;
 
 		if (nread > 0) {
 			result = net_client_data_write(dest, buf, nread, logger);
 			if (0 != result) break;
 		}
 
-		if (result == CURLE_AGAIN && !curl_wait_on_socket(hSocket, true, Socket_Wait_Timeout_Ms)) {
-			logger->LogTxt(llError, Log_Scope " Recv timeout.");
-			return Err_Socket_Timeout;
+		if ((CURLE_AGAIN _AsErrorCode) == result) {
+			int sock_res = curl_wait_on_socket(hSocket, true, Socket_Wait_Timeout_Ms);
+			if (sock_res <= 0) {
+				logger->LogFmt(llError, Log_Scope " Recv socket error: %i.", sock_res);
+				return 0 == sock_res ? Error_Socket_Timeout : Error_Socket_Failure;
+			}
 		}
-	} while (result == CURLE_AGAIN);
+	} while ((CURLE_AGAIN _AsErrorCode) == result);
 
-	if (result != CURLE_OK && result < CURL_LAST) {
+	if (result != ResCode_Ok) {
+		if (IsCurlError(result))
+			logger->LogFmt(llError,
+				Log_Scope " Recv failed: %i, %s", result, curl_easy_strerror((CURLcode)result));
 		logger->LogFmt(llError,
-			Log_Scope " Recv failed: %i, %s", (int)result, curl_easy_strerror((CURLcode)result));
+			Log_Scope " Recv failed: %i.", result);
 		return result;
-	}
-
-	logger->LogFmt(llDebug, Log_Scope " Recv =%lu bytes.", (unsigned long)nread);
+	} else
+		logger->LogFmt(llDebug, Log_Scope " Recv =%lu bytes.", (unsigned long)nread);
 
 	return result;
 }
 
-int NetClient::Exec(data_callback callback_func, void* user_param, const char* url, const char* post_fields)
+int NetClient::Exec(DataWriteCallback callback_func, void* user_param, const char* url, const char* post_fields)
 {
 	TDataDest dest = {};
 	dest.Type = ddtCallback;
@@ -280,7 +297,7 @@ int NetClient::Exec(TDataDest dest, const char* url, const char* post_fields)
 		curl_easy_cleanup(curl_handle);
 	}
 
-	return result;
+	return result _AsErrorCode;
 }
 
 // *************************************** static functions ****************************************
@@ -292,13 +309,13 @@ static int net_client_data_write(NetClient::TDataDest dest, char* data, size_t s
 	case NetClient::DataDestType::ddtCallback:
 		if (0 != dest.Func.Ref(data, size, dest.Func.Param)) {
 			if (logger) logger->LogTxt(llWarn, Log_Scope " _data_write stopped: callback interruption.");
-			return Err_Write_InterruptedByCaller;
+			return Error_DataWrite_InterruptedByCaller;
 		}
 		break;
 	case NetClient::DataDestType::ddtBuffer:
 		if (*dest.Buffer.Written + size > dest.Buffer.Size) {
 			if (logger) logger->LogTxt(llError, Log_Scope " _data_write failed: insufficient buffer.");
-			return Err_Write_InsufficientBuffer;
+			return Error_DataWrite_InsufficientBuffer;
 		}
 		memcpy(dest.Buffer.Ref + *dest.Buffer.Written, data, size);
 		*dest.Buffer.Written += size;
@@ -308,9 +325,9 @@ static int net_client_data_write(NetClient::TDataDest dest, char* data, size_t s
 		break;
 	default:
 		if (logger) logger->LogTxt(llError, Log_Scope " _data_write failed: unknown destination.");
-		return Err_Write_UnknownDestination;
+		return Error_DataWrite_UnknownDestination;
 	}
-	return 0;
+	return ResCode_Ok;
 }
 
 static int curl_wait_on_socket(curl_socket_t sockfd, bool for_recv, long timeout_ms)
@@ -330,8 +347,7 @@ static int curl_wait_on_socket(curl_socket_t sockfd, bool for_recv, long timeout
 
 	if (for_recv) {
 		FD_SET(sockfd, &infd);
-	}
-	else {
+	} else {
 		FD_SET(sockfd, &outfd);
 	}
 

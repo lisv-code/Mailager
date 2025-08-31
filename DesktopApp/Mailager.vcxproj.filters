@@ -306,6 +306,12 @@
     <ClInclude Include="..\CoreAppLib\MailMsgDataHelper.h">
       <Filter>Header Files\CoreAppLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\CoreAppLib\AppResCodes.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreNetLib\NetResCodes.h">
+      <Filter>Header Files\CoreNetLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

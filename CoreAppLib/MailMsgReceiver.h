@@ -1,6 +1,5 @@
 #pragma once
 #include <functional>
-#include <ostream>
 #include <string>
 #include <LisCommon/Logger.h>
 #include <LisCommon/FileSystem.h>
@@ -15,8 +14,6 @@ private:
 	std::basic_string<FILE_PATH_CHAR> workPath;
 	Connections::ConnectionInfo connection;
 	int grpId;
-
-	bool InitMsgStream(std::ostream& stm, const char* uidl);
 public:
 	int SetLocation(const FILE_PATH_CHAR* work_path, const Connections::ConnectionInfo& connection,
 		int grp_id);

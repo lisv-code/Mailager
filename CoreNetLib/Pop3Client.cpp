@@ -1,11 +1,11 @@
 #include "Pop3Client.h"
 #include <cstring>
-
-using namespace Pop3Client_Def;
+#include "NetResCodes.h"
+using namespace NetLibGen_ResCodes;
 
 namespace Pop3Client_Imp
 {
-	const char* Log_Scope = "Pop3Client";
+	const char* Log_Scope = "Pop3Clnt";
 
 	const char* RespOkStr = "+OK";
 	const size_t RespOkLen = strlen(RespOkStr);
@@ -19,13 +19,17 @@ using namespace Pop3Client_Imp;
 
 Pop3Client::Pop3Client(const char* url)	: TxtProtoClient(url) { }
 
+Pop3Client::Pop3Client(Pop3Client&& src) noexcept
+	: TxtProtoClient(std::move(src))
+{ }
+
 Pop3Client::~Pop3Client() { }
 
 bool Pop3Client::Auth(const char* user, const char* pswd)
 {
 	SendCmd("USER", user);
 	SendCmd("PASS", pswd);
-	return Error_None == lastErrCode; // NetClient_Def::ErrCode_None
+	return ResCode_Ok == lastErrCode;
 }
 
 const char* Pop3Client::GetLogScope() const { return Log_Scope; }
@@ -50,7 +54,7 @@ bool Pop3Client::Auth(AuthTokenType type, const char* token)
 	switch (type) {
 	case attXOAuth2:
 		SendCmd("AUTH XOAUTH2", token);
-		return Error_None == lastErrCode; // NetClient_Def::ErrCode_None
+		return ResCode_Ok == lastErrCode;
 	default:
 		return false;
 	}

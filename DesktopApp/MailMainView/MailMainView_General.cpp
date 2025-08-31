@@ -15,6 +15,13 @@ namespace MailMainView_Def
 	const TCHAR* WndTitle = _T("Mail main view");
 	const TCHAR* Msg_MailDeleteQuestion = _T("Delete selected message(s)?\n\n%s");
 	const TCHAR* Msg_MailStopSyncQuestion = _T("Stop mail synchronization for %i account(s)?");
+
+	const TCHAR* ToolHlp_MailSyncStart = _T("Start mail sync");
+	const TCHAR* MnuLbl_MailSyncStartRecv = _T("Receive mail");
+	const TCHAR* MnuLbl_MailSyncStartSend = _T("Send mail");
+	const TCHAR* ToolHlp_MailSyncStop = _T("Stop mail sync");
+	const TCHAR* MnuLbl_MailSyncStopRecv = _T("Stop receiving");
+	const TCHAR* MnuLbl_MailSyncStopSend = _T("Stop sending");
 }
 using namespace MailMainView_Def;
 
@@ -31,7 +38,10 @@ MailMainView::MailMainView(wxWindow* parent, MailMsgFileMgr* msg_file_mgr, MailM
 		std::bind(&MailMainView::AccountCfg_EventHandler,
 			this, std::placeholders::_1, std::placeholders::_2));
 	CreateMasterViewModel(masterModelViewOption1);
-	tlbrMaster->RemoveTool(toolStopSyncMail->GetId()); // needs initial state update
+	tlbrMaster->RemoveTool(toolStopSyncMail->GetId()); // Initial state update is required
+
+	AdjustMailSyncUiControls();
+
 	RefreshMasterToolsState();
 	RefreshDetailToolsState(false);
 #ifdef _WINDOWS
@@ -59,41 +69,32 @@ void MailMainView::toolConfigMasterView_OnToolClicked(wxCommandEvent& event)
 
 void MailMainView::toolStartSyncMail_OnToolClicked(wxCommandEvent& event)
 {
-	wxBeginBusyCursor();
-	const auto item = dvAccFolders->GetSelection();
-	if (item.IsOk()) {
-		auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
-		auto accounts = data_item->GetAccounts();
-		for (auto& account : accounts) {
-			msgFileMgr->InitGroup(account->Id, *account); // Refresh account info just in case
-			bool result = msgFileMgr->StartMailRecv(account->Id);
-		}
-		RefreshMasterToolsState(&item);
-	}
-	wxEndBusyCursor();
+	StartMailSync(true, true);
 }
 
 void MailMainView::toolStopSyncMail_OnToolClicked(wxCommandEvent& event)
 {
-	wxBeginBusyCursor();
-	const auto item = dvAccFolders->GetSelection();
-	if (item.IsOk()) {
-		auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
-		auto accounts = data_item->GetAccounts();
-		if (accounts.size() > 0
-			&& wxOK == wxMessageBox(
-				wxString::Format(Msg_MailStopSyncQuestion, (int)accounts.size()), AppDef_Title,
-				wxICON_QUESTION | wxOK | wxCANCEL | wxCANCEL_DEFAULT, this))
-		{
-			for (auto account : accounts) {
-				logger->LogFmt(LisLog::llInfo,
-					Log_Scope " Stopping acc#%i mail sync...", account->Id);
-				bool result = msgFileMgr->StopProcessing(account->Id);
-			}
-			RefreshMasterToolsState(&item);
-		}
-	}
-	wxEndBusyCursor();
+	StopMailSync(true, true);
+}
+
+void MailMainView::mnuMailSyncStartRecv_OnMenuSelection(wxCommandEvent& event)
+{
+	StartMailSync(true, false);
+}
+
+void MailMainView::mnuMailSyncStartSend_OnMenuSelection(wxCommandEvent& event)
+{
+	StartMailSync(false, true);
+}
+
+void MailMainView::mnuMailSyncStopRecv_OnMenuSelection(wxCommandEvent& event)
+{
+	StopMailSync(true, false);
+}
+
+void MailMainView::mnuMailSyncStopSend_OnMenuSelection(wxCommandEvent& event)
+{
+	StopMailSync(false, true);
 }
 
 void MailMainView::toolCreateMailMsg_OnToolClicked(wxCommandEvent& event)
@@ -233,6 +234,41 @@ void MailMainView::mnuMailMsgItemDelete_OnMenuSelection(wxCommandEvent& event)
 	}
 }
 
+void MailMainView::AdjustMailSyncUiControls()
+{
+	// Replacing the tools by wxITEM_DROPDOWN type (RAD tools don't allow this type yet).
+	// TODO: this wxITEM_DROPDOWN quick fix is supposed to be temporary, until fixed in a RAD editor
+
+	auto pos = tlbrMaster->GetToolPos(toolStartSyncMail->GetId());
+
+	tlbrMaster->RemoveTool(toolStartSyncMail->GetId());
+	delete toolStartSyncMail;
+	toolStartSyncMail = tlbrMaster->InsertTool(pos, wxID_ANY, wxEmptyString,
+		wxArtProvider::GetBitmap(wxASCII_STR("IcoToolRefresh"), wxASCII_STR(wxART_OTHER)), wxNullBitmap,
+		wxITEM_DROPDOWN, ToolHlp_MailSyncStart, wxEmptyString, nullptr);
+	this->Bind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStartSyncMail_OnToolClicked, this, toolStartSyncMail->GetId());
+
+	mnuMailSyncStart = new wxMenu();
+	mnuMailSyncStartRecv = mnuMailSyncStart->Append(wxID_ANY, MnuLbl_MailSyncStartRecv);
+	mnuMailSyncStart->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStartRecv_OnMenuSelection, this, mnuMailSyncStartRecv->GetId());
+	mnuMailSyncStartSend = mnuMailSyncStart->Append(wxID_ANY, MnuLbl_MailSyncStartSend);
+	mnuMailSyncStart->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStartSend_OnMenuSelection, this, mnuMailSyncStartSend->GetId());
+	toolStartSyncMail->SetDropdownMenu(mnuMailSyncStart);
+
+	delete toolStopSyncMail;
+	toolStopSyncMail = tlbrMaster->CreateTool(wxID_ANY, wxEmptyString,
+		wxArtProvider::GetBitmap(wxASCII_STR("IcoToolStop"), wxASCII_STR(wxART_OTHER)), wxNullBitmap,
+		wxITEM_DROPDOWN, nullptr, ToolHlp_MailSyncStop, wxEmptyString);
+	this->Bind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStopSyncMail_OnToolClicked, this, toolStopSyncMail->GetId());
+
+	mnuMailSyncStop = new wxMenu();
+	mnuMailSyncStopRecv = mnuMailSyncStop->Append(wxID_ANY, MnuLbl_MailSyncStopRecv);
+	mnuMailSyncStop->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStopRecv_OnMenuSelection, this, mnuMailSyncStopRecv->GetId());
+	mnuMailSyncStopSend = mnuMailSyncStop->Append(wxID_ANY, MnuLbl_MailSyncStopSend);
+	mnuMailSyncStop->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStopSend_OnMenuSelection, this, mnuMailSyncStopSend->GetId());
+	toolStopSyncMail->SetDropdownMenu(mnuMailSyncStop);
+}
+
 int MailMainView::AccountCfg_EventHandler(const AccountCfg* acc_cfg, const AccountCfg::EventInfo& evt_info)
 {
 	wxBeginBusyCursor();
@@ -248,8 +284,9 @@ void MailMainView::RefreshMasterToolsState(const wxDataViewItem* item)
 	if (!item) {
 		item = &dvAccFolders->GetSelection();
 	}
-	bool is_acc_busy = item ? IsAccItemBusy(*item, msgFileMgr) : true;
-	if (is_acc_busy) {
+	auto acc_busy_state =
+		item ? GetAccItemBusyState(*item, msgFileMgr) : MailMsgFileMgr::GrpProcStatus::gpsNone;
+	if (acc_busy_state) {
 		auto pos = tlbrMaster->GetToolPos(toolStartSyncMail->GetId());
 		if (wxNOT_FOUND != pos) {
 			tlbrMaster->RemoveTool(toolStartSyncMail->GetId());
@@ -263,6 +300,10 @@ void MailMainView::RefreshMasterToolsState(const wxDataViewItem* item)
 		}
 	}
 	tlbrMaster->Realize();
+	// mnuMailSyncStartRecv->Enable(!acc_busy_state);
+	// mnuMailSyncStartSend->Enable(!acc_busy_state);
+	mnuMailSyncStopRecv->Enable(MailMsgFileMgr::GrpProcStatus::gpsProcReceiving & acc_busy_state);
+	mnuMailSyncStopSend->Enable(MailMsgFileMgr::GrpProcStatus::gpsProcSending & acc_busy_state);
 }
 
 void MailMainView::RefreshDetailToolsState(bool enable_filter)
@@ -282,4 +323,45 @@ void MailMainView::RefreshDetailToolsState(bool enable_filter)
 		ApplyMailMsgFilter("");
 	}
 	tlbrDetail->Realize();
+}
+
+void MailMainView::StartMailSync(bool receiving, bool sending)
+{
+	wxBeginBusyCursor();
+	const auto item = dvAccFolders->GetSelection();
+	if (item.IsOk()) {
+		auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
+		auto accounts = data_item->GetAccounts();
+		for (auto& account : accounts) {
+			msgFileMgr->InitGroup(account->Id, *account); // Refresh account info just in case
+			if (receiving) msgFileMgr->StartMailRecv(account->Id);
+			if (sending) msgFileMgr->StartMailSend(account->Id);
+		}
+		RefreshMasterToolsState(&item);
+	}
+	wxEndBusyCursor();
+}
+
+void MailMainView::StopMailSync(bool receiving, bool sending)
+{
+	wxBeginBusyCursor();
+	const auto item = dvAccFolders->GetSelection();
+	if (item.IsOk()) {
+		auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
+		auto accounts = data_item->GetAccounts();
+		if (accounts.size() > 0
+			&& wxOK == wxMessageBox(
+				wxString::Format(Msg_MailStopSyncQuestion, (int)accounts.size()), AppDef_Title,
+				wxICON_QUESTION | wxOK | wxCANCEL | wxCANCEL_DEFAULT, this))
+		{
+			for (auto account : accounts) {
+				logger->LogFmt(LisLog::llInfo,
+					Log_Scope " Stopping acc#%i mail sync...", account->Id);
+				if (sending) msgFileMgr->StopMailSend(account->Id);
+				if (receiving) msgFileMgr->StopMailRecv(account->Id);
+			}
+			RefreshMasterToolsState(&item);
+		}
+	}
+	wxEndBusyCursor();
 }

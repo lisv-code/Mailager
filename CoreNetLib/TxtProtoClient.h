@@ -3,11 +3,6 @@
 #include <LisCommon/Logger.h>
 #include "NetClient.h"
 
-namespace TxtProtoClient_Def
-{
-	extern const int Error_None;
-}
-
 class TxtProtoClient
 {
 protected:
@@ -19,7 +14,6 @@ private:
 
 	static const int Last_Resp_Buf_Size = 0x2260 - 1;
 	char lastResp[Last_Resp_Buf_Size + 1]; // "+ 1" to allow 0-ending symbol if the buffer is full
-	char* lastErrMsg;
 
 	int ProcListItems(char* data, ListItemRecvProc item_proc, char** proc_end);
 	bool RecvMore(char* data_pos, size_t& data_size);
@@ -37,9 +31,11 @@ protected:
 	bool SendList(ListItemSendProc item_proc);
 	bool RecvList(char* data_pos, size_t data_size, ListItemRecvProc item_proc);
 public:
+	TxtProtoClient() = delete;
 	TxtProtoClient(const char* url);
-	~TxtProtoClient();
+	TxtProtoClient(const TxtProtoClient& src) = delete;
+	TxtProtoClient(TxtProtoClient&& src) noexcept;
+	virtual ~TxtProtoClient();
 
 	int GetLastErrorCode();
-	char* GetLastErrorMessage(); // TODO: is it needed? should contain a message related to the error code
 };

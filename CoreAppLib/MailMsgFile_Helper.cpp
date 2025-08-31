@@ -6,6 +6,7 @@
 #include <vector>
 #include <LisCommon/StrUtils.h>
 #include "../CoreMailLib/MimeMessageDef.h"
+#include "AppResCodes.h"
 #include "MailMsgFileDef.h"
 
 #ifdef _WINDOWS
@@ -16,6 +17,7 @@
 #endif
 
 #define FileExt_OperaMail ".mbs" // Opera Mailbox File
+#define FileExt_TempCopy ".tmp"
 
 namespace MailMsgFile_Helper_Imp
 {
@@ -37,17 +39,8 @@ bool MailMsgFile_Helper::is_opera_mail_file(const FILE_PATH_CHAR* file_path)
 std::string MailMsgFile_Helper::generate_file_name(const char* name_prefix, const char* name_suffix)
 {
 	char time_buf[0x20];
-	//int len = sizeof(time_buf);
 	auto tp_now = std::chrono::system_clock::now();
-
-	// // time string YyyyMmDdHhMmSsMmm
-	//auto time = std::chrono::system_clock::to_time_t(tp_now);
-	//std::tm tm = *std::localtime(&time);
-	//int res = std::strftime(time_buf, len, "%Y%m%d%H%M%S", &tm);
-	//auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tp_now.time_since_epoch()) % 1000;
-	//res += snprintf(time_buf + res, len - res, "%03u", ms);
-
-	// // time number (ms) represented in base-36 numeral system
+	// time number (ms) represented in base-36 numeral system
 	LisStr::IntToStr(
 		std::chrono::duration_cast<std::chrono::milliseconds>(tp_now.time_since_epoch()).count(),
 		time_buf, 36);
@@ -60,7 +53,7 @@ std::string MailMsgFile_Helper::generate_file_name(const char* name_prefix, cons
 
 int MailMsgFile_Helper::init_input_stream(std::ifstream& file_data, const FILE_PATH_CHAR* file_path, bool normalize)
 {
-	if (!file_path) return mfrError_Initialization;
+	if (!file_path) return Error_File_Initialization;
 	file_data.open(file_path, std::ios::in | std::ios::binary);
 	if (normalize) {
 		bool is_opera_mail_file = MailMsgFile_Helper::is_opera_mail_file(file_path);
@@ -70,19 +63,19 @@ int MailMsgFile_Helper::init_input_stream(std::ifstream& file_data, const FILE_P
 			while (file_data.get(c) && !file_data.eof() && ('\n' != c)) { ++pos; } // Skip first line
 		}
 	}
-	return file_data.is_open() ? mfrOk : mfrError_FileOperation;
+	return file_data.is_open() ? ResCode_Ok : Error_File_DataOperation;
 }
 
 int MailMsgFile_Helper::update_header_fields(const FILE_PATH_CHAR* file_path,
 	const char* field_names[], const char* field_values[], bool set_new_top)
 {
-	if (!file_path) return mfrError_Initialization;
+	if (!file_path) return Error_File_Initialization;
 	auto fld_names = copy_array(field_names);
 	auto fld_values = copy_array(field_values);
-	if (fld_names.size() != fld_values.size()) return mfrError_Initialization;
+	if (fld_names.size() != fld_values.size()) return Error_File_Initialization;
 
 	std::ifstream ifs(file_path, std::ios::in);
-	if (!ifs.is_open()) return mfrError_FileOperation;
+	if (!ifs.is_open()) return Error_File_DataOperation;
 
 	std::list<std::string> hdr_lines;
 	int fld_idx = -1;
@@ -94,9 +87,9 @@ int MailMsgFile_Helper::update_header_fields(const FILE_PATH_CHAR* file_path,
 	}
 
 	std::basic_string<FILE_PATH_CHAR> tmp_file(file_path);
-	tmp_file += FILE_PATH_TEXT(".tmp");
+	tmp_file += FILE_PATH_TEXT(FileExt_TempCopy);
 	std::ofstream ofs(tmp_file, std::ios::binary | std::ios::out | std::ios::trunc);
-	if (!ofs.is_open()) return mfrError_FileOperation;
+	if (!ofs.is_open()) return Error_File_DataOperation;
 
 	if (!fld_names.empty()) {
 		move_lines(hdr_lines, ofs, set_new_top ? (is_opera_mail_file(file_path) ? 1 : 0) : -1);
@@ -118,7 +111,7 @@ int MailMsgFile_Helper::update_header_fields(const FILE_PATH_CHAR* file_path,
 	LisFileSys::FileDelete(file_path);
 	LisFileSys::FileRename(tmp_file.c_str(), file_path);
 
-	return mfrOk;
+	return ResCode_Ok;
 }
 
 // ******************************* Internal functions implementation *******************************

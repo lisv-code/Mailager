@@ -2,16 +2,20 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
-
-using namespace SmtpClient_Def;
+#include "NetResCodes.h"
+using namespace NetLibGen_ResCodes;
 
 namespace SmtpClient_Imp
 {
-	const char* Log_Scope = "SmtpClient";
+	const char* Log_Scope = "SmtpClnt";
 }
 using namespace SmtpClient_Imp;
 
 SmtpClient::SmtpClient(const char* url) : TxtProtoClient(url) { }
+
+SmtpClient::SmtpClient(SmtpClient&& src) noexcept
+	: TxtProtoClient(std::move(src))
+{ }
 
 SmtpClient::~SmtpClient() { }
 
@@ -34,7 +38,7 @@ bool SmtpClient::Auth(AuthTokenType type, const char* token)
 		return nullptr != SendCmd("AUTH PLAIN", token);
 	case attXOAuth2:
 		SendCmd("AUTH XOAUTH2", token);
-		return Error_None == lastErrCode; // NetClient_Def::ErrCode_None
+		return ResCode_Ok == lastErrCode;
 	default:
 		return false;
 	}

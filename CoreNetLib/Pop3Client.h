@@ -3,11 +3,6 @@
 #include <ostream>
 #include "TxtProtoClient.h"
 
-namespace Pop3Client_Def
-{
-	const int Error_None = 0;
-}
-
 class Pop3Client : public TxtProtoClient
 {
 protected:
@@ -20,7 +15,8 @@ public:
 	struct UidlItem { int number; char id[71]; }; // Up to 70 characters (according to RFC 1939)
 
 	Pop3Client(const char* url);
-	~Pop3Client();
+	Pop3Client(Pop3Client&& src) noexcept;
+	virtual ~Pop3Client();
 
 	// Provides username and password to the server.
 	bool Auth(const char* user, const char* pswd);

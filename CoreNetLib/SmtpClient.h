@@ -2,11 +2,6 @@
 #include <istream>
 #include "TxtProtoClient.h"
 
-namespace SmtpClient_Def
-{
-	const int Error_None = 0;
-}
-
 class SmtpClient : public TxtProtoClient
 {
 	static const char* SkipResponseCode(const char* response);
@@ -18,7 +13,8 @@ public:
 	enum AuthTokenType { attNone = 0, attPlain, attXOAuth2 };
 
 	SmtpClient(const char* url);
-	~SmtpClient();
+	SmtpClient(SmtpClient&& src) noexcept;
+	virtual ~SmtpClient();
 
 	// Provides an access token to the server.
 	bool Auth(AuthTokenType type, const char* token);

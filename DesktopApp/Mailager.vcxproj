@@ -189,6 +189,7 @@
     <ClInclude Include="..\CoreAppLib\MailMsgDataHelper.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgFileDef.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgTransmitter.h" />
+    <ClInclude Include="..\CoreAppLib\AppResCodes.h" />
     <ClInclude Include="..\CoreMailLib\MimeHeader.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgFile.h" />
     <ClInclude Include="..\CoreMailLib\MimeMessageDef.h" />
@@ -200,6 +201,7 @@
     <ClInclude Include="..\CoreAppLib\MailMsgStatus.h" />
     <ClInclude Include="..\CoreMailLib\RfcHeaderField.h" />
     <ClInclude Include="..\CoreMailLib\RfcTextCodec.h" />
+    <ClInclude Include="..\CoreNetLib\NetResCodes.h" />
     <ClInclude Include="..\CoreNetLib\SmtpClient.h" />
     <ClInclude Include="..\CoreNetLib\TxtProtoClient.h" />
     <ClInclude Include="..\wxWidgetsX\fs_data.h" />

@@ -54,4 +54,5 @@ public:
 	int DeleteFile();
 	int SetReadStatus(bool is_read);
 	int SetMailToSend();
+	int SetMailAsSent();
 };

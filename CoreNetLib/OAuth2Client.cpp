@@ -9,18 +9,12 @@
 #include <json.hpp>
 using json = nlohmann::json;
 
-using namespace OAuth2Client_Def;
+#include "NetResCodes.h"
+using namespace NetLibGen_ResCodes;
+using namespace OAuth2Client_ResCodes;
 
 namespace OAuth2Client_Imp
 {
-// TODO: could be dependent on NetServer return codes
-#define Err_PortSetupFailed -1
-#define Err_SysCmdFailure -2
-#define Err_NetConnection -3
-#define Err_ResponseNoData -4
-#define Err_ResponseUnrecognized -5
-#define Err_ResponseIsError ErrCode_ResponseIsError
-
 	const char* auth_code_request = "https://%s?response_type=code&client_id=%s&scope=%s&redirect_uri=%s";
 	const char* auth_code_resp_head = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: %u\n\n";
 	const char* auth_code_resp_body = "<html>"
@@ -50,7 +44,7 @@ int OAuth2Client::ProcessRequest(const char* url)
 {
 #ifdef _WINDOWS
 	return (int)ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL) > 32
-		? 0 : Err_SysCmdFailure;
+		? ResCode_Ok : Error_SysCmdFailure;
 #else
 	char buf[0xFFF];
 	snprintf(buf, sizeof(buf), "open \"%s\"", url); // could be "xdg-open" in Linux, but "open" in MacOS
@@ -60,10 +54,10 @@ int OAuth2Client::ProcessRequest(const char* url)
 
 int OAuth2Client::SetRedirectPort(const unsigned short allowed_ports[], size_t count)
 {
-	int result = Err_PortSetupFailed;
+	int result = Error_PortSetupFailed;
 	for (size_t i = 0; i < count; ++i) {
 		result = netServer.Start("127.0.0.1", allowed_ports[i]);
-		if (0 == result) {
+		if (result >= 0) {
 			netPort = allowed_ports[i];
 			break;
 		}
@@ -91,10 +85,10 @@ int OAuth2Client::GetCode(char* out_buf, const char* server, const char* client_
 	snprintf(buf1, buf1_size, auth_code_request, server, client_id, scope, GetRedirectAddress(buf2, sizeof(buf2)));
 
 	int result = ProcessRequest(buf1);
-	if (result != 0) return Err_SysCmdFailure;
+	if (result != 0) return Error_SysCmdFailure;
 
 	result = netServer.Connect(); // TODO: make the state cancellable (thread, timeout)
-	if (result != 0) return Err_NetConnection;
+	if (result != 0) return Error_NetConnection;
 
 	size_t data_size;
 	result = netServer.Recv(buf1, buf1_size, data_size);
@@ -103,13 +97,13 @@ int OAuth2Client::GetCode(char* out_buf, const char* server, const char* client_
 		char* prm_val = (char*)FindRequestValue("code=", buf1);
 		if (prm_val) {
 			strcpy(out_buf, prm_val);
-			result = 0;
+			result = ResCode_Ok;
 		} else if (prm_val = (char*)FindRequestValue("error=", buf1)) {
 			strcpy(out_buf, prm_val);
-			result = Err_ResponseIsError;
+			result = Error_ResponseIsError;
 		} else {
 			strcpy(out_buf, buf1);
-			result = Err_ResponseUnrecognized;
+			result = Error_ResponseUnrecognized;
 		}
 
 		size_t body_len = strlen(auth_code_resp_body);
@@ -146,13 +140,13 @@ OAuth2Token OAuth2Client::GetToken(const char* server, const char* code, const c
 		} else if (!resp_data["error"].is_null()) {
 			result.access_token = resp_data["error"].get<std::string>();
 			result.token_type = resp_data["error_description"].get<std::string>();
-			result.expires = Err_ResponseIsError;
+			result.expires = Error_ResponseIsError;
 		} else {
-			result.expires = Err_ResponseUnrecognized;
+			result.expires = Error_ResponseUnrecognized;
 		}
 	} else {
 		result.access_token = std::string("no_data_returned");
-		result.expires = Err_ResponseNoData;
+		result.expires = Error_ResponseNoData;
 	}
 	return result;
 }
@@ -181,13 +175,13 @@ OAuth2Token OAuth2Client::RefreshToken(const char* server, const char* token1, c
 		} else if (!resp_data["error"].is_null()) {
 			result.access_token = resp_data["error"].get<std::string>();
 			result.token_type = resp_data["error_description"].get<std::string>();
-			result.expires = Err_ResponseIsError;
+			result.expires = Error_ResponseIsError;
 		} else {
-			result.expires = Err_ResponseUnrecognized;
+			result.expires = Error_ResponseUnrecognized;
 		}
 	} else {
 		result.access_token = std::string("no_data_returned");
-		result.expires = Err_ResponseNoData;
+		result.expires = Error_ResponseNoData;
 	}
 	return result;
 }

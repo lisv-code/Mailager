@@ -4,19 +4,11 @@
 #include <curl/curl.h>
 #include <LisCommon/Logger.h>
 
-namespace NetClient_Def
-{
-	const int ErrCode_None = CURLE_OK;
-	const int ErrCode_Max = CURL_LAST + 0xFF;
-
-	typedef int (*data_callback)(const char* data, size_t size, void* user_param);
-
-	const size_t Data_Recv_Buffer_Size = 4096;
-	const long Socket_Wait_Timeout_Ms = 60000;
-}
-
 class NetClient
 {
+public:
+	typedef int (*DataWriteCallback)(const char* data, size_t size, void* user_param);
+private:
 	LisLog::ILogger* logger = LisLog::Logger::GetInstance();
 	CURL* hConnection;
 	curl_socket_t hSocket;
@@ -30,7 +22,7 @@ class NetClient
 	struct TDataDest {
 		DataDestType Type;
 		union {
-			struct { NetClient_Def::data_callback Ref; void* Param; } Func;
+			struct { DataWriteCallback Ref; void* Param; } Func;
 			struct { char* Ref; size_t Size; size_t* Written; } Buffer;
 			std::ostream* Stream;
 		};
@@ -44,6 +36,8 @@ class NetClient
 	friend int net_client_data_write(TDataDest dest, char* data, size_t size, LisLog::ILogger* logger);
 public:
 	NetClient();
+	NetClient(const NetClient& src) = delete;
+	NetClient(NetClient&& src) noexcept;
 	virtual ~NetClient();
 
 	long GetDefaultTimeout();
@@ -55,11 +49,11 @@ public:
 	void Close();
 
 	int Send(const char* data, size_t size);
-	int Recv(NetClient_Def::data_callback callback_func, void* user_param);
+	int Recv(DataWriteCallback callback_func, void* user_param);
 	int Recv(char* buffer, size_t buffer_size, size_t& size_read);
 	int Recv(std::ostream& stream);
 
-	int Exec(NetClient_Def::data_callback callback_func, void* user_param,
+	int Exec(DataWriteCallback callback_func, void* user_param,
 		const char* url, const char* post_fields);
 	int Exec(char* out_buffer, size_t buffer_size, size_t& size_read,
 		const char* url, const char* post_fields);

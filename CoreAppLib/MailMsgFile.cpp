@@ -3,6 +3,7 @@
 #include "../CoreMailLib/MimeHeaderDef.h"
 #include "../CoreMailLib/MimeMessageDef.h"
 #include "../CoreMailLib/MimeParser.h"
+#include "AppResCodes.h"
 #include "MailMsgDataHelper.h"
 #include "MailMsgFileDef.h"
 #include "MailMsgFile_Helper.h"
@@ -80,7 +81,7 @@ int MailMsgFile::LoadMsgData(MimeNode* data, bool raw_hdr_values)
 		}
 		result = result >= 0 ? result : result + ErrorCode_Base_MimeParser;
 	} else {
-		result = mfrOk;
+		result = ResCode_Ok;
 	}
 	stm.close();
 
@@ -90,7 +91,7 @@ int MailMsgFile::LoadMsgData(MimeNode* data, bool raw_hdr_values)
 int MailMsgFile::LoadInfo()
 {
 	if (mailInfo.IsEmpty()) return LoadMsgData(nullptr, false);
-	else return mfrOk;
+	else return ResCode_Ok;
 }
 
 const MimeHeader& MailMsgFile::GetInfo()
@@ -129,10 +130,10 @@ int MailMsgFile::ChangeStatus(MailMsgStatus added, MailMsgStatus removed)
 {
 	auto old_status = _GetStatus();
 	auto new_status = (MailMsgStatus)((old_status | added) & ~removed);
-	if (old_status == new_status) return mfrOk; // No actual changes
+	if (old_status == new_status) return ResCode_Ok; // No actual changes
 
-	if (RaiseEvent(etStatusChanging, (void*)new_status) < 0) return mfrError_OperationInterrupted;
-	int result = mfrOk;
+	if (RaiseEvent(etStatusChanging, (void*)new_status) < 0) return Error_Gen_Operation_Interrupted;
+	int result = ResCode_Ok;
 	const char* status_str = header_update_status(mailInfo, new_status);
 	mailStatus = new_status;
 	if (filePath) {
@@ -155,6 +156,7 @@ bool MailMsgFile::CheckStatusFlags(MailMsgStatus enabled, MailMsgStatus unset) c
 	return (enabled ? (enabled & _GetStatus()) : true)
 		&& !(unset ? (unset & _GetStatus()) : false);
 }
+
 int MailMsgFile::LoadData(MimeNode& data, bool raw_hdr_values)
 {
 	return LoadMsgData(&data, raw_hdr_values);
@@ -163,7 +165,7 @@ int MailMsgFile::LoadData(MimeNode& data, bool raw_hdr_values)
 int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
 {
 	if (!filePath) { // Trying to obtain file path if not defined yet
-		if (MailMsgGrpId_Empty == grp_id) return mfrError_Initialization;
+		if (MailMsgGrpId_Empty == grp_id) return Error_File_Initialization;
 		std::swap(grpId, grp_id); // Set new grpId
 		MailMsgFile_EventData_DataSaving evt_prm;
 		if (filePath) evt_prm = filePath;
@@ -172,10 +174,10 @@ int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
 			filePath = LisStr::StrCopy(evt_prm.c_str());
 		} else {
 			std::swap(grpId, grp_id); // Rollback grpId
-			return mfrError_OperationInterrupted;
+			return Error_Gen_Operation_Interrupted;
 		}
 	}
-	if (!filePath) return mfrError_Initialization;
+	if (!filePath) return Error_File_Initialization;
 
 	// Initializing output stream and storing the data
 	std::ofstream file(filePath, std::ios::out | std::ios::binary);
@@ -188,7 +190,7 @@ int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
 	parser.AddHdr(header, true);
 	// Saving data and closing stream
 	parser.Save(file);
-	int result = file.good() ? mfrOk : mfrError_FileOperation; // TODO: handle the saving error (probably reset the filePath if it's newly obtained)
+	int result = file.good() ? ResCode_Ok : Error_File_DataOperation; // TODO: handle the saving error (probably reset the filePath if it's newly obtained)
 	file.close();
 
 	if (result >= 0) { // Loading metadata from the saved file
@@ -202,11 +204,11 @@ int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
 
 int MailMsgFile::DeleteFile()
 {
-	if (!filePath) return mfrError_Initialization;
-	int result = mfrError_FileOperation;
+	if (!filePath) return Error_File_Initialization;
+	int result = Error_File_DataOperation;
 	if (CheckStatusFlags(MailMsgStatus::mmsIsDeleted)) {
 		if (LisFileSys::FileDelete(filePath)) {
-			result = mfrOk;
+			result = ResCode_Ok;
 			RaiseEvent(etFileDeleted, nullptr);
 		}
 	} else {
@@ -234,10 +236,15 @@ int MailMsgFile::SetMailToSend()
 	const char* fld_values[] = { date_str.c_str(), msg_id_str.c_str(), 0};
 	int result = MailMsgFile_Helper::update_header_fields(filePath, fld_names, fld_values, false);
 
-	if (result)
+	if (result >= 0)
 		result = ChangeStatus(MailMsgStatus::mmsIsOutgoing, MailMsgStatus::mmsIsDraft);
 
 	return result;
+}
+
+int MailMsgFile::SetMailAsSent()
+{
+	return ChangeStatus(MailMsgStatus::mmsIsSent, MailMsgStatus::mmsIsDraft);
 }
 
 // *********************************** MailMsgFile_Imp functions ***********************************

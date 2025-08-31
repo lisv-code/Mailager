@@ -2,12 +2,9 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
-
-namespace TxtProtoClient_Def
-{
-	const int Error_None = 0;
-}
-using namespace TxtProtoClient_Def;
+#include "NetResCodes.h"
+using namespace NetLibGen_ResCodes;
+using namespace TxtProtoClient_ResCodes;
 
 #define Txt_Proto_Line_End_Str "\x0D\x0A"
 
@@ -26,15 +23,16 @@ using namespace LisLog;
 
 TxtProtoClient::TxtProtoClient(const char* url)
 {
-	lastErrMsg = nullptr;
 	lastErrCode = netClient.Open(url);
 }
+
+TxtProtoClient::TxtProtoClient(TxtProtoClient&& src) noexcept
+	: netClient(std::move(src.netClient)), lastErrCode(src.lastErrCode)
+{ }
 
 TxtProtoClient::~TxtProtoClient() { }
 
 int TxtProtoClient::GetLastErrorCode() { return lastErrCode; }
-
-char* TxtProtoClient::GetLastErrorMessage() { return lastErrMsg; }
 
 const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm)
 {
@@ -51,13 +49,13 @@ const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm, size_t& da
 		: CmdEndStr;
 	lastErrCode = netClient.Send(net_cmd.c_str(), net_cmd.size());
 
-	if (NetClient_Def::ErrCode_None != lastErrCode) return nullptr;
+	if (ResCode_Ok != lastErrCode) return nullptr;
 
 	lastErrCode = netClient.Recv(lastResp, Last_Resp_Buf_Size, data_size);
 	lastResp[data_size] = 0;
 
 	const char* ok_msg = nullptr;
-	if (Error_None == lastErrCode && 0 != data_size) {
+	if (ResCode_Ok == lastErrCode && 0 != data_size) {
 		auto resp_pos = std::find_if(lastResp, lastResp + data_size,
 			[](unsigned char c) { return 0 == std::isspace(c); }); // Skip leading spaces
 		const char* resp_msg = nullptr;
@@ -67,7 +65,7 @@ const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm, size_t& da
 			data_size -= (ok_msg - lastResp); // Decrease the data_size by the prefix length (if it is)
 			logger->LogFmt(llDebug, "%s Ok response on cmd %s: %s", GetLogScope(), cmd, ok_msg);
 		} else {
-			lastErrCode = NetClient_Def::ErrCode_Max + 1; // ERROR: some error
+			lastErrCode = Error_SomeError + 1; // ERROR: some error
 			logger->LogFmt(llError, "%s Error response on cmd %s: %s", GetLogScope(), cmd, resp_msg);
 		}
 	} else
@@ -85,11 +83,11 @@ bool TxtProtoClient::SendList(ListItemSendProc item_proc)
 	while (result && nullptr != (list_item = item_proc(counter))) {
 		data_line = list_item;
 		data_line += ListItemEndStr;
-		result = NetClient_Def::ErrCode_None == netClient.Send(data_line.c_str(), data_line.size());
+		result = ResCode_Ok == netClient.Send(data_line.c_str(), data_line.size());
 		++counter;
 	}
 	if (result) {
-		result = NetClient_Def::ErrCode_None == netClient.Send(ListEndStr, ListEndLen);
+		result = ResCode_Ok == netClient.Send(ListEndStr, ListEndLen);
 	}
 	return result;
 }
@@ -134,7 +132,7 @@ bool TxtProtoClient::RecvMore(char* data_pos, size_t& data_size)
 	size_t new_data_size;
 	size_t buf_size = Last_Resp_Buf_Size - data_size - (data_pos - lastResp);
 	lastErrCode = netClient.Recv(data_pos + data_size, buf_size, new_data_size);
-	if (Error_None == lastErrCode && 0 < new_data_size) {
+	if (ResCode_Ok == lastErrCode && 0 < new_data_size) {
 		data_size += new_data_size;
 		((char*)data_pos)[data_size] = 0;
 		return true;

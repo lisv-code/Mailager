@@ -2,15 +2,6 @@
 #include <string>
 #include "ConnectionInfo.h"
 
-#define Connection_Result_Ok 0
-
-#define Connection_Error_Protocol -1
-#define Connection_Error_Handshake -2
-#define Connection_Error_AuthConfig -3
-#define Connection_Error_AuthProcess -4
-
-#define Connection_Error_Interrupted -10
-
 class ConnectionHelper
 {
 public:

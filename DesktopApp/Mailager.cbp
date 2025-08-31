@@ -70,6 +70,7 @@
 		<Unit filename="../CoreAppLib/AccountSettings.cpp" />
 		<Unit filename="../CoreAppLib/AccountSettings.h" />
 		<Unit filename="../CoreAppLib/AppDef.h" />
+		<Unit filename="../CoreAppLib/AppResCodes.h" />
 		<Unit filename="../CoreAppLib/AuthTokenProc.cpp" />
 		<Unit filename="../CoreAppLib/AuthTokenProc.h" />
 		<Unit filename="../CoreAppLib/ConnectionAuth.cpp" />
@@ -116,6 +117,7 @@
 		<Unit filename="../CoreMailLib/RfcTextCodec.h" />
 		<Unit filename="../CoreNetLib/NetClient.cpp" />
 		<Unit filename="../CoreNetLib/NetClient.h" />
+		<Unit filename="../CoreNetLib/NetResCodes.h" />
 		<Unit filename="../CoreNetLib/NetServer.cpp" />
 		<Unit filename="../CoreNetLib/NetServer.h" />
 		<Unit filename="../CoreNetLib/OAuth2Client.cpp" />

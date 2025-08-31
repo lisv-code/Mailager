@@ -20,9 +20,23 @@ private:
 	MailMsgFileMgr* msgFileMgr;
 	MailMsgViewMgr* msgViewMgr;
 
+	// These menus are initialized specifically, then destroyed by the toolbar
+	wxMenu* mnuMailSyncStart = nullptr;
+	wxMenuItem *mnuMailSyncStartRecv = nullptr, *mnuMailSyncStartSend = nullptr;
+	wxMenu* mnuMailSyncStop = nullptr;
+	wxMenuItem *mnuMailSyncStopRecv = nullptr, *mnuMailSyncStopSend = nullptr;
+
+	void AdjustMailSyncUiControls();
 	int AccountCfg_EventHandler(const AccountCfg* acc_cfg, const AccountCfg::EventInfo& evt_info);
 	void RefreshMasterToolsState(const wxDataViewItem* item = nullptr);
 	void RefreshDetailToolsState(bool enable_filter);
+	void StartMailSync(bool receiving, bool sending);
+	void StopMailSync(bool receiving, bool sending);
+
+	void mnuMailSyncStartRecv_OnMenuSelection(wxCommandEvent& event);
+	void mnuMailSyncStartSend_OnMenuSelection(wxCommandEvent& event);
+	void mnuMailSyncStopRecv_OnMenuSelection(wxCommandEvent& event);
+	void mnuMailSyncStopSend_OnMenuSelection(wxCommandEvent& event);
 
 	// ****** MainViewUI override ******
 	virtual void toolConfigMasterView_OnToolClicked(wxCommandEvent& event) override;
@@ -49,7 +63,7 @@ private:
 	void CreateMasterViewModel(bool group_by_folder);
 	void ExpandFirstLevel();
 	static bool IsFolderMatches(int folder_id, MailMsgFile* mail_msg);
-	static bool IsAccItemBusy(const wxDataViewItem& item, MailMsgFileMgr* msg_mgr);
+	static MailMsgFileMgr::GrpProcStatus GetAccItemBusyState(const wxDataViewItem& item, MailMsgFileMgr* msg_mgr);
 	static void ResetFolderMailCount(wxDataViewCtrl* view_ctrl, int folder_id);
 
 	// ****** Detail ******

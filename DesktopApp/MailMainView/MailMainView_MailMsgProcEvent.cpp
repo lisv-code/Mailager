@@ -36,7 +36,8 @@ void MailMainView::InitMailMsgProcEvent()
 		this, std::placeholders::_1, std::placeholders::_2);
 	msgFileMgr->EventSubscribe(MailMsgFileMgr_EventType::etCredentialsRequest, mail_mgr_evt_handler);
 	msgFileMgr->EventSubscribe(MailMsgFileMgr_EventType::etNewMessageAdded, mail_mgr_evt_handler);
-	msgFileMgr->EventSubscribe(MailMsgFileMgr_EventType::etSyncFinished, mail_mgr_evt_handler);
+	msgFileMgr->EventSubscribe(MailMsgFileMgr_EventType::etRecvFinished, mail_mgr_evt_handler);
+	msgFileMgr->EventSubscribe(MailMsgFileMgr_EventType::etSendFinished, mail_mgr_evt_handler);
 }
 
 void MailMainView::FreeMailMsgProcEvent()
@@ -85,11 +86,17 @@ bool MailMainView::RouteProcEvent(wxEvtHandler* dest, const MailMsgFileMgr::Even
 		cmd_evt->SetClientData(new_msg);
 	}
 	break;
-	case MailMsgFileMgr_EventType::etSyncFinished:
+	case MailMsgFileMgr_EventType::etRecvFinished:
+	case MailMsgFileMgr_EventType::etSendFinished:
+	{
 		cmd_evt->SetInt((int)MailMsgProc_Event::evtSyncFinished);
 		auto sync_fin = static_cast<MailMsgFileMgr_EventData_SyncFinish*>(evt_info.data);
-		// No data actually is passed to further processing
-		break;
+		// No data is passed currently to further processing
+	}
+	break;
+	default:
+		// ERROR: Unsupported event
+		return false;
 	}
 	wxQueueEvent(dest, cmd_evt);
 	return true;

@@ -16,16 +16,22 @@ enum MailMsgFileMgr_EventType
 {
 	etCredentialsRequest, // MailMsgFileMgr_EventData_CredentialsRequest
 	etNewMessageAdded, // MailMsgFileMgr_EventData_NewMessage
-	etSyncFinished // MailMsgFileMgr_EventData_SyncFinish
+	etRecvFinished, // MailMsgFileMgr_EventData_SyncFinish
+	etSendFinished // MailMsgFileMgr_EventData_SyncFinish
 };
 
-typedef struct {
+struct MailMsgFileMgr_EventData_CredentialsRequest {
 	const Connections::ConnectionInfo* Connection;
 	std::string* PswdData;
 	bool* NeedSave;
-} MailMsgFileMgr_EventData_CredentialsRequest;
+};
 typedef std::shared_ptr<MailMsgFile> MailMsgFileMgr_EventData_NewMessage;
-typedef struct { int GrpId; size_t ItemsCount; } MailMsgFileMgr_EventData_SyncFinish;
+struct MailMsgFileMgr_EventData_SyncFinish {
+	int GrpId;
+	LisThread::TaskProcResult ResCode;
+	MailMsgFileMgr_EventData_SyncFinish(int grp_id, LisThread::TaskProcResult res_code)
+		: GrpId(grp_id), ResCode(res_code) { }
+};
 
 typedef EventDispatcherBase<MailMsgFileMgr, MailMsgFileMgr_EventType, void*> MailMsgFileMgr_EventDispatcher;
 
@@ -36,7 +42,7 @@ public:
 	typedef std::list<std::shared_ptr<MailMsgFile>> FilesContainer;
 	typedef FilesContainer::const_iterator FilesIterator;
 
-	enum GrpProcStatus { gpsNone = 0, gpsProcessing = 1 };
+	enum GrpProcStatus { gpsNone = 0, gpsProcReceiving = 1, gpsProcSending = 2 };
 private:
 	struct GrpDataItem {
 		AccountSettings MailAcc;
@@ -78,9 +84,10 @@ public:
 	GrpProcStatus GetProcStatus(GrpId grp_id);
 	bool GetIter(GrpId grp_id, FilesIterator& begin, FilesIterator& end);
 	int LoadList(GrpId grp_id);
-	bool StopProcessing(GrpId grp_id);
 	bool RemoveGroup(GrpId grp_id);
 	int StartMailRecv(GrpId grp_id);
 	int StartMailSend(GrpId grp_id);
+	bool StopMailRecv(GrpId grp_id);
+	bool StopMailSend(GrpId grp_id);
 	std::shared_ptr<MailMsgFile>& CreateMailMsg(GrpId grp_id);
 };
