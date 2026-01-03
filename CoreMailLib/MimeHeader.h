@@ -73,9 +73,13 @@ public:
 
 	const HeaderField& GetField(const char* name) const;
 
-	const HeaderField& SetField(const char* name, std::string* raw_value);
-	const HeaderField& SetField(const char* name, std::basic_string<TCHAR>* text_value);
-	const HeaderField& SetField(const char* name, std::time_t time_value);
+	const HeaderField& SetRaw(const char* name, const char* raw_value);
+	const HeaderField& SetRaw(const char* name, const std::string& raw_value);
+	const HeaderField& SetRaw(const char* name, std::string* raw_value);
+	const HeaderField& SetText(const char* name, const TCHAR* text_value);
+	const HeaderField& SetText(const char* name, const std::basic_string<TCHAR>& text_value);
+	const HeaderField& SetText(const char* name, std::basic_string<TCHAR>* text_value);
+	const HeaderField& SetTime(const char* name, std::time_t time_value);
 
 	int DelField(const char* name);
 };

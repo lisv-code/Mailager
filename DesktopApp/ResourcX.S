@@ -5,6 +5,8 @@
 .global IcoBtnNo_size
 .global IcoBtnOk_data
 .global IcoBtnOk_size
+.global IcoToolAttach_data
+.global IcoToolAttach_size
 .global IcoToolConfig_data
 .global IcoToolConfig_size
 .global IcoToolCreate_data
@@ -37,6 +39,7 @@ IcoAppMain_data: .incbin "../Resource/AppMain.ico"
 IcoBtnNo_data: .incbin "../Resource/BtnNo.ico"
 IcoBtnOk_data: .incbin "../Resource/BtnOk.ico"
 
+IcoToolAttach_data: .incbin "../Resource/ToolAttach.ico"
 IcoToolConfig_data: .incbin "../Resource/ToolConfig.ico"
 IcoToolCreate_data: .incbin "../Resource/ToolCreate.ico"
 IcoToolDelete_data: .incbin "../Resource/ToolDelete.ico"
@@ -54,8 +57,9 @@ IcoToolView_data: .incbin "../Resource/ToolView.ico"
 IcoAppMain_size: .int IcoBtnNo_data - IcoAppMain_data
 
 IcoBtnNo_size: .int IcoBtnOk_data - IcoBtnNo_data
-IcoBtnOk_size: .int IcoToolConfig_data - IcoBtnOk_data
+IcoBtnOk_size: .int IcoToolAttach_data - IcoBtnOk_data
 
+IcoToolAttach_size: .int IcoToolConfig_data - IcoToolAttach_data
 IcoToolConfig_size: .int IcoToolCreate_data - IcoToolConfig_data
 IcoToolCreate_size: .int IcoToolDelete_data - IcoToolCreate_data
 IcoToolDelete_size: .int IcoToolEdit_data - IcoToolDelete_data

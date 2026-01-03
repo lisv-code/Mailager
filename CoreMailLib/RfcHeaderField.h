@@ -19,6 +19,8 @@ namespace RfcHeaderField
 	{
 	public:
 		static int GetValue(const NameValueStrCollection& params, const char* name, std::string& value);
+		static bool SetValue(NameValueStrCollection& params, const char* name, const char* value);
+		static bool SetValue(NameValueStrCollection& params, const char* name, const wchar_t* value);
 	};
 
 	// RFC 2045 - Format of Internet Message Bodies (5. Content-Type Header Field)
@@ -75,10 +77,15 @@ class RfcHeaderFieldCodec
 public:
 	static RfcHeaderField::ContentType ReadContentType(const char* field_value);
 	static RfcHeaderField::ContentType ReadContentType(const wchar_t* field_value);
+	static std::string ComposeFieldValue(const RfcHeaderField::ContentType* field_data);
+
 	static RfcHeaderField::ContentDisposition ReadContentDisposition(const char* field_value);
 	static RfcHeaderField::ContentDisposition ReadContentDisposition(const wchar_t* field_value);
+	static std::string ComposeFieldValue(const RfcHeaderField::ContentDisposition* field_data);
+
 	static RfcHeaderField::MsgId ReadMsgId(const char* field_value);
 	static RfcHeaderField::MsgId ReadMsgId(const wchar_t* field_value);
+
 	static RfcHeaderField::AddressList ReadAddresses(const char* field_value);
 	static RfcHeaderField::AddressList ReadAddresses(const wchar_t* field_value);
 };

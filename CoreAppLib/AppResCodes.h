@@ -3,8 +3,8 @@
 #define _MAILAGER_APP_RES_CODES_H_
 
 #define ResCode_Ok 0
-#define ResCode_Created 6200201
-#define ResCode_NoContent 6200204
+#define ResCode_Created 620000201
+#define ResCode_NoContent 620000204
 
 // General (common) result codes
 #define Error_Gen_Undefined -1

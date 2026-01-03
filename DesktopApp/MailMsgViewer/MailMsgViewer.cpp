@@ -24,12 +24,11 @@ namespace MailMsgViewer_Imp
 	const TCHAR* Msg_SaveMsgContent = _T("Save message content");
 	const TCHAR* Msg_ErrorSavingMsgContent = _T("Error saving message content");
 	const TCHAR* Msg_ErrorOpeningMsgExt = _T("Error opening message externally");
-	const TCHAR* Msg_SaveAttachment = _T("Save attachment");
-	const TCHAR* Msg_ErrorSavingAttachment = _T("Error saving attachment file");
 }
 using namespace MailMsgViewer_Imp;
 
-MailMsgViewer::MailMsgViewer(wxWindow* parent) : MailMsgViewerUI(parent)
+MailMsgViewer::MailMsgViewer(wxWindow* parent) : MailMsgViewerUI(parent), MailMsgFileView(),
+	contentViewer(), attachmentsCtrl(this, pnlAttachments, false)
 {
 	InitContentViewer(AppCfg.Get().MailMessageContentViewer);
 }
@@ -69,14 +68,14 @@ void MailMsgViewer::toolSaveContent_OnToolClicked(wxCommandEvent& event)
 		return;
 	}
 	std::string data_type;
-	MimeNodeProc::GetNodeType(view_node, &data_type);
+	MimeNodeRead::get_node_type(view_node, &data_type);
 	wxString file_name;
 	if (std::string::npos != data_type.find("html")) file_name = "message.htm";
 	else if (std::string::npos != data_type.find("plain")) file_name = "message.txt";
 	else file_name = "";
 	wxFileDialog dlg(this, Msg_SaveMsgContent, "", file_name, "", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 	if (wxID_OK == dlg.ShowModal()) {
-		if (0 > MimeNodeProc::SaveContentDataTxt(view_node, dlg.GetPath()))
+		if (0 > MimeNodeRead::save_content_data_txt(view_node, dlg.GetPath()))
 			wxMessageBox(Msg_ErrorSavingMsgContent, AppDef_Title, wxICON_ERROR | wxOK);
 	}
 }
@@ -85,19 +84,6 @@ void MailMsgViewer::toolOpenMessage_OnToolClicked(wxCommandEvent& event)
 {
 	if (!SysHelper::Open(mailMsgFile->GetFilePath())) {
 		wxMessageBox(Msg_ErrorOpeningMsgExt, AppDef_Title, wxICON_ERROR | wxOK);
-	}
-}
-
-void MailMsgViewer::mnuAttachmentFileSave_OnMenuSelection(wxCommandEvent& event)
-{
-	wxMenu *mnu = wxDynamicCast(event.GetEventObject(), wxMenu);
-	wxButton *btn = (wxButton*)(mnu->GetClientData());
-	wxFileDialog dlg(
-		this, Msg_SaveAttachment, "", btn->GetLabelText(), "", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-	if (wxID_OK == dlg.ShowModal()) {
-		MimeNode *mail_node = (MimeNode*)btn->GetClientData();
-		if (0 > MimeNodeProc::SaveContentDataBin(mail_node, dlg.GetPath()))
-			wxMessageBox(Msg_ErrorSavingAttachment, AppDef_Title, wxICON_ERROR | wxOK);
 	}
 }
 
@@ -128,7 +114,7 @@ int MailMsgViewer::LoadData(std::string& out_info)
 	nodeStruct.clear();
 	int result = mailMsgFile->LoadData(msgNode, false);
 	if (result >= 0) {
-		result = MimeNodeProc::GetNodeStructInfo(msgNode, nodeStruct, &out_info);
+		result = MimeNodeRead::get_node_struct_info(msgNode, nodeStruct, &out_info);
 	}
 	return result;
 }
@@ -152,7 +138,7 @@ MimeNode* MailMsgViewer::FindRootViewNode()
 {
 	MimeNode* result = nullptr;
 	for (auto& node_info : nodeStruct) {
-		if (MimeNodeProc::nctRootView & node_info.type)
+		if (MimeNodeRead::nctRootView & node_info.type)
 			result = node_info.node;
 	}
 	return result;
@@ -186,7 +172,7 @@ wxString MailMsgViewer::ComposeTextViewContent(const MimeNode* node)
 	wxString result;
 	if (node) {
 		std::basic_string<TCHAR> node_data;
-		int res_code = MimeNodeProc::GetContentDataTxt(node, node_data);
+		int res_code = MimeNodeRead::get_content_data_txt(node, node_data);
 		result = node_data;
 		if (0 == res_code) {
 			result = _T(HtmlViewPrefix "<pre>") + result + _T("</pre>" HtmlViewSuffix);
@@ -201,12 +187,12 @@ ContentViewer::ContentData MailMsgViewer::ContentEmbeddedDataProvider(const TCHA
 {
 	ContentViewer::ContentData result { std::string(), nullptr };
 	for (const auto& item : nodeStruct) {
-		if (MimeNodeProc::MimeNodeContentType::nctHasContentId & item.type) {
+		if (MimeNodeRead::MimeNodeContentType::nctHasContentId & item.type) {
 			std::basic_string<TCHAR> content_id;
-			if (MimeNodeProc::ReadContentId(item.node, content_id) && (content_id == id)) {
+			if (MimeNodeRead::read_content_id(item.node, content_id) && (content_id == id)) {
 				std::string type;
 				std::stringstream data(std::ios::in | std::ios::out | std::ios::binary);
-				if (MimeNodeProc::GetContentDataBin(item.node, type, data) >= 0) {
+				if (MimeNodeRead::get_content_data_bin(item.node, type, data) >= 0) {
 					result.type = type;
 					result.data = new std::stringstream();
 					static_cast<std::stringstream*>(result.data)->swap(data);
@@ -220,7 +206,7 @@ ContentViewer::ContentData MailMsgViewer::ContentEmbeddedDataProvider(const TCHA
 
 int MailMsgViewer::RefreshView(bool update_content)
 {
-	InitAttachmentView();
+	attachmentsCtrl.LoadAttachments(nodeStruct);
 
 	if (update_content)
 		contentViewer->SetContent(isViewMsgStruct
@@ -234,30 +220,6 @@ int MailMsgViewer::RefreshView(bool update_content)
 	pnlExtDownload->GetParent()->Layout();
 
 	return 0;
-}
-
-void MailMsgViewer::InitAttachmentView()
-{
-	pnlAttachments->DestroyChildren();
-	auto sizer = pnlAttachments->GetSizer();
-	for (const auto& item : nodeStruct) {
-		if (MimeNodeProc::MimeNodeContentType::nctIsAttachment & item.type) {
-			std::basic_string<TCHAR> name;
-			MimeNodeProc::ReadFileName(item.node, name);
-			auto btn = new wxButton(pnlAttachments, wxID_ANY, name);
-			btn->Bind(wxEVT_BUTTON, &MailMsgViewer::btnAttachmentFile_Clicked, this);
-			btn->SetClientData((void*)item.node);
-			sizer->Add(btn);
-		}
-	}
-	pnlAttachments->Show(pnlAttachments->GetChildren().GetCount());
-}
-
-void MailMsgViewer::btnAttachmentFile_Clicked(wxCommandEvent& event)
-{
-	wxButton* btn = wxDynamicCast(event.GetEventObject(), wxButton);
-	mnuAttachmentFile->SetClientData((void*)btn);
-	btn->PopupMenu(mnuAttachmentFile);
 }
 
 void MailMsgViewer::btnDownloadImages_OnButtonClick(wxCommandEvent& event)

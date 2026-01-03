@@ -1,6 +1,6 @@
-## LIS Mailager
+## LISV Mailager
 
-Email client desktop application.
+Email client desktop application. http://lisv.site/mailager
 
 Target OS: Windows, Linux.
 

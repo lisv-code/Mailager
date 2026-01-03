@@ -63,13 +63,6 @@ MailMsgViewerUI::MailMsgViewerUI( wxWindow* parent, wxWindowID id, const wxPoint
 	pnlAttachments->SetSizer( szwAttachmentFiles );
 	pnlAttachments->Layout();
 	szwAttachmentFiles->Fit( pnlAttachments );
-	mnuAttachmentFile = new wxMenu();
-	wxMenuItem* mnuAttachmentFileSave;
-	mnuAttachmentFileSave = new wxMenuItem( mnuAttachmentFile, wxID_ANY, wxString( wxT("Save As...") ) , wxEmptyString, wxITEM_NORMAL );
-	mnuAttachmentFile->Append( mnuAttachmentFileSave );
-
-	pnlAttachments->Connect( wxEVT_RIGHT_DOWN, wxMouseEventHandler( MailMsgViewerUI::pnlAttachmentsOnContextMenu ), NULL, this );
-
 	bSizer1->Add( pnlAttachments, 0, wxEXPAND | wxALL, 2 );
 
 	pnlExtDownload = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
@@ -102,7 +95,6 @@ MailMsgViewerUI::MailMsgViewerUI( wxWindow* parent, wxWindowID id, const wxPoint
 	this->Connect( toolSwitchContentView->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgViewerUI::toolSwitchContentView_OnToolClicked ) );
 	this->Connect( toolSaveContent->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgViewerUI::toolSaveContent_OnToolClicked ) );
 	this->Connect( toolOpenMessage->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgViewerUI::toolOpenMessage_OnToolClicked ) );
-	mnuAttachmentFile->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MailMsgViewerUI::mnuAttachmentFileSave_OnMenuSelection ), this, mnuAttachmentFileSave->GetId());
 	btnDownloadImages->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MailMsgViewerUI::btnDownloadImages_OnButtonClick ), NULL, this );
 }
 
@@ -114,5 +106,4 @@ MailMsgViewerUI::~MailMsgViewerUI()
 	this->Disconnect( toolOpenMessage->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgViewerUI::toolOpenMessage_OnToolClicked ) );
 	btnDownloadImages->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MailMsgViewerUI::btnDownloadImages_OnButtonClick ), NULL, this );
 
-	delete mnuAttachmentFile;
 }

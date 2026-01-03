@@ -37,8 +37,9 @@ class MailMsgEditorUI : public wxPanel
 
 	protected:
 		wxToolBar* tlbrMain;
-		wxToolBarToolBase* toolSaveFile;
-		wxToolBarToolBase* toolSendMail;
+		wxToolBarToolBase* toolSaveMessage;
+		wxToolBarToolBase* toolSendMessage;
+		wxToolBarToolBase* toolAddAttachment;
 		wxPanel* pnlHeader;
 		wxStaticText* lblSender;
 		wxChoice* chcSender;
@@ -47,15 +48,16 @@ class MailMsgEditorUI : public wxPanel
 		wxStaticText* lblSubject;
 		wxTextCtrl* txtSubject;
 		wxPanel* pnlAttachments;
-		wxMenu* mnuAttachmentFile;
+		wxMenu* mnuAttachments;
 		wxPanel* pnlContentViewerPlaceholder;
 		wxTextCtrl* txtContent;
 
 		// Virtual event handlers, override them in your derived class
 		virtual void toolSaveMessage_OnToolClicked( wxCommandEvent& event ) = 0;
 		virtual void toolSendMessage_OnToolClicked( wxCommandEvent& event ) = 0;
+		virtual void toolAddAttachment_OnToolClicked( wxCommandEvent& event ) = 0;
 		virtual void chcSender_OnChoice( wxCommandEvent& event ) = 0;
-		virtual void mnuAttachmentFileSave_OnMenuSelection( wxCommandEvent& event ) = 0;
+		virtual void mnuAttachmentsAdd_OnMenuSelection( wxCommandEvent& event ) = 0;
 
 
 	public:
@@ -66,7 +68,7 @@ class MailMsgEditorUI : public wxPanel
 
 		void pnlAttachmentsOnContextMenu( wxMouseEvent &event )
 		{
-			pnlAttachments->PopupMenu( mnuAttachmentFile, event.GetPosition() );
+			pnlAttachments->PopupMenu( mnuAttachments, event.GetPosition() );
 		}
 
 };

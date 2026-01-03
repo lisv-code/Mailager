@@ -70,6 +70,9 @@
     <Filter Include="MailAccCfg">
       <UniqueIdentifier>{1e7c75b2-cb0d-4d31-9c3c-882508e8d7a7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MailMsgCtrlAttachments">
+      <UniqueIdentifier>{77d4f395-e063-4561-97de-831b75977313}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -168,7 +171,7 @@
     <ClInclude Include="MailMainView\DetailViewModel.h">
       <Filter>MailMainView</Filter>
     </ClInclude>
-    <ClInclude Include="..\CoreMailLib\RfcTextCodec.h">
+    <ClInclude Include="..\CoreMailLib\RfcTextDef.h">
       <Filter>Header Files\CoreMailLib</Filter>
     </ClInclude>
     <ClInclude Include="MailMsgViewer\MailMsgViewerUI.h">
@@ -210,7 +213,7 @@
     <ClInclude Include="..\CoreMailLib\MimeNode.h">
       <Filter>Header Files\CoreMailLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\CoreMailLib\MimeNodeProc.h">
+    <ClInclude Include="..\CoreMailLib\MimeNodeRead.h">
       <Filter>Header Files\CoreMailLib</Filter>
     </ClInclude>
     <ClInclude Include="..\CoreMailLib\RfcHeaderField.h">
@@ -312,6 +315,18 @@
     <ClInclude Include="..\CoreNetLib\NetResCodes.h">
       <Filter>Header Files\CoreNetLib</Filter>
     </ClInclude>
+    <ClInclude Include="MailMsgCtrlAttachments\MailMsgCtrlAttachments.h">
+      <Filter>MailMsgCtrlAttachments</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\MimeNodeWrite.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\RfcTextEncode.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreMailLib\RfcTextDecode.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -353,6 +368,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Resource\ToolView.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resource\ToolAttach.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -447,7 +465,7 @@
     <ClCompile Include="MailMainView\DetailViewModel.cpp">
       <Filter>MailMainView</Filter>
     </ClCompile>
-    <ClCompile Include="..\CoreMailLib\RfcTextCodec.cpp">
+    <ClCompile Include="..\CoreMailLib\RfcTextDef.cpp">
       <Filter>Source Files\CoreMailLib</Filter>
     </ClCompile>
     <ClCompile Include="MailMsgViewer\MailMsgViewerUI.cpp">
@@ -495,7 +513,7 @@
     <ClCompile Include="..\CoreMailLib\RfcHeaderField.cpp">
       <Filter>Source Files\CoreMailLib</Filter>
     </ClCompile>
-    <ClCompile Include="..\CoreMailLib\MimeNodeProc.cpp">
+    <ClCompile Include="..\CoreMailLib\MimeNodeRead.cpp">
       <Filter>Source Files\CoreMailLib</Filter>
     </ClCompile>
     <ClCompile Include="ContentViewer\HtmlContentViewer.cpp">
@@ -575,6 +593,21 @@
     </ClCompile>
     <ClCompile Include="..\CoreAppLib\MailMsgDataHelper.cpp">
       <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMsgEditor\MailMsgEditor_Account.cpp">
+      <Filter>MailMsgEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMsgCtrlAttachments\MailMsgCtrlAttachments.cpp">
+      <Filter>MailMsgCtrlAttachments</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\RfcTextDecode.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\RfcTextEncode.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreMailLib\MimeNodeWrite.cpp">
+      <Filter>Source Files\CoreMailLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

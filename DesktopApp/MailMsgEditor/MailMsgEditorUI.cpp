@@ -16,9 +16,13 @@ MailMsgEditorUI::MailMsgEditorUI( wxWindow* parent, wxWindowID id, const wxPoint
 
 	tlbrMain = new wxToolBar( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL );
 	tlbrMain->SetToolSeparation( 4 );
-	toolSaveFile = tlbrMain->AddTool( wxID_ANY, wxT("save"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolSave"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Save draft"), wxEmptyString, NULL );
+	toolSaveMessage = tlbrMain->AddTool( wxID_ANY, wxT("save"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolSave"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Save draft"), wxEmptyString, NULL );
 
-	toolSendMail = tlbrMain->AddTool( wxID_ANY, wxT("open"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolExport"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Send mail"), wxEmptyString, NULL );
+	toolSendMessage = tlbrMain->AddTool( wxID_ANY, wxT("send"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolExport"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Send mail"), wxEmptyString, NULL );
+
+	tlbrMain->AddSeparator();
+
+	toolAddAttachment = tlbrMain->AddTool( wxID_ANY, wxT("add"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolAttach"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Add attachment"), wxEmptyString, NULL );
 
 	tlbrMain->Realize();
 
@@ -61,6 +65,8 @@ MailMsgEditorUI::MailMsgEditorUI( wxWindow* parent, wxWindowID id, const wxPoint
 	bSizer1->Add( pnlHeader, 0, wxEXPAND | wxALL, 2 );
 
 	pnlAttachments = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	pnlAttachments->Hide();
+
 	wxWrapSizer* szwAttachmentFiles;
 	szwAttachmentFiles = new wxWrapSizer( wxHORIZONTAL, wxREMOVE_LEADING_SPACES );
 
@@ -68,10 +74,10 @@ MailMsgEditorUI::MailMsgEditorUI( wxWindow* parent, wxWindowID id, const wxPoint
 	pnlAttachments->SetSizer( szwAttachmentFiles );
 	pnlAttachments->Layout();
 	szwAttachmentFiles->Fit( pnlAttachments );
-	mnuAttachmentFile = new wxMenu();
-	wxMenuItem* mnuAttachmentFileSave;
-	mnuAttachmentFileSave = new wxMenuItem( mnuAttachmentFile, wxID_ANY, wxString( wxT("Save As...") ) , wxEmptyString, wxITEM_NORMAL );
-	mnuAttachmentFile->Append( mnuAttachmentFileSave );
+	mnuAttachments = new wxMenu();
+	wxMenuItem* mnuAttachmentsAdd;
+	mnuAttachmentsAdd = new wxMenuItem( mnuAttachments, wxID_ANY, wxString( wxT("Add attachment...") ) , wxEmptyString, wxITEM_NORMAL );
+	mnuAttachments->Append( mnuAttachmentsAdd );
 
 	pnlAttachments->Connect( wxEVT_RIGHT_DOWN, wxMouseEventHandler( MailMsgEditorUI::pnlAttachmentsOnContextMenu ), NULL, this );
 
@@ -95,18 +101,20 @@ MailMsgEditorUI::MailMsgEditorUI( wxWindow* parent, wxWindowID id, const wxPoint
 	this->Layout();
 
 	// Connect Events
-	this->Connect( toolSaveFile->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolSaveMessage_OnToolClicked ) );
-	this->Connect( toolSendMail->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolSendMessage_OnToolClicked ) );
+	this->Connect( toolSaveMessage->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolSaveMessage_OnToolClicked ) );
+	this->Connect( toolSendMessage->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolSendMessage_OnToolClicked ) );
+	this->Connect( toolAddAttachment->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolAddAttachment_OnToolClicked ) );
 	chcSender->Connect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( MailMsgEditorUI::chcSender_OnChoice ), NULL, this );
-	mnuAttachmentFile->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MailMsgEditorUI::mnuAttachmentFileSave_OnMenuSelection ), this, mnuAttachmentFileSave->GetId());
+	mnuAttachments->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MailMsgEditorUI::mnuAttachmentsAdd_OnMenuSelection ), this, mnuAttachmentsAdd->GetId());
 }
 
 MailMsgEditorUI::~MailMsgEditorUI()
 {
 	// Disconnect Events
-	this->Disconnect( toolSaveFile->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolSaveMessage_OnToolClicked ) );
-	this->Disconnect( toolSendMail->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolSendMessage_OnToolClicked ) );
+	this->Disconnect( toolSaveMessage->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolSaveMessage_OnToolClicked ) );
+	this->Disconnect( toolSendMessage->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolSendMessage_OnToolClicked ) );
+	this->Disconnect( toolAddAttachment->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMsgEditorUI::toolAddAttachment_OnToolClicked ) );
 	chcSender->Disconnect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( MailMsgEditorUI::chcSender_OnChoice ), NULL, this );
 
-	delete mnuAttachmentFile;
+	delete mnuAttachments;
 }

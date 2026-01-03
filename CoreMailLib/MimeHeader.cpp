@@ -4,7 +4,7 @@
 #include <LisCommon/StrUtils.h>
 #include "MimeHeaderDef.h"
 #include "RfcDateTimeCodec.h"
-#include "RfcTextCodec.h"
+#include "RfcTextEncode.h"
 
 bool MailMsgHdrName_IsDateType(const char* name) { return 0 == LisStr::StrICmp(name, MailHdrName_Date); }
 
@@ -52,7 +52,7 @@ bool MimeHeader::HeaderField::GetRawStr(std::string& raw_data) const
 		raw_data = *data.raw;
 		return true;
 	case MimeHeader::HeaderFieldDataType::hfdtText:
-		return RfcTextCodec::EncodeHeader(data.text->c_str(), data.text->length(), raw_data);
+		return RfcTextEncode::encode_header(data.text->c_str(), data.text->length(), raw_data);
 	case MimeHeader::HeaderFieldDataType::hfdtTime:
 		return RfcDateTimeCodec::DateTimeToString(&data.time, raw_data);
 	default:
@@ -141,21 +141,41 @@ const MimeHeader::HeaderField& MimeHeader::GetField(const char* name) const
 	else return (*it).second;
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetField(const char* name, std::string* raw_value)
+const MimeHeader::HeaderField& MimeHeader::SetRaw(const char* name, const char* raw_value)
+{
+	return SetRaw(name, new std::string(raw_value ? raw_value : ""));
+}
+
+const MimeHeader::HeaderField& MimeHeader::SetRaw(const char* name, const std::string& raw_value)
+{
+	return SetRaw(name, new std::string(raw_value));
+}
+
+const MimeHeader::HeaderField& MimeHeader::SetRaw(const char* name, std::string* raw_value)
 {
 	auto& hdr_fld = InitHeaderField(name, hfdtRaw);
 	hdr_fld.data.raw = raw_value;
 	return hdr_fld;
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetField(const char* name, std::basic_string<TCHAR>* text_value)
+const MimeHeader::HeaderField& MimeHeader::SetText(const char* name, const TCHAR* text_value)
+{
+	return SetText(name, new std::basic_string<TCHAR>(text_value ? text_value : _TEXT("")));
+}
+
+const MimeHeader::HeaderField& MimeHeader::SetText(const char* name, const std::basic_string<TCHAR>& text_value)
+{
+	return SetText(name, new std::basic_string<TCHAR>(text_value));
+}
+
+const MimeHeader::HeaderField& MimeHeader::SetText(const char* name, std::basic_string<TCHAR>* text_value)
 {
 	auto& hdr_fld = InitHeaderField(name, hfdtText);
 	hdr_fld.data.text = text_value;
 	return hdr_fld;
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetField(const char* name, std::time_t time_value)
+const MimeHeader::HeaderField& MimeHeader::SetTime(const char* name, std::time_t time_value)
 {
 	auto& hdr_fld = InitHeaderField(name, hfdtTime);
 	if (MimeHeaderTimeValueUndefined == time_value) {

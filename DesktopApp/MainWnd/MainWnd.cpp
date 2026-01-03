@@ -166,7 +166,7 @@ void MainWnd::mnuHelpAbout_OnMenuSelection(wxCommandEvent& event)
 	dlg.SetVersion(data.Version);
 	dlg.SetCopyright(data.Copyright);
 	dlg.SetDescription(data.Comments);
-	dlg.SetWebSite(wxT("http://lisv.site")); // TODO: Should be path to the app page
+	dlg.SetWebSite(wxT("http://lisv.site/mailager"));
 	wxAboutBox(dlg, this);
 }
 

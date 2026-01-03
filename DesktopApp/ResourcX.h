@@ -10,6 +10,9 @@ extern char IcoBtnOk_data[];
 extern int IcoBtnOk_size;
 
 
+extern char IcoToolAttach_data[];
+extern int IcoToolAttach_size;
+
 extern char IcoToolConfig_data[];
 extern int IcoToolConfig_size;
 

@@ -254,11 +254,11 @@ static const char* MailMsgFile_Imp::header_update_status(
 {
 	auto status_str = new std::string;
 	MailMsgStatusCodec::ConvertStatusToString(status, *status_str);
-	return header.SetField(MailHdrName_MailagerStatus, status_str).GetRaw();
+	return header.SetRaw(MailHdrName_MailagerStatus, status_str).GetRaw();
 }
 
 static const MimeHeader::HeaderField& MailMsgFile_Imp::header_update_date(
 	MimeHeader& header, const std::time_t* date_time)
 {
-	return header.SetField(MailHdrName_Date, date_time ? *date_time : MimeHeaderTimeValueUndefined);
+	return header.SetTime(MailHdrName_Date, date_time ? *date_time : MimeHeaderTimeValueUndefined);
 }

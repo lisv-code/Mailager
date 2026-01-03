@@ -169,7 +169,7 @@ int MailMsgFileMgr::MailMsgFile_EventHandler(const MailMsgFile* mail_msg, const 
 {
 	int result = ResCode_Ok;
 	if (MailMsgFile_EventType::etFileDeleted == evt_info.type) {
-		// Remove file from the group list
+		// File deleted - Remove file from the group list
 		auto grp_data = GetGrpData(mail_msg->GetGrpId());
 		if (grp_data) {
 			auto it = std::find_if(grp_data->MsgFiles.begin(), grp_data->MsgFiles.end(),
@@ -177,7 +177,7 @@ int MailMsgFileMgr::MailMsgFile_EventHandler(const MailMsgFile* mail_msg, const 
 			if (it != grp_data->MsgFiles.end()) grp_data->MsgFiles.erase(it); // TODO: multithreading warning - collection modification
 		}
 	} else if (MailMsgFile_EventType::etDataSaving == evt_info.type) {
-		// Generating file path
+		// File saving started - Generating file path
 		std::basic_string<FILE_PATH_CHAR> *evt_prm = static_cast<MailMsgFile_EventData_DataSaving*>(evt_info.data);
 		if (evt_prm) {
 			auto acc = AccCfg.FindAccount(mail_msg->GetGrpId());
@@ -185,7 +185,7 @@ int MailMsgFileMgr::MailMsgFile_EventHandler(const MailMsgFile* mail_msg, const 
 			else result = Error_Gen_ItemNotFound; // Event parameter data is probably incorrect
 		} else result = Error_Gen_Undefined;
 	} else if (MailMsgFile_EventType::etDataSaved == evt_info.type) {
-		// Move file from draft list to group
+		// File saving finished - Move file from draft list to group
 		auto draft_it = std::find_if(draftMessages.begin(), draftMessages.end(),
 			[mail_msg](const auto& x) { return mail_msg == x.get(); });
 		if (draft_it != draftMessages.end()) {
@@ -199,7 +199,7 @@ int MailMsgFileMgr::MailMsgFile_EventHandler(const MailMsgFile* mail_msg, const 
 			// This can happen if the file has been handled already and moved to some group
 		}
 	} else if (MailMsgFile_EventType::etStatusChanged == evt_info.type) {
-		// Check if message is ready to be sent and enqueue it
+		// File status changed - Check if message is ready to be sent and enqueue it
 		if (is_mail_msg_to_send(mail_msg)) {
 			StartMailSend(mail_msg->GetGrpId());
 		}

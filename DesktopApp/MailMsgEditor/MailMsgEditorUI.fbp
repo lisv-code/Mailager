@@ -127,7 +127,7 @@
               <property name="id">wxID_ANY</property>
               <property name="kind">wxITEM_NORMAL</property>
               <property name="label">save</property>
-              <property name="name">toolSaveFile</property>
+              <property name="name">toolSaveMessage</property>
               <property name="permission">protected</property>
               <property name="statusbar"></property>
               <property name="tooltip">Save draft</property>
@@ -138,12 +138,27 @@
               <property name="context_menu">0</property>
               <property name="id">wxID_ANY</property>
               <property name="kind">wxITEM_NORMAL</property>
-              <property name="label">open</property>
-              <property name="name">toolSendMail</property>
+              <property name="label">send</property>
+              <property name="name">toolSendMessage</property>
               <property name="permission">protected</property>
               <property name="statusbar"></property>
               <property name="tooltip">Send mail</property>
               <event name="OnToolClicked">toolSendMessage_OnToolClicked</event>
+            </object>
+            <object class="toolSeparator" expanded="true">
+              <property name="permission">protected</property>
+            </object>
+            <object class="tool" expanded="true">
+              <property name="bitmap">Load From Art Provider; &quot;IcoToolAttach&quot;; wxART_OTHER</property>
+              <property name="context_menu">0</property>
+              <property name="id">wxID_ANY</property>
+              <property name="kind">wxITEM_NORMAL</property>
+              <property name="label">add</property>
+              <property name="name">toolAddAttachment</property>
+              <property name="permission">protected</property>
+              <property name="statusbar"></property>
+              <property name="tooltip">Add attachment</property>
+              <event name="OnToolClicked">toolAddAttachment_OnToolClicked</event>
             </object>
           </object>
         </object>
@@ -631,7 +646,7 @@
             <property name="floatable">1</property>
             <property name="font"></property>
             <property name="gripper">0</property>
-            <property name="hidden">0</property>
+            <property name="hidden">1</property>
             <property name="id">wxID_ANY</property>
             <property name="max_size"></property>
             <property name="maximize_button">0</property>
@@ -664,8 +679,8 @@
               <property name="permission">none</property>
             </object>
             <object class="wxMenu" expanded="true">
-              <property name="label">attachment</property>
-              <property name="name">mnuAttachmentFile</property>
+              <property name="label">attachments</property>
+              <property name="name">mnuAttachments</property>
               <property name="permission">protected</property>
               <object class="wxMenuItem" expanded="true">
                 <property name="bitmap"></property>
@@ -674,12 +689,12 @@
                 <property name="help"></property>
                 <property name="id">wxID_ANY</property>
                 <property name="kind">wxITEM_NORMAL</property>
-                <property name="label">Save As...</property>
-                <property name="name">mnuAttachmentFileSave</property>
+                <property name="label">Add attachment...</property>
+                <property name="name">mnuAttachmentsAdd</property>
                 <property name="permission">none</property>
                 <property name="shortcut"></property>
                 <property name="unchecked_bitmap"></property>
-                <event name="OnMenuSelection">mnuAttachmentFileSave_OnMenuSelection</event>
+                <event name="OnMenuSelection">mnuAttachmentsAdd_OnMenuSelection</event>
               </object>
             </object>
           </object>

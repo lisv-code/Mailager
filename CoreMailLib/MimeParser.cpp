@@ -1,7 +1,7 @@
 #include "MimeParser.h"
 #include <mimetic/mimetic.h>
 #include "RfcDateTimeCodec.h"
-#include "RfcTextCodec.h"
+#include "RfcTextDecode.h"
 #include "MimeMessageDef.h"
 
 class MimeParser::MimeEntity : public mimetic::MimeEntity {};
@@ -182,15 +182,15 @@ int MimeParser_Imp::read_mime_hdr_value(const mimetic::Field& field,
 {
 	int result = MimeMessageDef::ErrorCode_None;
 	if ((hvtRaw == value_type) || MailMsgHdrName_IsMetadata(field.name().c_str())) {
-		mail_data.SetField(field.name().c_str(), new std::string(field.value()));
+		mail_data.SetRaw(field.name().c_str(), field.value());
 	} else if (MailMsgHdrName_IsDateType(field.name().c_str())) {
 		auto fld_val = RfcDateTimeCodec::ParseDateTime(field.value().c_str());
-		if (RfcDateTimeValueUndefined != fld_val) mail_data.SetField(field.name().c_str(), fld_val);
+		if (RfcDateTimeValueUndefined != fld_val) mail_data.SetTime(field.name().c_str(), fld_val);
 		else result = MimeMessageDef::ErrorCode_BrokenData;
 	} else {
 		auto fld_val = new std::basic_string<TCHAR>();
-		if (RfcTextCodec::DecodeHeader(field.value(), *fld_val))
-			mail_data.SetField(field.name().c_str(), fld_val);
+		if (RfcTextDecode::decode_header(field.value(), *fld_val))
+			mail_data.SetText(field.name().c_str(), fld_val);
 		else {
 			delete fld_val;
 			result = MimeMessageDef::ErrorCode_BrokenData;

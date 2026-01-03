@@ -22,7 +22,6 @@
 #include <wx/sizer.h>
 #include <wx/panel.h>
 #include <wx/wrapsizer.h>
-#include <wx/menu.h>
 #include <wx/stattext.h>
 #include <wx/button.h>
 
@@ -45,7 +44,6 @@ class MailMsgViewerUI : public wxPanel
 		wxTextCtrl* txtDate;
 		wxTextCtrl* txtSender;
 		wxPanel* pnlAttachments;
-		wxMenu* mnuAttachmentFile;
 		wxPanel* pnlExtDownload;
 		wxStaticText* lblExternalImages;
 		wxButton* btnDownloadImages;
@@ -55,7 +53,6 @@ class MailMsgViewerUI : public wxPanel
 		virtual void toolSwitchContentView_OnToolClicked( wxCommandEvent& event ) = 0;
 		virtual void toolSaveContent_OnToolClicked( wxCommandEvent& event ) = 0;
 		virtual void toolOpenMessage_OnToolClicked( wxCommandEvent& event ) = 0;
-		virtual void mnuAttachmentFileSave_OnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void btnDownloadImages_OnButtonClick( wxCommandEvent& event ) = 0;
 
 
@@ -64,11 +61,6 @@ class MailMsgViewerUI : public wxPanel
 		MailMsgViewerUI( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
 
 		~MailMsgViewerUI();
-
-		void pnlAttachmentsOnContextMenu( wxMouseEvent &event )
-		{
-			pnlAttachments->PopupMenu( mnuAttachmentFile, event.GetPosition() );
-		}
 
 };
 

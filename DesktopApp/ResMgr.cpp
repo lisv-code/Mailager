@@ -13,22 +13,22 @@
 
 const wxChar* resXNames[] = { wxT("IcoAppMain"),
 	wxT("IcoBtnNo"), wxT("IcoBtnOk"),
-	wxT("IcoToolConfig"), wxT("IcoToolCreate"), wxT("IcoToolDelete"), wxT("IcoToolEdit"),
-	wxT("IcoToolExport"), wxT("IcoToolLayout"), wxT("IcoToolPrint"), wxT("IcoToolRefresh"),
-	wxT("IcoToolSave"), wxT("IcoToolStop"), wxT("IcoToolView"),
+	wxT("IcoToolAttach"), wxT("IcoToolConfig"), wxT("IcoToolCreate"), wxT("IcoToolDelete"),
+	wxT("IcoToolEdit"), wxT("IcoToolExport"), wxT("IcoToolLayout"), wxT("IcoToolPrint"),
+	wxT("IcoToolRefresh"), wxT("IcoToolSave"), wxT("IcoToolStop"), wxT("IcoToolView"),
 	nullptr };
 
 const char* resXDatas[] = { IcoAppMain_data,
 	IcoBtnNo_data, IcoBtnOk_data,
-	IcoToolConfig_data, IcoToolCreate_data, IcoToolDelete_data, IcoToolEdit_data,
-	IcoToolExport_data, IcoToolLayout_data, IcoToolPrint_data, IcoToolRefresh_data,
-	IcoToolSave_data, IcoToolStop_data, IcoToolView_data };
+	IcoToolAttach_data, IcoToolConfig_data, IcoToolCreate_data, IcoToolDelete_data,
+	IcoToolEdit_data, IcoToolExport_data, IcoToolLayout_data, IcoToolPrint_data,
+	IcoToolRefresh_data, IcoToolSave_data, IcoToolStop_data, IcoToolView_data };
 
 const int resXSizes[] = { IcoAppMain_size,
 	IcoBtnNo_size, IcoBtnOk_size,
-	IcoToolConfig_size, IcoToolCreate_size, IcoToolDelete_size, IcoToolEdit_size,
-	IcoToolExport_size, IcoToolLayout_size, IcoToolPrint_size, IcoToolRefresh_size,
-	IcoToolSave_size, IcoToolStop_size, IcoToolView_size };
+	IcoToolAttach_size, IcoToolConfig_size, IcoToolCreate_size, IcoToolDelete_size,
+	IcoToolEdit_size, IcoToolExport_size, IcoToolLayout_size, IcoToolPrint_size,
+	IcoToolRefresh_size, IcoToolSave_size, IcoToolStop_size, IcoToolView_size };
 
 #endif
 

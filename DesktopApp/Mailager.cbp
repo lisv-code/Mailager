@@ -105,16 +105,24 @@
 		<Unit filename="../CoreMailLib/MimeMessageDef.h" />
 		<Unit filename="../CoreMailLib/MimeNode.cpp" />
 		<Unit filename="../CoreMailLib/MimeNode.h" />
-		<Unit filename="../CoreMailLib/MimeNodeProc.cpp" />
 		<Unit filename="../CoreMailLib/MimeNodeProc.h" />
+		<Unit filename="../CoreMailLib/MimeNodeRead.cpp" />
+		<Unit filename="../CoreMailLib/MimeNodeRead.h" />
+		<Unit filename="../CoreMailLib/MimeNodeWrite.cpp" />
+		<Unit filename="../CoreMailLib/MimeNodeWrite.h" />
 		<Unit filename="../CoreMailLib/MimeParser.cpp" />
 		<Unit filename="../CoreMailLib/MimeParser.h" />
 		<Unit filename="../CoreMailLib/RfcDateTimeCodec.cpp" />
 		<Unit filename="../CoreMailLib/RfcDateTimeCodec.h" />
 		<Unit filename="../CoreMailLib/RfcHeaderField.cpp" />
 		<Unit filename="../CoreMailLib/RfcHeaderField.h" />
-		<Unit filename="../CoreMailLib/RfcTextCodec.cpp" />
 		<Unit filename="../CoreMailLib/RfcTextCodec.h" />
+		<Unit filename="../CoreMailLib/RfcTextDecode.cpp" />
+		<Unit filename="../CoreMailLib/RfcTextDecode.h" />
+		<Unit filename="../CoreMailLib/RfcTextDef.cpp" />
+		<Unit filename="../CoreMailLib/RfcTextDef.h" />
+		<Unit filename="../CoreMailLib/RfcTextEncode.cpp" />
+		<Unit filename="../CoreMailLib/RfcTextEncode.h" />
 		<Unit filename="../CoreNetLib/NetClient.cpp" />
 		<Unit filename="../CoreNetLib/NetClient.h" />
 		<Unit filename="../CoreNetLib/NetResCodes.h" />
@@ -132,7 +140,10 @@
 		<Unit filename="../Resource/AppMain.ico" />
 		<Unit filename="../Resource/BtnNo.ico" />
 		<Unit filename="../Resource/BtnOk.ico" />
+		<Unit filename="../Resource/ToolAttach.ico" />
 		<Unit filename="../Resource/ToolConfig.ico" />
+		<Unit filename="../Resource/ToolCreate.ico" />
+		<Unit filename="../Resource/ToolDelete.ico" />
 		<Unit filename="../Resource/ToolEdit.ico" />
 		<Unit filename="../Resource/ToolExport.ico" />
 		<Unit filename="../Resource/ToolLayout.ico" />
@@ -196,11 +207,14 @@
 		<Unit filename="MailMainView/MailMainView_Master.cpp" />
 		<Unit filename="MailMainView/MasterViewModel.cpp" />
 		<Unit filename="MailMainView/MasterViewModel.h" />
+		<Unit filename="MailMsgCtrlAttachments/MailMsgCtrlAttachments.cpp" />
+		<Unit filename="MailMsgCtrlAttachments/MailMsgCtrlAttachments.h" />
 		<Unit filename="MailMsgEditor/MailMsgEditor.cpp" />
 		<Unit filename="MailMsgEditor/MailMsgEditor.h" />
 		<Unit filename="MailMsgEditor/MailMsgEditorUI.cpp" />
 		<Unit filename="MailMsgEditor/MailMsgEditorUI.fbp" />
 		<Unit filename="MailMsgEditor/MailMsgEditorUI.h" />
+		<Unit filename="MailMsgEditor/MailMsgEditor_Account.cpp" />
 		<Unit filename="MailMsgFileMgr.cpp" />
 		<Unit filename="MailMsgFileMgr.h" />
 		<Unit filename="MailMsgFileView.h" />
@@ -226,7 +240,6 @@
 		<Unit filename="SysHelper.h" />
 		<Unit filename="UiHelper.cpp" />
 		<Unit filename="UiHelper.h" />
-		<Unit filename="View2/View2WndUI.fbp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

@@ -6,6 +6,7 @@
 #include <mimetic/contenttransferencoding.h>
 #include <mimetic/rfc822/addresslist.h>
 #include <LisCommon/StrUtils.h>
+#include "RfcTextEncode.h"
 
 using namespace RfcHeaderField;
 namespace RfcHeaderField_Imp
@@ -13,6 +14,9 @@ namespace RfcHeaderField_Imp
 #define StrSpaceChars " \t\n\r\f\v"
 #define StrMsgIdPrefix "<"
 #define StrMsgIdSuffix ">"
+
+	template<typename TChr>
+	static bool set_parameter_value(NameValueStrCollection& params, const char* name, const TChr* value);
 }
 using namespace RfcHeaderField_Imp;
 
@@ -45,6 +49,16 @@ int RfcHeaderField::Parameters::GetValue(const NameValueStrCollection& params, c
 	return result;
 }
 
+bool RfcHeaderField::Parameters::SetValue(NameValueStrCollection& params, const char* name, const char* value)
+{
+	return RfcHeaderField_Imp::set_parameter_value(params, name, value);
+}
+
+bool RfcHeaderField::Parameters::SetValue(NameValueStrCollection& params, const char* name, const wchar_t* value)
+{
+	return RfcHeaderField_Imp::set_parameter_value(params, name, value);
+}
+
 ContentType RfcHeaderFieldCodec::ReadContentType(const char* field_value)
 {
 	mimetic::ContentType field_data(field_value);
@@ -59,6 +73,21 @@ ContentType RfcHeaderFieldCodec::ReadContentType(const wchar_t* field_value)
 	return ReadContentType((char*)LisStr::CStrConvert(field_value));
 }
 
+std::string RfcHeaderFieldCodec::ComposeFieldValue(const RfcHeaderField::ContentType* field_data)
+{
+	std::string result;
+	if (field_data) {
+		mimetic::ContentType data;
+		data.type(field_data->type);
+		data.subtype(field_data->subtype);
+		for (const auto& prm_item : field_data->parameters) {
+			data.param(prm_item.first, prm_item.second);
+		}
+		result = data.str();
+	}
+	return result;
+}
+
 ContentDisposition RfcHeaderFieldCodec::ReadContentDisposition(const char* field_value)
 {
 	mimetic::ContentDisposition field_data(field_value);
@@ -71,6 +100,20 @@ ContentDisposition RfcHeaderFieldCodec::ReadContentDisposition(const char* field
 ContentDisposition RfcHeaderFieldCodec::ReadContentDisposition(const wchar_t* field_value)
 {
 	return ReadContentDisposition((char*)LisStr::CStrConvert(field_value));
+}
+
+std::string RfcHeaderFieldCodec::ComposeFieldValue(const RfcHeaderField::ContentDisposition* field_data)
+{
+	std::string result;
+	if (field_data) {
+		mimetic::ContentDisposition data;
+		data.type(field_data->type);
+		for (const auto& prm_item : field_data->parameters) {
+			data.param(prm_item.first, prm_item.second);
+		}
+		result = data.str();
+	}
+	return result;
 }
 
 MsgId RfcHeaderFieldCodec::ReadMsgId(const char* field_value)
@@ -127,4 +170,18 @@ AddressList RfcHeaderFieldCodec::ReadAddresses(const char* field_value)
 AddressList RfcHeaderFieldCodec::ReadAddresses(const wchar_t* field_value)
 {
 	return ReadAddresses((char*)LisStr::CStrConvert(field_value));
+}
+
+// *************************************** RfcHeaderField_Imp ***************************************
+
+template<typename TChr>
+bool RfcHeaderField_Imp::set_parameter_value(NameValueStrCollection& params, const char* name, const TChr* value)
+{
+	std::string encoded_value;
+	int enc_res = value ? RfcTextEncode::encode_header(value, encoded_value) : 0;
+	if (enc_res >= 0) {
+		params.emplace(std::string(name) + (enc_res > 0 ? "*" : ""), encoded_value);
+		return true;
+	}
+	return false;
 }

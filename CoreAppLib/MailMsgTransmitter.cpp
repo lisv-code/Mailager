@@ -113,7 +113,7 @@ static void MailMsgTransmitter_Imp::prepare_msg_to_send(MimeNode& mail_msg)
 	mail_msg.Header.DelField(MailHdrName_MailagerStatus);
 	// Set the origination date if not already set
 	if (!mail_msg.Header.GetField(MailHdrName_Date).GetRaw())
-		mail_msg.Header.SetField(MailHdrName_Date, MimeHeaderTimeValueUndefined);
+		mail_msg.Header.SetTime(MailHdrName_Date, MimeHeaderTimeValueUndefined);
 }
 
 static int MailMsgTransmitter_Imp::send_mail_msg(SmtpClient& mail_client, const char* mailbox, MimeNode& mail_msg)

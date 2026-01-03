@@ -3,8 +3,9 @@
 #include "MailMsgViewerUI.h"
 #include "../MailMsgFileView.h"
 #include "../../CoreMailLib/MimeNode.h"
-#include "../../CoreMailLib/MimeNodeProc.h"
+#include "../../CoreMailLib/MimeNodeRead.h"
 #include "../ContentViewer/ContentViewer.h"
+#include "../MailMsgCtrlAttachments/MailMsgCtrlAttachments.h"
 
 namespace MailMsgViewer_Def
 {
@@ -14,8 +15,9 @@ namespace MailMsgViewer_Def
 class MailMsgViewer : public MailMsgViewerUI, public MailMsgFileView
 {
 	ContentViewer* contentViewer;
+	MailMsgCtrlAttachments attachmentsCtrl;
 	MimeNode msgNode;
-	MimeNodeProc::NodeInfoContainer nodeStruct;
+	MimeNodeRead::NodeInfoContainer nodeStruct;
 
 	bool isViewMsgStruct = false;
 	wxString structInfo;
@@ -28,15 +30,11 @@ class MailMsgViewer : public MailMsgViewerUI, public MailMsgFileView
 	static wxString ComposeTextViewContent(const MimeNode* node);
 	ContentViewer::ContentData ContentEmbeddedDataProvider(const TCHAR* id);
 	int RefreshView(bool update_content);
-	void InitAttachmentView();
-
-	void btnAttachmentFile_Clicked(wxCommandEvent& event);
 
 	//****** MailMsgViewerUI override ******
 	virtual void toolSwitchContentView_OnToolClicked(wxCommandEvent& event) override;
 	virtual void toolSaveContent_OnToolClicked(wxCommandEvent& event) override;
 	virtual void toolOpenMessage_OnToolClicked(wxCommandEvent& event) override;
-	virtual void mnuAttachmentFileSave_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void btnDownloadImages_OnButtonClick(wxCommandEvent& event) override;
 
 	// ****** MaiMsgFileView override ******
