@@ -1,5 +1,6 @@
 #pragma once
 #include <ctime>
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -25,12 +26,12 @@ public:
 	private:
 		HeaderFieldDataType type;
 		union TDataValue {
-			std::string* raw;
+			std::string* raw; // TODO: consider using unique_ptr instead of the manual memory management
 			std::basic_string<TCHAR>* text;
 			std::time_t time;
 		} data;
 		void Clear(bool preserve_pointer_data);
-		void SetType(HeaderFieldDataType new_type);
+		void SetType(HeaderFieldDataType new_type, void* data_ptr = nullptr);
 		static void Copy(const HeaderField* src, HeaderField* dst, bool dst_need_clear);
 		friend class MimeHeader;
 	public:
@@ -56,10 +57,11 @@ public:
 	typedef std::unordered_map<std::string, HeaderField,
 		RfcHeaderField::KeyHash, RfcHeaderField::KeyCompare> HeaderFieldContainer; // TODO: consider using unordered_multimap
 	typedef HeaderFieldContainer::const_iterator HeaderFieldIterator;
+	typedef std::function<bool(const char* name, const HeaderField& value)> HeaderFieldItemCheck;
 private:
 	HeaderFieldContainer data;
 
-	HeaderField& InitHeaderField(const char* name, HeaderFieldDataType type);
+	HeaderField& InitHeaderField(const char* name, HeaderFieldDataType type, void* data_ptr = nullptr);
 public:
 	MimeHeader() noexcept;
 	MimeHeader(const MimeHeader& src) noexcept;
@@ -70,16 +72,18 @@ public:
 
 	// Returns the begin and end iterators
 	const std::pair<HeaderFieldIterator, HeaderFieldIterator>GetIter() const;
+	const HeaderFieldIterator FindIter(const HeaderFieldIterator* start, HeaderFieldItemCheck func) const;
 
 	const HeaderField& GetField(const char* name) const;
 
-	const HeaderField& SetRaw(const char* name, const char* raw_value);
-	const HeaderField& SetRaw(const char* name, const std::string& raw_value);
-	const HeaderField& SetRaw(const char* name, std::string* raw_value);
-	const HeaderField& SetText(const char* name, const TCHAR* text_value);
-	const HeaderField& SetText(const char* name, const std::basic_string<TCHAR>& text_value);
-	const HeaderField& SetText(const char* name, std::basic_string<TCHAR>* text_value);
-	const HeaderField& SetTime(const char* name, std::time_t time_value);
+	const HeaderField& SetRaw(const char* name, const char* value);
+	const HeaderField& SetRaw(const char* name, const std::string& value);
+	const HeaderField& SetRaw(const char* name, std::string* value);
+	const HeaderField& SetText(const char* name, const TCHAR* value);
+	const HeaderField& SetText(const char* name, const std::basic_string<TCHAR>& value);
+	const HeaderField& SetText(const char* name, std::basic_string<TCHAR>* value);
+	const HeaderField& SetTime(const char* name, std::time_t value);
 
 	int DelField(const char* name);
+	int DelField(const std::string& name);
 };

@@ -1,7 +1,7 @@
 #pragma once
 #include <wx/menu.h>
 #include <wx/window.h>
-#include "../../CoreMailLib/MimeNodeRead.h"
+#include "../../CoreMailLib/MimeNode.h"
 
 class MailMsgCtrlAttachments
 {
@@ -12,6 +12,7 @@ private:
 	wxWindow* wndParent, *wndContainer;
 	wxMenu mnuAttachmentFile;
 
+	void InitItemMenu(bool allow_edit);
 	void AddAttachmentFileButton(const wxString& name, MimeNode* msg_node);
 	void AttachmentFileButton_ClickHandler(wxCommandEvent& event);
 	void RemoveAttachment_EventHandler(wxCommandEvent& event);
@@ -20,8 +21,8 @@ public:
 	MailMsgCtrlAttachments(wxWindow* wnd_parent, wxWindow* wnd_container, bool allow_edit);
 	~MailMsgCtrlAttachments();
 
-	void InitItemMenu(bool allow_edit);
-	void LoadAttachments(const MimeNodeRead::NodeInfoContainer& node_struct);
+	void SetMode(bool allow_edit);
+	void LoadAttachments(const MimeNode& node, bool take_ownership);
 	bool AddAttachment(MimeNode* data_node, bool take_ownership, bool refresh_view);
 	bool Dialog_NewAttachment();
 	NodeList GetAttachments(bool pass_ownership);

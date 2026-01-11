@@ -1,4 +1,5 @@
 #include "MimeHeader.h"
+#include <algorithm>
 #include <cstring>
 #include <utility>
 #include <LisCommon/StrUtils.h>
@@ -72,12 +73,18 @@ void MimeHeader::HeaderField::Clear(bool preserve_pointer_data)
 	}
 }
 
-void MimeHeader::HeaderField::SetType(HeaderFieldDataType new_type)
+void MimeHeader::HeaderField::SetType(HeaderFieldDataType new_type, void* data_ptr)
 {
 	Clear(false);
-	if (hfdtRaw == new_type) { data.raw = new std::string(); }
-	else if (hfdtText == new_type) { data.text = new std::basic_string<TCHAR>(); }
-	else if (hfdtTime == new_type) { data.time = MimeHeaderTimeValueUndefined; }
+	if (hfdtRaw == new_type) {
+		data.raw = data_ptr ? (std::string*)data_ptr : new std::string();
+	}
+	else if (hfdtText == new_type) {
+		data.text = data_ptr ? (std::basic_string<TCHAR>*) data_ptr : new std::basic_string<TCHAR>();
+	}
+	else if (hfdtTime == new_type) {
+		data.time = data_ptr ? *(std::time_t*)data_ptr : MimeHeaderTimeValueUndefined;
+	}
 	else memset(&data, 0, sizeof(TDataValue)); // Zero for all unknown data types
 	type = new_type;
 }
@@ -119,17 +126,24 @@ const std::pair<MimeHeader::HeaderFieldIterator, MimeHeader::HeaderFieldIterator
 	return std::make_pair(data.begin(), data.end());
 }
 
-MimeHeader::HeaderField& MimeHeader::InitHeaderField(const char* name, HeaderFieldDataType type)
+const MimeHeader::HeaderFieldIterator MimeHeader::FindIter(const HeaderFieldIterator* start,
+	HeaderFieldItemCheck func) const
+{
+	return std::find_if(start ? *start : data.begin(), data.end(),
+		[func](const auto& item) { return func(item.first.c_str(), item.second); });
+}
+
+MimeHeader::HeaderField& MimeHeader::InitHeaderField(const char* name, HeaderFieldDataType type, void* data_ptr)
 {
 	auto it = data.find(name);
 	if (it == data.end()) {
 		const auto& item = data.emplace(std::string(name), HeaderField { });
 		auto& result = (*item.first).second;
-		result.SetType(type);
+		result.SetType(type, data_ptr);
 		return result;
 	} else {
 		auto& result = (*it).second;
-		result.SetType(type);
+		result.SetType(type, data_ptr);
 		return result;
 	}
 }
@@ -141,51 +155,53 @@ const MimeHeader::HeaderField& MimeHeader::GetField(const char* name) const
 	else return (*it).second;
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetRaw(const char* name, const char* raw_value)
+const MimeHeader::HeaderField& MimeHeader::SetRaw(const char* name, const char* value)
 {
-	return SetRaw(name, new std::string(raw_value ? raw_value : ""));
+	return SetRaw(name, new std::string(value ? value : ""));
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetRaw(const char* name, const std::string& raw_value)
+const MimeHeader::HeaderField& MimeHeader::SetRaw(const char* name, const std::string& value)
 {
-	return SetRaw(name, new std::string(raw_value));
+	return SetRaw(name, new std::string(value));
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetRaw(const char* name, std::string* raw_value)
+const MimeHeader::HeaderField& MimeHeader::SetRaw(const char* name, std::string* value)
 {
-	auto& hdr_fld = InitHeaderField(name, hfdtRaw);
-	hdr_fld.data.raw = raw_value;
+	auto& hdr_fld = InitHeaderField(name, hfdtRaw, value);
 	return hdr_fld;
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetText(const char* name, const TCHAR* text_value)
+const MimeHeader::HeaderField& MimeHeader::SetText(const char* name, const TCHAR* value)
 {
-	return SetText(name, new std::basic_string<TCHAR>(text_value ? text_value : _TEXT("")));
+	return SetText(name, new std::basic_string<TCHAR>(value ? value : _TEXT("")));
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetText(const char* name, const std::basic_string<TCHAR>& text_value)
+const MimeHeader::HeaderField& MimeHeader::SetText(const char* name, const std::basic_string<TCHAR>& value)
 {
-	return SetText(name, new std::basic_string<TCHAR>(text_value));
+	return SetText(name, new std::basic_string<TCHAR>(value));
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetText(const char* name, std::basic_string<TCHAR>* text_value)
+const MimeHeader::HeaderField& MimeHeader::SetText(const char* name, std::basic_string<TCHAR>* value)
 {
-	auto& hdr_fld = InitHeaderField(name, hfdtText);
-	hdr_fld.data.text = text_value;
+	auto& hdr_fld = InitHeaderField(name, hfdtText, value);
 	return hdr_fld;
 }
 
-const MimeHeader::HeaderField& MimeHeader::SetTime(const char* name, std::time_t time_value)
+const MimeHeader::HeaderField& MimeHeader::SetTime(const char* name, std::time_t value)
 {
-	auto& hdr_fld = InitHeaderField(name, hfdtTime);
-	if (MimeHeaderTimeValueUndefined == time_value) {
-		time_value = std::time(nullptr); // Set current time
+	if (MimeHeaderTimeValueUndefined == value) {
+		value = std::time(nullptr); // Set current time
 	}
-	hdr_fld.data.time = time_value;
+	auto& hdr_fld = InitHeaderField(name, hfdtTime, &value);
 	return hdr_fld;
 }
 
 int MimeHeader::DelField(const char* name)
 {
 	return data.erase(name);
+}
+
+int MimeHeader::DelField(const std::string& name)
+{
+	return DelField(name.c_str());
 }

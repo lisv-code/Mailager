@@ -192,6 +192,7 @@
     <ClInclude Include="..\CoreAppLib\AppResCodes.h" />
     <ClInclude Include="..\CoreMailLib\MimeHeader.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgFile.h" />
+    <ClInclude Include="..\CoreMailLib\MimeMediaTypes.h" />
     <ClInclude Include="..\CoreMailLib\MimeMessageDef.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgFile_Helper.h" />
     <ClInclude Include="..\CoreMailLib\MimeNodeWrite.h" />
@@ -234,6 +235,7 @@
     <ClInclude Include="MailAccCfg\ConnectionUiCtrlHelper.h" />
     <ClInclude Include="MailMsgCtrlAttachments\MailMsgCtrlAttachments.h" />
     <ClInclude Include="MailMsgFileView.h" />
+    <ClInclude Include="MailMsgViewer\MimeNodeViewInfo.h" />
     <ClInclude Include="MailMsgViewMgr.h" />
     <ClInclude Include="MailMsgEditor\MailMsgEditor.h" />
     <ClInclude Include="MailMsgEditor\MailMsgEditorUI.h" />
@@ -334,6 +336,7 @@
     <ClCompile Include="MailMainView\MailMainView_Master.cpp" />
     <ClCompile Include="MailMsgCtrlAttachments\MailMsgCtrlAttachments.cpp" />
     <ClCompile Include="MailMsgEditor\MailMsgEditor_Account.cpp" />
+    <ClCompile Include="MailMsgViewer\MimeNodeViewInfo.cpp" />
     <ClCompile Include="MailMsgViewMgr.cpp" />
     <ClCompile Include="MailMsgEditor\MailMsgEditor.cpp" />
     <ClCompile Include="MailMsgEditor\MailMsgEditorUI.cpp" />

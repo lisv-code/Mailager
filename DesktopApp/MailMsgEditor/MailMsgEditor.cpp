@@ -1,5 +1,6 @@
 #pragma once
 #include "MailMsgEditor.h"
+#include "../../CoreAppLib/MailMsgDataHelper.h"
 #include "../../CoreAppLib/MailMsgFileDef.h"
 #include "../../CoreMailLib/MimeHeaderDef.h"
 #include "../../CoreMailLib/MimeNodeRead.h"
@@ -16,7 +17,7 @@ MailMsgEditor::MailMsgEditor(wxWindow* parent) : MailMsgEditorUI(parent), MailMs
 	attachmentsCtrl(this, pnlAttachments, true)
 {
 	AccountInfo_Setup();
-	UpdateToolState(false);
+	RefreshToolState();
 }
 
 MailMsgEditor::~MailMsgEditor()
@@ -24,34 +25,26 @@ MailMsgEditor::~MailMsgEditor()
 	AccountInfo_Cleanup();
 }
 
-int MailMsgEditor::OnMailMsgFileSet()
+int MailMsgEditor::OnMailMsgFileChanged(MailMsgFile* prev_value)
 {
 	int result = 0;
 	if (mailMsgFile && mailMsgFile->GetFilePath()) {
 		MimeNode msg_node;
 		result = mailMsgFile->LoadData(msg_node, false);
-		//MimeNodeRead::NodeInfoContainer node_struct;
-		if (result >= 0) {
-			//result = MimeNodeRead::GetNodeStructInfo(msg_node, node_struct, nullptr);
-		}
 		if (result >= 0) {
 			LoadMsgHdrData(&msg_node);
 			LoadMsgBodyData(&msg_node);
-			MimeNodeRead::NodeInfoContainer node_struct;
-			result = MimeNodeRead::get_node_struct_info(msg_node, node_struct, nullptr);
-			if (result >= 0) attachmentsCtrl.LoadAttachments(node_struct);
+			attachmentsCtrl.LoadAttachments(msg_node, true);
+			// TODO: may require to keep some header data to save later with changes (In-Reply-To, ...)
 		}
 	} else {
-		int acc_id = mailMsgFile ? mailMsgFile->GetGrpId() : AccountId_Empty;
-		chcSender->SetSelection(FindSenderIdx(acc_id));
-		wxCommandEvent evt;
-		chcSender_OnChoice(evt);
+		RefreshSender();
 	}
 	if (result < 0) {
 		// TODO: handle the error after the file load attempt - show/log the error
 	}
-	UpdateEditState();
-	UpdateToolState(GetCanEdit());
+	RefreshSenderState();
+	RefreshToolState();
 	return result;
 }
 
@@ -62,10 +55,13 @@ bool MailMsgEditor::GetCanEdit()
 
 void MailMsgEditor::SetCanEdit(bool new_state)
 {
-	UpdateToolState(new_state);
+	txtContent->SetEditable(new_state);
+	RefreshToolState();
 	txtRecipient->SetEditable(new_state);
 	txtSubject->SetEditable(new_state);
-	txtContent->SetEditable(new_state);
+	attachmentsCtrl.SetMode(new_state);
+	for (auto item : mnuAttachments->GetMenuItems())
+		mnuAttachments->Enable(item->GetId(), new_state);
 }
 
 void MailMsgEditor::LoadMsgHdrData(const MimeNode* msg_node)
@@ -85,9 +81,28 @@ void MailMsgEditor::LoadMsgHdrData(const MimeNode* msg_node)
 	txtSubject->SetValue(msg_node->Header.GetField(MailHdrName_Subj).GetText());
 }
 
-void MailMsgEditor::LoadMsgBodyData(const MimeNode* msg_node)
+int MailMsgEditor::LoadMsgBodyData(const MimeNode* msg_node)
 {
-	txtContent->SetValue(msg_node->Body);
+	int result = 0;
+	MimeNode* data_node = nullptr;
+	const_cast<MimeNode&>(*msg_node).EnumDataStructure([&data_node](MimeNode* entity)
+	{
+		auto node_type = MimeNodeRead::get_node_content_flags(entity);
+		if ((MimeNodeContentFlags::ncfIsViewData & node_type)
+			&& !(MimeNodeContentFlags::ncfIsAttachment & node_type))
+		{
+			data_node = entity;
+			return -1; // Stop the enumeration. Accepting first node with supported view type.
+		}
+		return 0;
+	});
+	std::basic_string<TCHAR> text_data;
+	if (data_node) {
+		result = MimeNodeRead::get_content_data_txt(data_node, text_data);
+		// TODO: handle the error after the file load attempt - show/log the error
+	}
+	txtContent->SetValue(text_data);
+	return result;
 }
 
 void MailMsgEditor::SaveMsgHdrData(MimeNode& msg_node)
@@ -106,24 +121,41 @@ void MailMsgEditor::SaveMsgHdrData(MimeNode& msg_node)
 
 void MailMsgEditor::SaveMsgBodyData(MimeNode& msg_node)
 {
-	msg_node.Header.SetRaw(MailHdrName_ContentType, MailHdrData_ContentTypeData_TextPlainUtf8);
-	msg_node.Header.SetRaw(MailHdrName_ContentTransferEncoding, MailHdrData_Encoding_8bit);
-
-	msg_node.Body = txtContent->GetValue().ToUTF8();
+	MimeNode* text_node = nullptr;
+	auto attachments = attachmentsCtrl.GetAttachments(true);
+	if (attachments.empty()) {
+		text_node = &msg_node;
+	} else {
+		RfcHeaderField::ContentType cont_type;
+		cont_type.type = MimeMediaType_Multipart;
+		cont_type.subtype = MimeMediaSubType_Mixed;
+		RfcHeaderField::Parameters::SetValue(cont_type.parameters,
+			MailHdrData_Parameter_Boundary, MailMsgDataHelper::generate_boundary(MimeMediaSubType_Mixed));
+		msg_node.Header.SetRaw(MailHdrName_ContentType, RfcHeaderFieldCodec::ComposeFieldValue(&cont_type));
+		text_node = new MimeNode();
+		msg_node.AddPart(text_node);
+		for (auto item : attachments)
+			msg_node.AddPart(item);
+	}
+	text_node->Header.SetRaw(MailHdrName_ContentType, MailHdrData_ContentTypeData_TextPlainUtf8);
+	text_node->Header.SetRaw(MailHdrName_ContentTransferEncoding, MailHdrData_Encoding_8bit);
+	text_node->Body = txtContent->GetValue().ToUTF8();
 }
 
-void MailMsgEditor::UpdateEditState()
+void MailMsgEditor::RefreshSenderState()
 {
 	auto sender_idx = chcSender->GetCurrentSelection();
 	chcSender->Enable((mailMsgFile != nullptr)
 		&& ((mailMsgFile->GetFilePath() == nullptr) || (sender_idx <= 0)));
 }
 
-void MailMsgEditor::UpdateToolState(bool can_edit)
+void MailMsgEditor::RefreshToolState()
 {
 	auto acc = FindAccount(chcSender->GetSelection());
+	bool can_edit = GetCanEdit();
 	tlbrMain->EnableTool(toolSaveMessage->GetId(), can_edit && mailMsgFile && acc);
 	tlbrMain->EnableTool(toolSendMessage->GetId(), can_edit && acc && !acc->Outgoing.Server.empty() && !txtRecipient->IsEmpty());
+	tlbrMain->EnableTool(toolAddAttachment->GetId(), can_edit);
 }
 
 void MailMsgEditor::toolSaveMessage_OnToolClicked(wxCommandEvent& event)
@@ -133,8 +165,8 @@ void MailMsgEditor::toolSaveMessage_OnToolClicked(wxCommandEvent& event)
 	SaveMsgBodyData(mail_msg);
 	int result = mailMsgFile->SaveData(mail_msg, GetAccountId());
 	// TODO: handle saving errors
-	UpdateEditState();
-	UpdateToolState(GetCanEdit());
+	RefreshSenderState();
+	RefreshToolState();
 }
 
 void MailMsgEditor::toolSendMessage_OnToolClicked(wxCommandEvent& event)

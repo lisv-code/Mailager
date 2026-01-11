@@ -21,6 +21,7 @@ namespace RfcHeaderField
 		static int GetValue(const NameValueStrCollection& params, const char* name, std::string& value);
 		static bool SetValue(NameValueStrCollection& params, const char* name, const char* value);
 		static bool SetValue(NameValueStrCollection& params, const char* name, const wchar_t* value);
+		static bool SetValue(NameValueStrCollection& params, const char* name, const std::string& value);
 	};
 
 	// RFC 2045 - Format of Internet Message Bodies (5. Content-Type Header Field)
@@ -29,13 +30,6 @@ namespace RfcHeaderField
 		std::string type, subtype;
 		NameValueStrCollection parameters;
 	};
-	// Standard defined primary (top-level) media types:
-	// - discrete types: text, image, audio, video, application, model, font
-	// - composite types: multipart, message
-	// - unknown: ietf-token / x-token
-	// RFC 2046 - Media Types (3. Overview Of The Initial Top-Level Media Types).
-	// RFC 2077 - The Model Primary Content Type. RFC 8081 - The "font" Top-Level Media Type.
-	// See also: https://www.iana.org/assignments/media-types/media-types.xhtml
 
 	// RFC 2183 - The Content-Disposition Header Field.
 	// Content-Disposition:disposition-type[;attribute=value].

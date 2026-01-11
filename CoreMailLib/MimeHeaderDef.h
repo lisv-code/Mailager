@@ -2,8 +2,12 @@
 #ifndef _LIS_MIME_HEADER_DEF_H_
 #define _LIS_MIME_HEADER_DEF_H_
 
-#define MailHdrName_MailagerStatus "X-Mailager-Status"
-#define MailHdrName_MailagerUidl "X-Mailager-Uidl"
+#include "MimeMediaTypes.h"
+
+#define MailHdrName_MailagerFieldPrefix "X-Mailager-"
+
+#define MailHdrName_MailagerStatus MailHdrName_MailagerFieldPrefix "Status"
+#define MailHdrName_MailagerUidl MailHdrName_MailagerFieldPrefix "Uidl"
 #define MailHdrName_OperaStatus "X-Opera-Status"
 
 #define MailHdrName_MimeVersion "MIME-Version"
@@ -21,15 +25,14 @@
 #define MailHdrName_ContentId "Content-ID"
 
 #define MailHdrData_MimeVersion1 "1.0"
-#define MailHdrData_ContentTypeData_Default "text/plain"
-#define MailHdrData_ContentTypeData_TextPlainUtf8 "text/plain; charset=utf-8"
-#define MailHdrData_ContentType_Application "application"
-#define MailHdrData_ContentTypeSub_OctetStream "octet-stream"
-#define MailHdrData_Encoding_8bit "8bit"
+#define MailHdrData_ContentTypeData_Default MimeMediaType_Text "/" MimeMediaSubType_Plain
+#define MailHdrData_ContentTypeData_TextPlainUtf8 MailHdrData_ContentTypeData_Default "; charset=utf-8"
+#define MailHdrData_Encoding_8bit "8bit" // The 8-bit is RFC 6152 extension, not compatible with old RFC 821
 #define MailHdrData_Encoding_Base64 "base64"
 #define MailHdrData_ContentDisposition_Inline "inline"
 #define MailHdrData_ContentDisposition_Attachment "attachment"
 #define MailHdrData_Parameter_Name "name"
 #define MailHdrData_Parameter_Filename "filename"
+#define MailHdrData_Parameter_Boundary "boundary"
 
 #endif // #ifndef _LIS_MIME_HEADER_DEF_H_

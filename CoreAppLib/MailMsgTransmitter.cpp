@@ -1,3 +1,4 @@
+#include <cstring>
 #include <memory>
 #include <sstream>
 #include "MailMsgTransmitter.h"
@@ -24,6 +25,7 @@ namespace MailMsgTransmitter_Imp
 	static int init_auth(SmtpClient& mail_client,
 		const Connections::ConnectionInfo& connection, const char* auth_data);
 	static void prepare_msg_to_send(MimeNode& mail_msg);
+	static void remove_internal_headers(MimeNode& mail_msg);
 	static int send_mail_msg(SmtpClient& mail_client, const char* mailbox, MimeNode& mail_msg);
 }
 using namespace MailMsgTransmitter_Imp;
@@ -109,11 +111,30 @@ static int MailMsgTransmitter_Imp::init_auth(SmtpClient& mail_client,
 
 static void MailMsgTransmitter_Imp::prepare_msg_to_send(MimeNode& mail_msg)
 {
-	// Remove header fields intended for internal use
-	mail_msg.Header.DelField(MailHdrName_MailagerStatus);
+	// Remove header fields intended for internal use only
+	remove_internal_headers(mail_msg);
+
 	// Set the origination date if not already set
 	if (!mail_msg.Header.GetField(MailHdrName_Date).GetRaw())
 		mail_msg.Header.SetTime(MailHdrName_Date, MimeHeaderTimeValueUndefined);
+}
+
+void MailMsgTransmitter_Imp::remove_internal_headers(MimeNode& mail_msg)
+{
+	const char* name_prefix = MailHdrName_MailagerFieldPrefix;
+	size_t prefix_len = std::strlen(MailHdrName_MailagerFieldPrefix);
+	auto hdr_fld_chk = [name_prefix, prefix_len](const char* name, const MimeHeader::HeaderField& value)
+	{
+		return 0 == std::strncmp(name, name_prefix, prefix_len);
+	};
+	auto hdr_iter = mail_msg.Header.GetIter();
+	auto hdr_it1 = hdr_iter.first;
+	while ((hdr_it1 = mail_msg.Header.FindIter(&hdr_it1, hdr_fld_chk)) != hdr_iter.second)
+	{
+		auto fld_name = hdr_it1->first;
+		++hdr_it1;
+		mail_msg.Header.DelField(fld_name); // Safe to delete in the loop, while iterating through map
+	}
 }
 
 static int MailMsgTransmitter_Imp::send_mail_msg(SmtpClient& mail_client, const char* mailbox, MimeNode& mail_msg)

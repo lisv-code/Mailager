@@ -59,6 +59,11 @@ bool RfcHeaderField::Parameters::SetValue(NameValueStrCollection& params, const 
 	return RfcHeaderField_Imp::set_parameter_value(params, name, value);
 }
 
+bool RfcHeaderField::Parameters::SetValue(NameValueStrCollection& params, const char* name, const std::string& value)
+{
+	return RfcHeaderField_Imp::set_parameter_value(params, name, value.c_str());
+}
+
 ContentType RfcHeaderFieldCodec::ReadContentType(const char* field_value)
 {
 	mimetic::ContentType field_data(field_value);

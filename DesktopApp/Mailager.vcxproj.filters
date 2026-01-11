@@ -327,6 +327,12 @@
     <ClInclude Include="..\CoreMailLib\RfcTextDecode.h">
       <Filter>Header Files\CoreMailLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\CoreMailLib\MimeMediaTypes.h">
+      <Filter>Header Files\CoreMailLib</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMsgViewer\MimeNodeViewInfo.h">
+      <Filter>MailMsgViewer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -608,6 +614,9 @@
     </ClCompile>
     <ClCompile Include="..\CoreMailLib\MimeNodeWrite.cpp">
       <Filter>Source Files\CoreMailLib</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMsgViewer\MimeNodeViewInfo.cpp">
+      <Filter>MailMsgViewer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

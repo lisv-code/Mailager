@@ -3,9 +3,9 @@
 #include "MailMsgViewerUI.h"
 #include "../MailMsgFileView.h"
 #include "../../CoreMailLib/MimeNode.h"
-#include "../../CoreMailLib/MimeNodeRead.h"
 #include "../ContentViewer/ContentViewer.h"
 #include "../MailMsgCtrlAttachments/MailMsgCtrlAttachments.h"
+#include "MimeNodeViewInfo.h"
 
 namespace MailMsgViewer_Def
 {
@@ -17,7 +17,7 @@ class MailMsgViewer : public MailMsgViewerUI, public MailMsgFileView
 	ContentViewer* contentViewer;
 	MailMsgCtrlAttachments attachmentsCtrl;
 	MimeNode msgNode;
-	MimeNodeRead::NodeInfoContainer nodeStruct;
+	MimeNodeViewInfo::NodeStructInfoContainer nodeStruct;
 
 	bool isViewMsgStruct = false;
 	wxString structInfo;
@@ -38,7 +38,7 @@ class MailMsgViewer : public MailMsgViewerUI, public MailMsgFileView
 	virtual void btnDownloadImages_OnButtonClick(wxCommandEvent& event) override;
 
 	// ****** MaiMsgFileView override ******
-	virtual int OnMailMsgFileSet() override;
+	virtual int OnMailMsgFileChanged(MailMsgFile* prev_value) override;
 public:
 	MailMsgViewer(wxWindow* parent);
 	virtual ~MailMsgViewer();

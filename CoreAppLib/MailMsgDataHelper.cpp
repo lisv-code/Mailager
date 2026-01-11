@@ -29,3 +29,8 @@ std::string MailMsgDataHelper::generate_message_id()
 
 	return result;
 }
+
+std::string MailMsgDataHelper::generate_boundary(const char* base)
+{
+	return std::string(base) + "-boundary-01234567890"; // TODO: the boundary generation to be improved
+}

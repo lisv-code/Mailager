@@ -1,7 +1,6 @@
 #include "MimeNodeRead.h"
 #include <fstream>
 #include <sstream>
-#include <stack>
 #include <LisCommon/StrUtils.h>
 #include "MimeHeaderDef.h"
 #include "RfcHeaderField.h"
@@ -9,69 +8,41 @@
 
 namespace MimeNodeRead_Imp
 {
-	static const int TextTypeCount = 2;
-	static const char* TextTypeNames[TextTypeCount] = { "plain", "html" };
+	static const char* SupportedViewMainType = MimeMediaType_Text;
+	static const int SupportedViewTypeCount = 2;
+	static const char* SupportedViewTypeNames[SupportedViewTypeCount] =	{
+		MimeMediaSubType_Plain, MimeMediaSubType_Html };
 	// Candidates to support: "richtext", "enriched", "rtf"
 }
 using namespace MimeNodeRead_Imp;
 
-void MimeNodeRead::get_node_description(const MimeNode& node, int level, std::string& info_line)
+MimeNodeContentFlags MimeNodeRead::get_node_content_flags(const MimeNode* node)
 {
-	std::string txt;
-	for (int c = level; c > 0; --c) // indent nested entities
-		txt += ". ";
-	auto hdr_fld1 = node.Header.GetField(MailHdrName_ContentType);
-	txt += hdr_fld1.GetRaw() ? hdr_fld1.GetRaw() : "? (" MailHdrData_ContentTypeData_Default ")";
-	hdr_fld1 = node.Header.GetField(MailHdrName_ContentDisposition);
-	if (hdr_fld1.GetRaw()) {
-		txt += ". _disp: ";
-		txt += hdr_fld1.GetRaw();
-	}
-	hdr_fld1 = node.Header.GetField(MailHdrName_ContentTransferEncoding);
-	if (hdr_fld1.GetRaw()) {
-		txt += ". _enc: ";
-		txt += hdr_fld1.GetRaw();
-	}
-	hdr_fld1 = node.Header.GetField(MailHdrName_ContentId);
-	if (hdr_fld1.GetRaw()) {
-		auto msg_id = RfcHeaderFieldCodec::ReadMsgId(hdr_fld1.GetRaw());
-		txt += ". _id: ";
-		txt += msg_id;
-	}
-	info_line += txt;
-	info_line += "\n";
-}
-
-MimeNodeRead::MimeNodeContentType MimeNodeRead::get_node_type(const MimeNode* node, std::string* data_type)
-{
-	MimeNodeContentType result = nctUnknown;
+	MimeNodeContentFlags result = ncfUnknown;
 
 	auto hdr_fld1 = node->Header.GetField(MailHdrName_ContentType);
 	if (hdr_fld1.GetRaw()) {
 		auto content_type = RfcHeaderFieldCodec::ReadContentType(hdr_fld1.GetRaw());
-		if (0 == LisStr::StrICmp(content_type.type.c_str(), "multipart")) {
-			result = nctContainer;
-		} else if (0 == LisStr::StrICmp(content_type.type.c_str(), "text")) {
-			for (int i = 0; i < TextTypeCount; ++i)
-				if (0 == LisStr::StrICmp(content_type.subtype.c_str(), TextTypeNames[i])) {
-					result = nctRootView;
+		if (0 == LisStr::StrICmp(content_type.type.c_str(), MimeMediaType_Multipart)) {
+			result = result | ncfIsContainer;
+		} else if (0 == LisStr::StrICmp(content_type.type.c_str(), SupportedViewMainType)) {
+			for (int i = 0; i < SupportedViewTypeCount; ++i)
+				if (0 == LisStr::StrICmp(content_type.subtype.c_str(), SupportedViewTypeNames[i])) {
+					result = result | ncfIsViewData;
 					break;
 				}
 		}
-		if (data_type) *data_type = hdr_fld1.GetRaw();
 	} else {
-		result = nctRootView; // assume it's default: "text/plain"
-		if (data_type) *data_type = MailHdrData_ContentTypeData_Default;
+		result = result | ncfIsViewData; // Assuming it's default: "text/plain"
 	}
 
 	hdr_fld1 = node->Header.GetField(MailHdrName_ContentDisposition);
 	if (hdr_fld1.GetRaw()) {
 		auto content_disp = RfcHeaderFieldCodec::ReadContentDisposition(hdr_fld1.GetRaw());
 		if (0 == LisStr::StrICmp(content_disp.type.c_str(), MailHdrData_ContentDisposition_Attachment)) {
-			result = static_cast<MimeNodeContentType>(result | nctIsAttachment);
-		} else if ((nctUnknown == result)
-				&& (0 == LisStr::StrICmp(content_disp.type.c_str(), MailHdrData_ContentDisposition_Inline))) {
-			result = nctViewPart;
+			result = result | ncfIsAttachment;
+		} else if (0 == LisStr::StrICmp(content_disp.type.c_str(), MailHdrData_ContentDisposition_Inline)) {
+			result = result | ncfIsInline;
 		}
 	}
 
@@ -79,41 +50,10 @@ MimeNodeRead::MimeNodeContentType MimeNodeRead::get_node_type(const MimeNode* no
 	if (hdr_fld1.GetRaw()) {
 		auto content_id = RfcHeaderFieldCodec::ReadMsgId(hdr_fld1.GetRaw());
 		if (!content_id.empty()) {
-			result = static_cast<MimeNodeContentType>(result | nctHasContentId);
+			result = result | ncfHasContentId;
 		}
 	}
 
-	return result;
-}
-
-int MimeNodeRead::get_node_struct_info(
-	const MimeNode& node, NodeInfoContainer& info, std::string* description)
-{
-	info.clear();
-	struct CurrentContainer {
-		std::stack<MimeNode*> refs;
-		int level;
-	} current_container{};
-	int result = const_cast<MimeNode&>(node).EnumDataStructure(
-		[&info, &current_container, description](MimeNode* data_item, int nest_level) {
-			if (description) get_node_description(*data_item, nest_level, *description);
-			NodeInfo node_info{};
-			node_info.type = MimeNodeRead::get_node_type(data_item);
-			node_info.node = data_item;
-			if ((current_container.level >= nest_level) && current_container.refs.size()) {
-				current_container.refs.pop();
-				current_container.level = nest_level;
-			}
-			if (MimeNodeRead::nctContainer & node_info.type) {
-				current_container.refs.push(data_item);
-				current_container.level = nest_level;
-			}
-			else if (node_info.type > 0) {
-				node_info.container = current_container.refs.size() ? current_container.refs.top() : nullptr;
-				info.push_back(node_info);
-			}
-			return 0;
-		});
 	return result;
 }
 
@@ -151,8 +91,8 @@ int MimeNodeRead::get_content_data_txt(const MimeNode* node, RfcText::Charset& c
 	auto hdr_fld1 = node->Header.GetField(MailHdrName_ContentType);
 	if (hdr_fld1.GetRaw()) {
 		auto content_type = RfcHeaderFieldCodec::ReadContentType(hdr_fld1.GetRaw());
-		if (0 == LisStr::StrICmp(content_type.type.c_str(), "text")) {
-			if (0 == LisStr::StrICmp(content_type.subtype.c_str(), "html")) is_html_text = true;
+		if (0 == LisStr::StrICmp(content_type.type.c_str(), MimeMediaType_Text)) {
+			if (0 == LisStr::StrICmp(content_type.subtype.c_str(), MimeMediaSubType_Html)) is_html_text = true;
 		} else {
 			return -1; // ERROR: unsupported content
 		}

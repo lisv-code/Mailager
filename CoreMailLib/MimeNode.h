@@ -7,19 +7,27 @@
 class MimeNode
 {
 public:
-	typedef std::function<int(MimeNode* data_item, int nest_level)> MailMsgDataItemProc;
+	typedef std::vector<MimeNode*> PartsContainer;
+	typedef std::function<int(MimeNode* data_item)> MailMsgDataItemProc;
 private:
-	static int EnumStruct(MimeNode* entity, int level, MailMsgDataItemProc proc);
+	MimeNode* parent = nullptr;
+	PartsContainer parts;
+	static int EnumStruct(MimeNode* entity, MailMsgDataItemProc proc);
 public:
 	MimeHeader Header;
 	std::string Body; // Content
-	std::vector<MimeNode*> Parts;
 
 	MimeNode();
 	MimeNode(MimeHeader& header, std::string& body);
 	~MimeNode();
 
 	void Clear();
+
+	MimeNode* GetParent() const;
+
+	const PartsContainer& GetParts() const;
+	void AddPart(MimeNode* node);
+	bool RemovePart(MimeNode* node, bool recursive);
 
 	int EnumDataStructure(MailMsgDataItemProc proc);
 };

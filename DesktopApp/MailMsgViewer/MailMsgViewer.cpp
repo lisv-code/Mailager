@@ -38,7 +38,7 @@ MailMsgViewer::~MailMsgViewer()
 	if (contentViewer) delete contentViewer;
 }
 
-int MailMsgViewer::OnMailMsgFileSet()
+int MailMsgViewer::OnMailMsgFileChanged(MailMsgFile* prev_value)
 {
 	structInfo.clear();
 	std::string struct_descr;
@@ -67,12 +67,8 @@ void MailMsgViewer::toolSaveContent_OnToolClicked(wxCommandEvent& event)
 		wxMessageBox(Msg_ErrorSavingMsgContent, AppDef_Title, wxICON_ERROR | wxOK);
 		return;
 	}
-	std::string data_type;
-	MimeNodeRead::get_node_type(view_node, &data_type);
-	wxString file_name;
-	if (std::string::npos != data_type.find("html")) file_name = "message.htm";
-	else if (std::string::npos != data_type.find("plain")) file_name = "message.txt";
-	else file_name = "";
+	std::string file_name;
+	MimeNodeViewInfo::generate_content_filename(*view_node, file_name);
 	wxFileDialog dlg(this, Msg_SaveMsgContent, "", file_name, "", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 	if (wxID_OK == dlg.ShowModal()) {
 		if (0 > MimeNodeRead::save_content_data_txt(view_node, dlg.GetPath()))
@@ -114,7 +110,7 @@ int MailMsgViewer::LoadData(std::string& out_info)
 	nodeStruct.clear();
 	int result = mailMsgFile->LoadData(msgNode, false);
 	if (result >= 0) {
-		result = MimeNodeRead::get_node_struct_info(msgNode, nodeStruct, &out_info);
+		result = MimeNodeViewInfo::get_node_struct_info(msgNode, nodeStruct, &out_info);
 	}
 	return result;
 }
@@ -138,10 +134,13 @@ MimeNode* MailMsgViewer::FindRootViewNode()
 {
 	MimeNode* result = nullptr;
 	for (auto& node_info : nodeStruct) {
-		if (MimeNodeRead::nctRootView & node_info.type)
-			result = node_info.node;
+		if ((MimeNodeContentFlags::ncfIsViewData & node_info.ContentFlags)
+			&& !(MimeNodeContentFlags::ncfIsAttachment & node_info.ContentFlags))
+		{
+			result = node_info.NodeRef;
+		}
 	}
-	return result;
+	return result; // Returning the last node of a supported view type
 }
 
 wxString MailMsgViewer::ComposeStructViewContent(const wxString& struct_info, const FILE_PATH_CHAR* msg_file_path)
@@ -187,12 +186,12 @@ ContentViewer::ContentData MailMsgViewer::ContentEmbeddedDataProvider(const TCHA
 {
 	ContentViewer::ContentData result { std::string(), nullptr };
 	for (const auto& item : nodeStruct) {
-		if (MimeNodeRead::MimeNodeContentType::nctHasContentId & item.type) {
+		if (MimeNodeContentFlags::ncfHasContentId & item.ContentFlags) {
 			std::basic_string<TCHAR> content_id;
-			if (MimeNodeRead::read_content_id(item.node, content_id) && (content_id == id)) {
+			if (MimeNodeRead::read_content_id(item.NodeRef, content_id) && (content_id == id)) {
 				std::string type;
 				std::stringstream data(std::ios::in | std::ios::out | std::ios::binary);
-				if (MimeNodeRead::get_content_data_bin(item.node, type, data) >= 0) {
+				if (MimeNodeRead::get_content_data_bin(item.NodeRef, type, data) >= 0) {
 					result.type = type;
 					result.data = new std::stringstream();
 					static_cast<std::stringstream*>(result.data)->swap(data);
@@ -206,7 +205,7 @@ ContentViewer::ContentData MailMsgViewer::ContentEmbeddedDataProvider(const TCHA
 
 int MailMsgViewer::RefreshView(bool update_content)
 {
-	attachmentsCtrl.LoadAttachments(nodeStruct);
+	attachmentsCtrl.LoadAttachments(msgNode, false);
 
 	if (update_content)
 		contentViewer->SetContent(isViewMsgStruct

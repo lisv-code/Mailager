@@ -20,18 +20,19 @@ class MailMsgEditor : public MailMsgEditorUI, public MailMsgFileView
 	const int GetAccountId(int sel_idx = -1) const;
 	const AccountSettings* FindAccount(int sel_idx) const;
 	const int FindSenderIdx(int acc_id = -1, const char* mailbox = nullptr) const;
+	void RefreshSender();
 
 	/****** Attachments ******/
 	MailMsgCtrlAttachments attachmentsCtrl;
 
 	/****** Message metadata and content ******/
 	void LoadMsgHdrData(const MimeNode* msg_node);
-	void LoadMsgBodyData(const MimeNode* msg_node);
+	int LoadMsgBodyData(const MimeNode* msg_node);
 	void SaveMsgHdrData(MimeNode& msg_node);
 	void SaveMsgBodyData(MimeNode& msg_node);
 
-	void UpdateEditState();
-	void UpdateToolState(bool can_edit);
+	void RefreshSenderState();
+	void RefreshToolState();
 
 	// ****** MailMsgEditorUI override ******
 	virtual void toolSaveMessage_OnToolClicked(wxCommandEvent& event) override;
@@ -41,7 +42,7 @@ class MailMsgEditor : public MailMsgEditorUI, public MailMsgFileView
 	virtual void mnuAttachmentsAdd_OnMenuSelection(wxCommandEvent& event) override;
 
 	// ****** MaiMsgFileView override ******
-	virtual int OnMailMsgFileSet() override;
+	virtual int OnMailMsgFileChanged(MailMsgFile* prev_value) override;
 public:
 	MailMsgEditor(wxWindow* parent);
 	virtual ~MailMsgEditor();

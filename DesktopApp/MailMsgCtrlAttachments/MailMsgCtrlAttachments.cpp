@@ -4,6 +4,7 @@
 #include <wx/msgdlg.h>
 #include <wx/sizer.h>
 #include "../../CoreAppLib/AppDef.h"
+#include "../../CoreMailLib/MimeNodeRead.h"
 #include "../../CoreMailLib/MimeNodeWrite.h"
 
 namespace MailMsgCtrlAttachments_Imp
@@ -24,17 +25,6 @@ MailMsgCtrlAttachments::MailMsgCtrlAttachments(wxWindow* wnd_parent, wxWindow* w
 	InitItemMenu(allow_edit);
 }
 
-void MailMsgCtrlAttachments::InitItemMenu(bool allow_edit)
-{
-	if (mnuAttachmentFile.GetMenuItemCount() > 0) while (mnuAttachmentFile.Destroy(0)) ; // clean up
-	auto mnu_item = mnuAttachmentFile.Append(wxID_ANY, MnuTitle_SaveFile);
-	mnuAttachmentFile.Bind(wxEVT_MENU, &MailMsgCtrlAttachments::SaveAttachmentFile_EventHandler, this, mnu_item->GetId());
-	if (allow_edit) {
-		mnu_item = mnuAttachmentFile.Append(wxID_ANY, MnuTitle_Remove);
-		mnuAttachmentFile.Bind(wxEVT_MENU, &MailMsgCtrlAttachments::RemoveAttachment_EventHandler, this, mnu_item->GetId());
-	}
-}
-
 MailMsgCtrlAttachments::~MailMsgCtrlAttachments()
 {
 	if (wndContainer) wndContainer->DestroyChildren();
@@ -45,15 +35,38 @@ MailMsgCtrlAttachments::~MailMsgCtrlAttachments()
 	own_nodes.clear();
 }
 
-void MailMsgCtrlAttachments::LoadAttachments(const MimeNodeRead::NodeInfoContainer& node_struct)
+void MailMsgCtrlAttachments::InitItemMenu(bool allow_edit)
+{
+	if (mnuAttachmentFile.GetMenuItemCount() > 0) { // clean up
+		auto items = mnuAttachmentFile.GetMenuItems();
+		for (auto item : items) mnuAttachmentFile.Destroy(item);
+	}
+	auto mnu_item = mnuAttachmentFile.Append(wxID_ANY, MnuTitle_SaveFile);
+	mnuAttachmentFile.Bind(wxEVT_MENU, &MailMsgCtrlAttachments::SaveAttachmentFile_EventHandler,
+		this, mnu_item->GetId());
+	if (allow_edit) {
+		mnu_item = mnuAttachmentFile.Append(wxID_ANY, MnuTitle_Remove);
+		mnuAttachmentFile.Bind(wxEVT_MENU, &MailMsgCtrlAttachments::RemoveAttachment_EventHandler,
+			this, mnu_item->GetId());
+	}
+}
+
+void MailMsgCtrlAttachments::SetMode(bool allow_edit)
+{
+	InitItemMenu(allow_edit);
+}
+
+void MailMsgCtrlAttachments::LoadAttachments(const MimeNode& node, bool take_ownership)
 {
 	wndContainer->DestroyChildren();
-	if (node_struct.empty()) return;
-	for (const auto& item : node_struct) {
-		if (MimeNodeRead::MimeNodeContentType::nctIsAttachment & item.type) {
-			AddAttachment(item.node, false, false);
+	int result = const_cast<MimeNode&>(node).EnumDataStructure([this, take_ownership](MimeNode* entity)
+	{
+		auto node_type = MimeNodeRead::get_node_content_flags(entity);
+		if (MimeNodeContentFlags::ncfIsAttachment & node_type) {
+			AddAttachment(entity, take_ownership, false);
 		}
-	}
+		return 0;
+	});
 	wndContainer->Show(wndContainer->GetChildren().GetCount());
 	wndContainer->GetParent()->Layout();
 }
@@ -72,8 +85,10 @@ bool MailMsgCtrlAttachments::AddAttachment(MimeNode* data_node, bool take_owners
 	std::basic_string<TCHAR> name;
 	MimeNodeRead::read_file_name(data_node, name);
 	AddAttachmentFileButton(name, data_node);
-	if (take_ownership)
+	if (take_ownership) {
 		own_nodes.push_back(data_node);
+		if (data_node->GetParent()) data_node->GetParent()->RemovePart(data_node, true);
+	}
 	if (refresh_view) {
 		wndContainer->Show();
 		wndContainer->GetParent()->Layout();
@@ -112,7 +127,8 @@ MailMsgCtrlAttachments::NodeList MailMsgCtrlAttachments::GetAttachments(bool pas
 			if (data_node) {
 				result.push_back(data_node);
 				if (pass_ownership)
-					own_nodes.erase(std::remove(own_nodes.begin(), own_nodes.end(), data_node), own_nodes.end());
+					own_nodes.erase(
+						std::remove(own_nodes.begin(), own_nodes.end(), data_node), own_nodes.end());
 			}
 		}
 	}

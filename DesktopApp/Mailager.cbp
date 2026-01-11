@@ -102,6 +102,7 @@
 		<Unit filename="../CoreMailLib/MimeHeader.cpp" />
 		<Unit filename="../CoreMailLib/MimeHeader.h" />
 		<Unit filename="../CoreMailLib/MimeHeaderDef.h" />
+		<Unit filename="../CoreMailLib/MimeMediaTypes.h" />
 		<Unit filename="../CoreMailLib/MimeMessageDef.h" />
 		<Unit filename="../CoreMailLib/MimeNode.cpp" />
 		<Unit filename="../CoreMailLib/MimeNode.h" />
@@ -225,6 +226,8 @@
 		<Unit filename="MailMsgViewer/MailMsgViewerUI.cpp" />
 		<Unit filename="MailMsgViewer/MailMsgViewerUI.fbp" />
 		<Unit filename="MailMsgViewer/MailMsgViewerUI.h" />
+		<Unit filename="MailMsgViewer/MimeNodeViewInfo.cpp" />
+		<Unit filename="MailMsgViewer/MimeNodeViewInfo.h" />
 		<Unit filename="Mailager.cfg" />
 		<Unit filename="MainApp.cpp" />
 		<Unit filename="MainWnd/MainWnd.cpp" />

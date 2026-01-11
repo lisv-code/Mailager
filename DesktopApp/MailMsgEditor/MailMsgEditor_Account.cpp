@@ -38,7 +38,7 @@ int MailMsgEditor::AccCfg_EventHandler(const AccountCfg* acc_cfg, const AccountC
 	}
 	load_accounts(AccCfg, chcSender, cur_acc_id);
 	if (!mailMsgFile) {
-		this->OnMailMsgFileSet();
+		this->OnMailMsgFileChanged(nullptr); // Previous file reference is probably not valid anymore
 	}
 	return 0;
 }
@@ -68,9 +68,17 @@ const int MailMsgEditor::FindSenderIdx(int acc_id, const char* mailbox) const
 	return -1;
 }
 
+void MailMsgEditor::RefreshSender()
+{
+	int acc_id = mailMsgFile ? mailMsgFile->GetGrpId() : AccountId_Empty;
+	chcSender->SetSelection(FindSenderIdx(acc_id));
+	wxCommandEvent evt;
+	chcSender_OnChoice(evt);
+}
+
 void MailMsgEditor::chcSender_OnChoice(wxCommandEvent& event)
 {
-	UpdateToolState(GetCanEdit());
+	RefreshToolState();
 }
 
 static void MailMsgEditor_Imp::load_accounts(const AccountCfg& src, wxItemContainer* dst, int sel_acc_id)

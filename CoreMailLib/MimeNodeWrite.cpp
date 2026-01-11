@@ -7,8 +7,8 @@
 void MimeNodeWrite::set_data_node_header(MimeNode& node, const FILE_PATH_CHAR* filename, bool is_inline)
 {
 	RfcHeaderField::ContentType type;
-	type.type = MailHdrData_ContentType_Application;
-	type.subtype = MailHdrData_ContentTypeSub_OctetStream;
+	type.type = MimeMediaType_Application;
+	type.subtype = MimeMediaSubType_OctetStream;
 	RfcHeaderField::Parameters::SetValue(type.parameters, MailHdrData_Parameter_Name, filename);
 	node.Header.SetRaw(MailHdrName_ContentType, RfcHeaderFieldCodec::ComposeFieldValue(&type));
 

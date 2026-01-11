@@ -73,12 +73,12 @@ int MimeParser::GetData(MimeNode& data, MimeHeaderValueType value_type) const
 		auto data_item = &data;
 		while (level > 0) {
 			--level;
-			if ((0 == level) || data_item->Parts.empty()) {
+			if ((0 == level) || data_item->GetParts().empty()) {
 				auto new_item = new MimeNode();
-				data_item->Parts.push_back(new_item);
+				data_item->AddPart(new_item);
 				data_item = new_item;
 			} else {
-				data_item = data_item->Parts.back();
+				data_item = data_item->GetParts().back();
 			}
 		}
 
@@ -137,10 +137,10 @@ int MimeParser::SetNode(const MimeNode& mail_data, MimeEntity* mime_entity)
 {
 	int result = SetHdr(mail_data.Header, mime_entity, false);
 	if (result < 0) return result;
-	if (mail_data.Parts.empty()) {
+	if (mail_data.GetParts().empty()) {
 		mime_entity->body().set(mail_data.Body);
 	} else
-		for (const auto item : mail_data.Parts) {
+		for (const auto item : mail_data.GetParts()) {
 			auto new_entity = (MimeEntity*)new mimetic::MimeEntity();
 			mime_entity->body().parts().push_back(new_entity);
 			result = SetNode(*item, new_entity);
