@@ -5,12 +5,13 @@
 #include "MimeMessageDef.h"
 
 class MimeParser::MimeEntity : public mimetic::MimeEntity {};
+using namespace MailLibResCodes_Gen;
 namespace MimeParser_Imp
 {
 	// mimetic helper functions
 	static const mimetic::Field* find_mime_hdr_field(const mimetic::MimeEntity* mime_entity, const char* field_name);
 	static int read_mime_hdr_value(const mimetic::Field& field, MimeHeader& mail_data, MimeHeaderValueType value_type);
-	bool set_mime_hdr_value(mimetic::MimeEntity* mime_entity, const char* field_name, const char* field_value, bool set_new_top);
+	static void set_mime_hdr_value(mimetic::MimeEntity* mime_entity, const char* field_name, const char* field_value, bool set_new_top);
 }
 using namespace MimeParser_Imp;
 
@@ -25,7 +26,7 @@ void MimeParser::Clear()
 
 int MimeParser::Load(std::istream& msg_stm, bool hdr_only)
 {
-	int result = MimeMessageDef::ErrorCode_None;
+	int result = ResCode_Ok;
 	Clear();
 
 	auto msg = new mimetic::MimeEntity();
@@ -34,7 +35,7 @@ int MimeParser::Load(std::istream& msg_stm, bool hdr_only)
 	if (hdr.contentType().str().empty()
 		&& hdr.mimeVersion().str().empty() && hdr.messageid().str().empty()) // Check that header can be read
 	{
-		result = MimeMessageDef::ErrorCode_DataFormat;
+		result = Error_Gen_DataFormatIsNotValid;
 		delete msg;
 	} else {
 		mimeData = (MimeEntity*)msg;
@@ -51,7 +52,7 @@ void MimeParser::Save(std::ostream& msg_stm) const
 int MimeParser::GetHdr(const char** field_names, int field_count, MimeHeader& mail_data,
 	MimeHeaderValueType value_type) const
 {
-	int result = MimeMessageDef::ErrorCode_None;
+	int result = ResCode_Ok;
 	for (int i = 0; i < field_count; ++i) {
 		auto hdr_name = field_names[i];
 		result = ReadHdrValue(mimeData, hdr_name, mail_data, value_type);
@@ -102,7 +103,7 @@ int MimeParser::SetData(const MimeNode& mail_data)
 int MimeParser::GetHdr(const MimeEntity* mime_entity, MimeHeader& mail_data,
 	MimeHeaderValueType value_type)
 {
-	int result = MimeMessageDef::ErrorCode_None;
+	int result = ResCode_Ok;
 	for (auto it = mime_entity->header().begin(); it != mime_entity->header().end(); ++it) {
 		result = read_mime_hdr_value(*it, mail_data, value_type);
 		if (result < 0) break;
@@ -113,7 +114,7 @@ int MimeParser::GetHdr(const MimeEntity* mime_entity, MimeHeader& mail_data,
 int MimeParser::ReadHdrValue(const MimeEntity* mime_entity, const char* hdr_name, MimeHeader& hdr_data,
 	MimeHeaderValueType value_type)
 {
-	int result = MimeMessageDef::ErrorCode_None;
+	int result = ResCode_Ok;
 	auto field = find_mime_hdr_field(mime_entity, hdr_name);
 	if (field) result = read_mime_hdr_value(*field, hdr_data, value_type);
 	return result;
@@ -121,16 +122,16 @@ int MimeParser::ReadHdrValue(const MimeEntity* mime_entity, const char* hdr_name
 
 int MimeParser::SetHdr(const MimeHeader& hdr_data, MimeEntity* mime_entity, bool set_new_top)
 {
-	int result = (int)true;
+	if (!mime_entity) return Error_Gen_DataIsNullOrEmpty;
 	std::string str1;
 	auto hdr_iter = hdr_data.GetIter();
 	for (auto it = hdr_iter.first; it != hdr_iter.second; ++it) {
 		auto hdr_name = (*it).first.c_str();
 		const auto& hdr_fld = (*it).second;
 		hdr_fld.GetRawStr(str1);
-		result = result & (int)set_mime_hdr_value(mime_entity, hdr_name, str1.c_str(), set_new_top);
+		set_mime_hdr_value(mime_entity, hdr_name, str1.c_str(), set_new_top);
 	}
-	return result ? MimeMessageDef::ErrorCode_None : MimeMessageDef::ErrorCode_BrokenData;
+	return ResCode_Ok;
 }
 
 int MimeParser::SetNode(const MimeNode& mail_data, MimeEntity* mime_entity)
@@ -180,37 +181,34 @@ const mimetic::Field* MimeParser_Imp::find_mime_hdr_field(const mimetic::MimeEnt
 int MimeParser_Imp::read_mime_hdr_value(const mimetic::Field& field,
 	MimeHeader& mail_data, MimeHeaderValueType value_type)
 {
-	int result = MimeMessageDef::ErrorCode_None;
+	int result = ResCode_Ok;
 	if ((hvtRaw == value_type) || MailMsgHdrName_IsMetadata(field.name().c_str())) {
 		mail_data.SetRaw(field.name().c_str(), field.value());
 	} else if (MailMsgHdrName_IsDateType(field.name().c_str())) {
 		auto fld_val = RfcDateTimeCodec::ParseDateTime(field.value().c_str());
 		if (RfcDateTimeValueUndefined != fld_val) mail_data.SetTime(field.name().c_str(), fld_val);
-		else result = MimeMessageDef::ErrorCode_BrokenData;
+		else result = Error_Gen_DataFormatIsNotValid;
 	} else {
 		auto fld_val = new std::basic_string<TCHAR>();
 		if (RfcTextDecode::decode_header(field.value(), *fld_val))
 			mail_data.SetText(field.name().c_str(), fld_val);
 		else {
 			delete fld_val;
-			result = MimeMessageDef::ErrorCode_BrokenData;
+			result = Error_Gen_DataFormatIsNotValid;
 		}
 	}
 	return result;
 }
 
-bool MimeParser_Imp::set_mime_hdr_value(mimetic::MimeEntity* mime_entity,
+void MimeParser_Imp::set_mime_hdr_value(mimetic::MimeEntity* mime_entity,
 	const char* field_name, const char* field_value, bool set_new_top)
 {
-	if (!mime_entity) return false;
 	if (set_new_top) {
 		auto field = mime_entity->header().field(field_name);
 		if (field.name().empty()) {
 			mimetic::Field fieldX(field_name, field_value);
 			mime_entity->header().insert(mime_entity->header().begin(), fieldX);
-			return true;
 		}
 	}
 	mime_entity->header().field(field_name).value(field_value);
-	return true;
 }

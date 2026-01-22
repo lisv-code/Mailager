@@ -19,18 +19,6 @@ SmtpClient::SmtpClient(SmtpClient&& src) noexcept
 
 SmtpClient::~SmtpClient() { }
 
-const char* SmtpClient::GetLogScope() const { return Log_Scope; }
-
-bool SmtpClient::CheckResponse(const char* response, size_t size, const char** message) const
-{
-	if (message) {
-		*message = response; // The response message including status code
-	}
-	unsigned int status_code = 0;
-	int parse_result = sscanf(response, "%u ", &status_code);
-	return (parse_result > 0) && (status_code >= 200) && (status_code < 400);
-}
-
 bool SmtpClient::Auth(AuthTokenType type, const char* token)
 {
 	switch (type) {
@@ -115,4 +103,18 @@ const char* SmtpClient::SkipResponseCode(const char* response)
 		while ((result < end_pos) && std::isspace(*(unsigned char*)result)) ++result;
 	}
 	return result;
+}
+
+// **************************************** TxtProtoClient *****************************************
+
+const char* SmtpClient::GetLogScope() const { return Log_Scope; }
+
+bool SmtpClient::CheckResponse(CommandContext* context, const char* response, size_t size, const char** message) const
+{
+	if (message) {
+		*message = response; // The response message including status code
+	}
+	unsigned int status_code = 0;
+	int parse_result = sscanf(response, "%u ", &status_code);
+	return (parse_result > 0) && (status_code >= 200) && (status_code < 400);
 }

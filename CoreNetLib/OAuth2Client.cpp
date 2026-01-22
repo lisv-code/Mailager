@@ -21,26 +21,24 @@ namespace OAuth2Client_Imp
 		"<head><title>OAuth2</title></head>"
 		"<body><h2>Auth OK</h2><h4>It is okay to close this page.</h4></body>"
 		"</html>";
-	const char* auth_token_request = "grant_type=authorization_code&"
-		"code=%s&"
-		"client_id=%s&"
-		"client_secret=%s&"
-		"redirect_uri=%s";
-	const char* auth_refresh_request = "grant_type=refresh_token&"
-		"refresh_token=%s&"
-		"client_id=%s&"
-		"client_secret=%s";
+
+	static std::string compose_token_retrieve_params(
+		const char* auth_code, const char* client_id, const char* client_secret, const char* redirect_addr);
+	static std::string compose_token_refresh_params(
+		const char* token1, const char* client_id, const char* client_secret);
+	static bool get_token_data(OAuth2Token& token, json& data_source);
+	static void set_token_error(OAuth2Token& token, int code, const char* error = nullptr, const char* descr = nullptr);
+	static void set_token_error(OAuth2Token& token, int code, json& data_source);
 }
 
 using namespace OAuth2Client_Imp;
 
-char* OAuth2Client::GetRedirectAddress(char* buf, size_t size)
+std::string OAuth2Client::GetRedirectAddress()
 {
-	snprintf(buf, size, "http://127.0.0.1:%u", netPort);
-	return buf;
+	return std::string("http://127.0.0.1:") + std::to_string(netPort);
 }
 
-int OAuth2Client::ProcessRequest(const char* url)
+int OAuth2Client::PerformAuthRequest(const char* url)
 {
 #ifdef _WINDOWS
 	return (int)ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL) > 32
@@ -78,13 +76,13 @@ const char* OAuth2Client::FindRequestValue(const char* name, char* buf)
 	return val_pos;
 }
 
-int OAuth2Client::GetCode(char* out_buf, const char* server, const char* client_id, const char* scope)
+int OAuth2Client::GetCode(char* out_buf, const char* endpoint, const char* client_id, const char* scope)
 {
 	const size_t buf1_size = 0xFFF;
-	char buf1[buf1_size] = { 0 }, buf2[0xFF] = { 0 };
-	snprintf(buf1, buf1_size, auth_code_request, server, client_id, scope, GetRedirectAddress(buf2, sizeof(buf2)));
+	char buf1[buf1_size] = { 0 };
+	snprintf(buf1, buf1_size, auth_code_request, endpoint, client_id, scope, GetRedirectAddress().c_str());
 
-	int result = ProcessRequest(buf1);
+	int result = PerformAuthRequest(buf1);
 	if (result != 0) return Error_SysCmdFailure;
 
 	result = netServer.Connect(); // TODO: make the state cancellable (thread, timeout)
@@ -115,73 +113,43 @@ int OAuth2Client::GetCode(char* out_buf, const char* server, const char* client_
 	return result;
 }
 
-OAuth2Token OAuth2Client::GetToken(const char* server, const char* code, const char* client_id, const char* client_secret)
+OAuth2Token OAuth2Client::GetToken(const char* endpoint, const char* code, const char* client_id, const char* client_secret)
 {
-	OAuth2Token result;
-	result.expires = 0;
-
-	const size_t buf_size = 0xFFF;
-	char buf1[buf_size] = { 0 }, buf2[buf_size] = { 0 };
-	snprintf(buf2, buf_size, auth_token_request, code, client_id, client_secret, GetRedirectAddress(buf1, buf_size)); // Params
-	snprintf(buf1, buf_size, "https://%s", server); // Query
-
-	size_t data_size;
-	netClient.Exec(buf1, buf_size, data_size, buf1, buf2);
-	std::time(&result.created);
-	if (data_size) {
-		buf1[data_size] = 0;
-		char* content = strstr(buf1, "{");
-		auto resp_data = json::parse(content, nullptr, false);
-		if (!resp_data["access_token"].is_null()) {
-			result.access_token = resp_data["access_token"].get<std::string>();
-			result.token_type = resp_data["token_type"].get<std::string>();
-			result.expires = resp_data["expires_in"].get<int>();
-			result.refresh_token = resp_data["refresh_token"].get<std::string>();
-		} else if (!resp_data["error"].is_null()) {
-			result.access_token = resp_data["error"].get<std::string>();
-			result.token_type = resp_data["error_description"].get<std::string>();
-			result.expires = Error_ResponseIsError;
-		} else {
-			result.expires = Error_ResponseUnrecognized;
-		}
-	} else {
-		result.access_token = std::string("no_data_returned");
-		result.expires = Error_ResponseNoData;
-	}
-	return result;
+	return PerformTokenRequest((std::string("https://") + endpoint).c_str(),
+		compose_token_retrieve_params(code, client_id, client_secret, GetRedirectAddress().c_str()).c_str());
 }
 
-OAuth2Token OAuth2Client::RefreshToken(const char* server, const char* token1, const char* client_id, const char* client_secret)
+OAuth2Token OAuth2Client::RefreshToken(const char* endpoint, const char* token1, const char* client_id, const char* client_secret)
+{
+	return PerformTokenRequest((std::string("https://") + endpoint).c_str(),
+		compose_token_refresh_params(token1, client_id, client_secret).c_str());
+}
+
+OAuth2Token OAuth2Client::PerformTokenRequest(const char* query, const char* payload)
 {
 	OAuth2Token result;
 	result.expires = 0;
 
 	const size_t buf_size = 0xFFF;
-	char buf1[buf_size] = { 0 }, buf2[buf_size] = { 0 };
-	snprintf(buf2, buf_size, auth_refresh_request, token1, client_id, client_secret); // Params
-	snprintf(buf1, buf_size, "https://%s", server); // Query
-
+	char response_data[buf_size] = { 0 };
 	size_t data_size;
-	netClient.Exec(buf1, buf_size, data_size, buf1, buf2);
+	int res_code = netClient.Exec(response_data, buf_size, data_size, query, payload);
 	std::time(&result.created);
-	if (data_size) {
-		buf1[data_size] = 0;
-		char* content = strstr(buf1, "{");
-		json resp_data = json::parse(content, nullptr, false);
+	if ((res_code >= 0) && data_size) {
+		response_data[data_size] = 0;
+		const char* json_content = strstr(response_data, "{");
+		auto resp_data = json::parse(json_content, nullptr, false);
 		if (!resp_data["access_token"].is_null()) {
-			result.access_token = resp_data["access_token"].get<std::string>();
-			result.token_type = resp_data["token_type"].get<std::string>();
-			result.expires = resp_data["expires_in"].get<int>();
+			if (!get_token_data(result, resp_data))
+				set_token_error(result, Error_RequiredDataNotFound, "data_incomplete");
 		} else if (!resp_data["error"].is_null()) {
-			result.access_token = resp_data["error"].get<std::string>();
-			result.token_type = resp_data["error_description"].get<std::string>();
-			result.expires = Error_ResponseIsError;
+			set_token_error(result, Error_ResponseIsError, resp_data);
 		} else {
-			result.expires = Error_ResponseUnrecognized;
+			set_token_error(result, Error_ResponseUnrecognized, "data_not_recognized");
 		}
 	} else {
-		result.access_token = std::string("no_data_returned");
-		result.expires = Error_ResponseNoData;
+		if (res_code < 0) set_token_error(result, res_code);
+		else set_token_error(result, Error_ResponseNoData, "no_data_returned");
 	}
 	return result;
 }
@@ -189,4 +157,72 @@ OAuth2Token OAuth2Client::RefreshToken(const char* server, const char* token1, c
 int OAuth2Client::Stop()
 {
 	return netServer.Stop();
+}
+
+bool OAuth2Client::IsTokenError(const OAuth2Token& token)
+{
+	return token.expires < 0;
+}
+
+std::string OAuth2Client::GetTokenErrorInfo(const OAuth2Token& token)
+{
+	return token.access_token + (token.token_type.empty() ? "" : ": " + token.token_type);
+}
+
+// *************************************** OAuth2Client_Imp ****************************************
+
+std::string OAuth2Client_Imp::compose_token_retrieve_params(
+	const char* auth_code, const char* client_id, const char* client_secret, const char* redirect_addr)
+{
+	return std::string("grant_type=authorization_code")
+		+ "&code=" + auth_code
+		+ "&client_id=" + client_id
+		+ ((client_secret && client_secret[0]) ? std::string("&client_secret=") + client_secret : "")
+		+ "&redirect_uri=" + redirect_addr;
+}
+
+std::string OAuth2Client_Imp::compose_token_refresh_params(
+	const char* token1, const char* client_id, const char* client_secret)
+{
+	return std::string("grant_type=refresh_token")
+		+ "&refresh_token=" + token1
+		+ "&client_id=" + client_id
+		+ ((client_secret && client_secret[0]) ? std::string("&client_secret=") + client_secret : "");
+}
+
+template<typename T>
+bool get_json_field(json& data_source, const char* name, T& result)
+{
+	auto field = data_source[name];
+	if (!field.is_null()) {
+		result = field.get_to(result);
+		return true;
+	}
+	return false;
+}
+
+bool OAuth2Client_Imp::get_token_data(OAuth2Token& token, json& data_source)
+{
+	// Mandatory fields
+	bool is_ok = get_json_field(data_source, "access_token", token.access_token);
+	is_ok = is_ok && get_json_field(data_source, "token_type", token.token_type);
+	is_ok = is_ok && get_json_field(data_source, "expires_in", token.expires);
+	// Optional fields
+	get_json_field(data_source, "refresh_token", token.refresh_token);
+
+	return is_ok;
+}
+
+void OAuth2Client_Imp::set_token_error(OAuth2Token& token, int code, const char* error, const char* descr)
+{
+	token.expires = code;
+	if (error) token.access_token = error;
+	if (descr) token.token_type = descr;
+}
+
+void OAuth2Client_Imp::set_token_error(OAuth2Token& token, int code, json& data_source)
+{
+	set_token_error(token, code,
+		data_source["error"].is_null() ? nullptr : data_source["error"].get<std::string>().c_str(),
+		data_source["error_description"].is_null() ? nullptr : data_source["error_description"].get<std::string>().c_str());
 }

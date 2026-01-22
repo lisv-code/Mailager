@@ -7,7 +7,7 @@ class SmtpClient : public TxtProtoClient
 	static const char* SkipResponseCode(const char* response);
 protected:
 	virtual const char* GetLogScope() const override;
-	virtual bool CheckResponse(const char* response, size_t size,
+	virtual bool CheckResponse(CommandContext* context, const char* response, size_t size,
 		const char** message = nullptr) const override;
 public:
 	enum AuthTokenType { attNone = 0, attPlain, attXOAuth2 };

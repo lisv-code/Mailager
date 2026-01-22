@@ -14,6 +14,11 @@ namespace Pop3Client_Imp
 
 	const char* MailMsgItemEndStr = "\x0D\x0A";
 	const size_t MailMsgItemEndLen = strlen(MailMsgItemEndStr);
+
+	struct Pop3CmdCtx {
+		const char* RespOkPrefix;
+		Pop3CmdCtx(const char* ok_msg) : RespOkPrefix(ok_msg) { }
+	};
 }
 using namespace Pop3Client_Imp;
 
@@ -32,29 +37,18 @@ bool Pop3Client::Auth(const char* user, const char* pswd)
 	return ResCode_Ok == lastErrCode;
 }
 
-const char* Pop3Client::GetLogScope() const { return Log_Scope; }
-
-bool Pop3Client::CheckResponse(const char* response, size_t size, const char** message) const
-{
-	bool result = 0 == std::strncmp(response, RespOkStr, RespOkLen);
-	if (message) {
-		if (result)
-			*message = response + RespOkLen; // Skip the response prefix
-		else if (0 == std::strncmp(response, RespErrStr, RespErrLen))
-			*message = response + RespErrLen;
-		else
-			*message = response; // Unrecognized response type, assume an error
-		while (' ' == (*message)[0]) ++(*message); // Skip spaces before the message
-	}
-	return result;
-}
-
 bool Pop3Client::Auth(AuthTokenType type, const char* token)
 {
 	switch (type) {
-	case attXOAuth2:
-		SendCmd("AUTH XOAUTH2", token);
+	case attXOAuth2: {
+		const char* cmd_result = SendCmd("AUTH XOAUTH2", nullptr,
+			&(CommandContext(nullptr, &(Pop3CmdCtx("+"))))); // Allowing SASL continuation indicator (RFC 5034)
+		// cmd_result may contain Challenge Response to continue with, but practically no POP3 servers use it
+		if (cmd_result && (ResCode_Ok == lastErrCode)) {
+			SendCmd(token, nullptr, &(CommandContext("(oauth2_token)", nullptr)));
+		}
 		return ResCode_Ok == lastErrCode;
+	}
 	default:
 		return false;
 	}
@@ -70,7 +64,7 @@ bool Pop3Client::Stat(int& number, int& size)
 bool Pop3Client::List(std::vector<ListItem>& data)
 {
 	size_t data_size;
-	const char* cmd_result = SendCmd("LIST", NULL, data_size);
+	const char* cmd_result = SendCmd("LIST", nullptr, nullptr, data_size);
 
 	if (cmd_result) {
 		int count = 0;
@@ -89,7 +83,7 @@ bool Pop3Client::Uidl(std::vector<UidlItem>& data, int number)
 {
 	size_t data_size;
 	const char* cmd_result = SendCmd("UIDL",
-		number > 0 ? std::to_string(number).c_str() : nullptr, data_size);
+		number > 0 ? std::to_string(number).c_str() : nullptr, nullptr, data_size);
 
 	if (cmd_result) {
 		int count = 0;
@@ -109,7 +103,7 @@ bool Pop3Client::Uidl(std::vector<UidlItem>& data, int number)
 bool Pop3Client::Retr(std::ostream& data, int number)
 {
 	size_t data_size;
-	const char* cmd_result = SendCmd("RETR", std::to_string(number).c_str(), data_size);
+	const char* cmd_result = SendCmd("RETR", std::to_string(number).c_str(), nullptr, data_size);
 
 	if (cmd_result) {
 		int count = 0;
@@ -142,4 +136,36 @@ bool Pop3Client::Rset()
 bool Pop3Client::Quit()
 {
 	return NULL != SendCmd("QUIT");
+}
+
+// **************************************** TxtProtoClient *****************************************
+
+const char* Pop3Client::GetLogScope() const { return Log_Scope; }
+
+bool Pop3Client::CheckResponse(CommandContext* ctx, const char* response, size_t size, const char** message) const
+{
+	bool result = false;
+	size_t ok_msg_start = 0;
+	if (ctx && ctx->CtxData) {
+		Pop3CmdCtx* cmd_ctx = static_cast<Pop3CmdCtx*>(ctx->CtxData);
+		if (cmd_ctx->RespOkPrefix) {
+			size_t ctx_len = std::strlen(cmd_ctx->RespOkPrefix);
+			result = 0 == std::strncmp(response, cmd_ctx->RespOkPrefix, ctx_len);
+			if (result) ok_msg_start = ctx_len;
+		}
+	}
+	if (!result) {
+		result = 0 == std::strncmp(response, RespOkStr, RespOkLen);
+		if (result) ok_msg_start = RespOkLen;
+	}
+	if (message) {
+		if (result)
+			*message = response + ok_msg_start; // Skip the response OK prefix
+		else if (0 == std::strncmp(response, RespErrStr, RespErrLen))
+			*message = response + RespErrLen;
+		else
+			*message = response; // Unrecognized response type, assume an error
+		while (' ' == (*message)[0]) ++(*message); // Skip spaces before the message
+	}
+	return result;
 }

@@ -34,15 +34,16 @@ TxtProtoClient::~TxtProtoClient() { }
 
 int TxtProtoClient::GetLastErrorCode() { return lastErrCode; }
 
-const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm)
+const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm, CommandContext* ctx)
 {
 	size_t data_size = 0;
-	return SendCmd(cmd, prm, data_size);
+	return SendCmd(cmd, prm, ctx, data_size);
 }
 
-const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm, size_t& data_size)
+const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm, CommandContext* ctx, size_t& resp_data_size)
 {
-	logger->LogFmt(llDebug, "%s Sending cmd %s...", GetLogScope(), cmd);
+	const char* cmd_name = ctx && ctx->CmdName ? ctx->CmdName : cmd;
+	logger->LogFmt(llDebug, "%s Sending cmd %s...", GetLogScope(), cmd_name);
 	std::string net_cmd = cmd;
 	net_cmd += prm != NULL
 		? std::string(" ") + prm + CmdEndStr
@@ -51,25 +52,25 @@ const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm, size_t& da
 
 	if (ResCode_Ok != lastErrCode) return nullptr;
 
-	lastErrCode = netClient.Recv(lastResp, Last_Resp_Buf_Size, data_size);
-	lastResp[data_size] = 0;
+	lastErrCode = netClient.Recv(lastResp, Last_Resp_Buf_Size, resp_data_size);
+	lastResp[resp_data_size] = 0;
 
 	const char* ok_msg = nullptr;
-	if (ResCode_Ok == lastErrCode && 0 != data_size) {
-		auto resp_pos = std::find_if(lastResp, lastResp + data_size,
+	if (ResCode_Ok == lastErrCode && 0 != resp_data_size) {
+		auto resp_pos = std::find_if(lastResp, lastResp + resp_data_size,
 			[](unsigned char c) { return 0 == std::isspace(c); }); // Skip leading spaces
 		const char* resp_msg = nullptr;
-		bool is_ok = CheckResponse(resp_pos, data_size - (lastResp - resp_pos), &resp_msg);
+		bool is_ok = CheckResponse(ctx, resp_pos, resp_data_size - (lastResp - resp_pos), &resp_msg);
 		if (is_ok) {
 			ok_msg = resp_msg;
-			data_size -= (ok_msg - lastResp); // Decrease the data_size by the prefix length (if it is)
-			logger->LogFmt(llDebug, "%s Ok response on cmd %s: %s", GetLogScope(), cmd, ok_msg);
+			resp_data_size -= (ok_msg - lastResp); // Decrease the data_size by the prefix length (if it is)
+			logger->LogFmt(llDebug, "%s Ok response on cmd %s: %s", GetLogScope(), cmd_name, ok_msg);
 		} else {
 			lastErrCode = Error_SomeError + 1; // ERROR: some error
-			logger->LogFmt(llError, "%s Error response on cmd %s: %s", GetLogScope(), cmd, resp_msg);
+			logger->LogFmt(llError, "%s Error response on cmd %s: %s", GetLogScope(), cmd_name, resp_msg);
 		}
 	} else
-		logger->LogFmt(llError, "%s Failed to receive response on cmd %s.", GetLogScope(), cmd);
+		logger->LogFmt(llError, "%s Failed to receive response on cmd %s.", GetLogScope(), cmd_name);
 
 	return ok_msg;
 }

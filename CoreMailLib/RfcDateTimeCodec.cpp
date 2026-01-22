@@ -2,9 +2,11 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include "MailResCodes.h"
 
 // TODO: ? consider using mimetic DateTime - mimetic/rfc822/datetime.h
 
+using namespace MailLibResCodes_Gen;
 using namespace RfcDateTime;
 
 namespace RfcDateTimeCodec_Imp
@@ -35,6 +37,10 @@ std::time_t RfcDateTimeCodec::ParseDateTime(const char* dt_str)
 std::tm RfcDateTimeCodec::ParseDateTime(const char* dt_str, RfcDateTimeCodec::TimeZoneOptions tz_options)
 {
 	std::tm result{};
+	if (!dt_str) {
+		result.tm_sec = Error_Gen_DataIsNullOrEmpty;
+		return result;
+	}
 	int fmt_idx = parse_date_time_str(dt_str, result);
 	if (fmt_idx < DateTimeFmtCnt) {
 		if (tzoNone != tz_options) {
@@ -45,18 +51,18 @@ std::tm RfcDateTimeCodec::ParseDateTime(const char* dt_str, RfcDateTimeCodec::Ti
 					if (RfcDateTimeValueUndefined != time_val) {
 						result = (tzoLocal & tz_options) ? *std::localtime(&time_val) : *std::gmtime(&time_val);
 					} else {
-						result.tm_sec = -2; // ERROR: something wrong with the time representation
+						result.tm_sec = Error_Gen_DataValueIsNotValid; // Seems something wrong with the time representation
 					}
 				}
 				if (tzoTmWday & tz_options) result.tm_wday = time_zone;
 				if (tzoTmYday & tz_options) result.tm_yday = time_zone;
 				if (tzoTmIsdst & tz_options) result.tm_isdst = time_zone;
 			} else {
-				// time zone is not presented?
+				// Probably time zone is not presented, return as is
 			}
 		}
 	} else {
-		result.tm_sec = -1; // ERROR: the input can't be parsed
+		result.tm_sec = Error_Gen_DataFormatIsNotValid;
 	}
 	return result;
 }

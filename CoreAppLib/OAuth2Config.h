@@ -4,11 +4,11 @@
 
 struct OAuth2Settings
 {
-	std::string code_server;
-	std::string token_server;
-	std::string scope;
-	std::string client_id;
-	std::string client_secret;
+	std::string AuthEndpoint;
+	std::string TokenEndpoint;
+	std::string Scope;
+	std::string ClientId;
+	std::string ClientSecret;
 };
 
 namespace OAuth2Cfg

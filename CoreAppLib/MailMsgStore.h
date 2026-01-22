@@ -21,7 +21,7 @@ class MailMsgStore
 public:
 	int SetLocation(const FILE_PATH_CHAR* path, int grp_id);
 	std::vector<MailMsgFile> GetFileList();
-	MailMsgFile SaveMsgFile(const FILE_PATH_CHAR* src_path, bool move_file);
+	MailMsgFile SaveMsgFile(const FILE_PATH_CHAR* src_path, bool move_file, bool use_broken_storage, int& res_code);
 	int DeleteAll();
 
 	static std::basic_string<FILE_PATH_CHAR> GetStoreDirPath(

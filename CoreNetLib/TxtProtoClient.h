@@ -8,6 +8,11 @@ class TxtProtoClient
 protected:
 	typedef std::function<bool(const char* item)> ListItemRecvProc;
 	typedef std::function<const char*(size_t counter)> ListItemSendProc;
+	struct CommandContext {
+		const char* CmdName;
+		void* CtxData;
+		CommandContext(const char* cmd_name, void* ctx_data) : CmdName(cmd_name), CtxData(ctx_data) { }
+	};
 private:
 	LisLog::ILogger* logger = LisLog::Logger::GetInstance();
 	NetClient netClient;
@@ -21,12 +26,12 @@ protected:
 	int lastErrCode;
 
 	virtual const char* GetLogScope() const = 0;
-	virtual bool CheckResponse(const char* response, size_t size,
+	virtual bool CheckResponse(CommandContext* ctx, const char* response, size_t size,
 		const char** message = nullptr) const = 0;
 
 	// Returns OK-response message if success, else NULL
-	const char* SendCmd(const char* cmd, const char* prm = nullptr);
-	const char* SendCmd(const char* cmd, const char* prm, size_t& data_size);
+	const char* SendCmd(const char* cmd, const char* prm = nullptr, CommandContext* ctx = nullptr);
+	const char* SendCmd(const char* cmd, const char* prm, CommandContext* ctx, size_t& resp_data_size);
 
 	bool SendList(ListItemSendProc item_proc);
 	bool RecvList(char* data_pos, size_t data_size, ListItemRecvProc item_proc);

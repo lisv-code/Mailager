@@ -15,6 +15,7 @@
 
 namespace MailMsgFileMgr_Imp
 {
+	const bool StopReceiveOnMsgFileError = true;
 	static bool is_mail_msg_to_send(const MailMsgFile* mail_msg);
 	static bool is_mail_msg_status_needs_monitoring(const MailMsgFile* mail_msg);
 }
@@ -265,16 +266,19 @@ LisThread::TaskProcResult MailMsgFileMgr::MailRecvProc(
 		MailMsgStore mail_store;
 		mail_store.SetLocation(mail_store_path.c_str(), grp_id);
 		auto grp_files = &mail_grp->MsgFiles;
-		auto file_proc = [&mail_store, grp_files, proc_ctrl, mgr, &file_count] (const FILE_PATH_CHAR* file_path)
+		auto file_proc = [grp_id , &mail_store, grp_files, proc_ctrl, mgr, &file_count] (const FILE_PATH_CHAR* file_path)
 		{
-			auto msg_file = mail_store.SaveMsgFile(file_path, true);
-			if (msg_file.LoadInfo() >= 0) {
+			int res_code;
+			auto msg_file = mail_store.SaveMsgFile(file_path, true, !StopReceiveOnMsgFileError, res_code);
+			if ((res_code >= 0) && (msg_file.LoadInfo() >= 0)) {
 				auto file_grp_it = grp_files->emplace(grp_files->end(),
 					std::make_shared<MailMsgFile>(std::move(msg_file))); // TODO: multithreading warning - collection modification
 				++file_count;
 				AfterMailMsgFileAdded(&(*file_grp_it), mgr, true);
 			} else {
-				// TODO: Handle the error (broken message file)
+				mgr->logger->LogFmt(llError, Log_Scope_Rcv " grp#%i The mail message is broken, error: %i.",
+					grp_id, res_code);
+				if (StopReceiveOnMsgFileError) return false;
 			}
 			return !proc_ctrl->StopFlag;
 		};

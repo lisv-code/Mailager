@@ -10,7 +10,10 @@
 #include "../CoreMailLib/RfcDateTimeCodec.h"
 #include "MailMsgFile_Helper.h"
 
-namespace MailStore_Imp {
+using namespace MailLibResCodes_Gen;
+
+namespace MailStore_Imp
+{
 #define Log_Scope "MailStore"
 
 #define DirName_Unknown "unknown"
@@ -54,27 +57,32 @@ std::vector<MailMsgFile> MailMsgStore::GetFileList()
 	return result;
 }
 
-MailMsgFile MailMsgStore::SaveMsgFile(const FILE_PATH_CHAR* src_path, bool move_file)
+MailMsgFile MailMsgStore::SaveMsgFile(const FILE_PATH_CHAR* src_path, bool move_file, bool use_broken_storage,
+	int& res_code)
 {
 	logger->LogFmt(llDebug, Log_Scope " Storing file: %s.", (char*)LisStr::CStrConvert(src_path));
 
 	std::string dir_name, file_name;
-	int result = ComposePathNames(dir_name, file_name, src_path);
+	res_code = ComposePathNames(dir_name, file_name, src_path);
 	std::basic_string<FILE_PATH_CHAR> dst_path;
-	if ((result >= 0) && !dir_name.empty() && !file_name.empty()) {
-		result = StoreMessage(src_path, dir_name.c_str(), file_name.c_str(), dst_path);
+	if ((res_code >= 0) && !dir_name.empty() && !file_name.empty()) {
+		res_code = StoreMessage(src_path, dir_name.c_str(), file_name.c_str(), dst_path);
 	} else {
-		logger->LogFmt(llError, "%s File path composition error %i", Log_Scope, result);
-		auto dir = MimeMessageDef::ErrorCode_BrokenData == result ? DirName_Broken : DirName_Unknown;
-		if (LisFileSys::DirExistCheck(storeLocation.c_str(), (FILE_PATH_CHAR*)LisStr::CStrConvert(dir), true)) {
-			auto ext = MimeMessageDef::ErrorCode_BrokenData == result ? FileExt_Mime : FileExt_Text;
-			dst_path = ComposeFilePath(storeLocation.c_str(), dir, GetFileNameGen(ext).c_str());
-			result = LisFileSys::FileCopy(src_path, dst_path.c_str()) >= 0;
+		logger->LogFmt(llError, "%s File path composition error %i", Log_Scope, res_code);
+		if (use_broken_storage) {
+			auto dir = MailLibResCodes_Gen::Error_Gen_DataFormatIsNotValid == res_code ? DirName_Broken : DirName_Unknown;
+			if (LisFileSys::DirExistCheck(storeLocation.c_str(), (FILE_PATH_CHAR*)LisStr::CStrConvert(dir), true)) {
+				auto ext = MailLibResCodes_Gen::Error_Gen_DataFormatIsNotValid == res_code ? FileExt_Mime : FileExt_Text;
+				dst_path = ComposeFilePath(storeLocation.c_str(), dir, GetFileNameGen(ext).c_str());
+				res_code = LisFileSys::FileCopy(src_path, dst_path.c_str()) >= 0;
+			}
+		} else {
+			dst_path = src_path;
 		}
 	}
 	MailMsgFile msg_file(grpId, dst_path.c_str());
 
-	if (result >= 0) {
+	if (res_code >= 0) {
 		logger->LogFmt(llInfo, Log_Scope " File stored: %s.", (char*)LisStr::CStrConvert(dst_path.c_str()));
 		if (move_file) LisFileSys::FileDelete(src_path);
 	}
@@ -150,11 +158,11 @@ int MailMsgStore::ComposePathNames(std::string& dir_name, std::string& file_name
 		MailHdrName_From, MailHdrName_To, MailHdrName_Subj, MailHdrName_MessageId
 	};
 
-	MimeHeader mail_data;
-	parser.GetHdr(field_names, field_count, mail_data, hvtRaw);
+	MimeHeader mail_info;
+	parser.GetHdr(field_names, field_count, mail_info, hvtRaw);
 
 	std::tm mail_time = RfcDateTimeCodec::ParseDateTime(
-		mail_data.GetField(MailHdrName_Date).GetRaw(), RfcDateTimeCodec::TimeZoneOptions::tzoUtc);
+		mail_info.GetField(MailHdrName_Date).GetRaw(), RfcDateTimeCodec::TimeZoneOptions::tzoUtc);
 	if (mail_time.tm_sec >= 0) {
 		ComposePathParts(dir_name, file_name, &mail_time);
 
@@ -162,7 +170,7 @@ int MailMsgStore::ComposePathNames(std::string& dir_name, std::string& file_name
 		for (size_t i = hash_fields_start_index; i < field_count; ++i) {
 			auto hdr_name = field_names[i];
 			if (hdr_name) {
-				auto hdr_fld = mail_data.GetField(hdr_name);
+				auto hdr_fld = mail_info.GetField(hdr_name);
 				if (hdr_fld.GetRaw()) {
 					data_hash = hash_fnv64(
 						(unsigned char*)hdr_fld.GetRaw(), hdr_fld.GetRawLen(), data_hash);
@@ -176,8 +184,8 @@ int MailMsgStore::ComposePathNames(std::string& dir_name, std::string& file_name
 		file_name += (char*)LisStr::IntToStr(data_hash, buf, 36);
 		file_name += FileExt_Mime;
 	} else {
-		// Date couldn't be parsed - probably the message is broken
-		result = MimeMessageDef::ErrorCode_BrokenData;
+		// Date couldn't be parsed - most probably the message is broken
+		result = MailLibResCodes_Gen::Error_Gen_DataFormatIsNotValid;
 	}
 
 	return result;

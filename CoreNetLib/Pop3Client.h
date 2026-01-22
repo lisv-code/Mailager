@@ -7,7 +7,7 @@ class Pop3Client : public TxtProtoClient
 {
 protected:
 	virtual const char* GetLogScope() const override;
-	virtual bool CheckResponse(const char* response, size_t size,
+	virtual bool CheckResponse(CommandContext* ctx, const char* response, size_t size,
 		const char** message = nullptr) const override;
 public:
 	enum AuthTokenType { attXOAuth2 };

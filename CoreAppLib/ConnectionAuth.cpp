@@ -142,8 +142,8 @@ int ConnectionAuth::RefreshOrGetToken(OAuth2Token& token, OAuth2Settings config,
 			allowed_ports, sizeof(allowed_ports) / sizeof(unsigned short));
 		if (result < 0) return (ErrResGrp_NetLib - result); // ERROR: auth_client code
 		if (!token.refresh_token.empty()) {
-			new_token = auth_client.RefreshToken(config.token_server.c_str(), token.refresh_token.c_str(),
-				config.client_id.c_str(), config.client_secret.c_str());
+			new_token = auth_client.RefreshToken(config.TokenEndpoint.c_str(), token.refresh_token.c_str(),
+				config.ClientId.c_str(), config.ClientSecret.c_str());
 			if (new_token.expires < 0 && new_token.expires != OAuth2Client_ResCodes::Error_ResponseIsError)
 				return (ErrResGrp_NetLib - new_token.expires);  // ERROR: auth_client code
 			new_token.refresh_token = token.refresh_token;
@@ -153,14 +153,18 @@ int ConnectionAuth::RefreshOrGetToken(OAuth2Token& token, OAuth2Settings config,
 			evt_data = [&auth_client]() { return auth_client.Stop(); };
 			if (event_handler && !event_handler(connection, etStopFunction, &evt_data)) return Error_Gen_Operation_Interrupted;
 			char buf[0xFFF] = { 0 };
-			result = auth_client.GetCode(buf, config.code_server.c_str(),
-				config.client_id.c_str(), config.scope.c_str());
+			result = auth_client.GetCode(buf, config.AuthEndpoint.c_str(),
+				config.ClientId.c_str(), config.Scope.c_str());
 			if (result < 0) return (ErrResGrp_NetLib - result); // ERROR: auth_client code
-			new_token = auth_client.GetToken(config.token_server.c_str(), buf,
-				config.client_id.c_str(), config.client_secret.c_str());
+			new_token = auth_client.GetToken(config.TokenEndpoint.c_str(), buf,
+				config.ClientId.c_str(), config.ClientSecret.c_str());
 		}
 		token = new_token;
-		return ResCode_Created; // OK: token was updated
+		if (OAuth2Client::IsTokenError(token)) {
+			logger->LogFmt(llError, Log_Scope " OAuth2 token error: %s.", OAuth2Client::GetTokenErrorInfo(token).c_str());
+			return Error_Conn_AuthProcess; // ERROR: returned an auth error
+		} else
+			return ResCode_Created; // OK: token was updated
 	}
 	return ResCode_Ok; // OK: token is valid
 }

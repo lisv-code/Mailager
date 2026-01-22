@@ -99,6 +99,7 @@
 		<Unit filename="../CoreAppLib/OAuth2TokenStor.h" />
 		<Unit filename="../CoreAppLib/PasswordStore.cpp" />
 		<Unit filename="../CoreAppLib/PasswordStore.h" />
+		<Unit filename="../CoreMailLib/MailResCodes.h" />
 		<Unit filename="../CoreMailLib/MimeHeader.cpp" />
 		<Unit filename="../CoreMailLib/MimeHeader.h" />
 		<Unit filename="../CoreMailLib/MimeHeaderDef.h" />

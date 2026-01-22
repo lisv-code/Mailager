@@ -55,8 +55,9 @@ namespace OAuth2Client_ResCodes
 	const int Error_ResponseNoData = Error_1st_Value - 4;
 	const int Error_ResponseUnrecognized = Error_1st_Value - 5;
 	const int Error_ResponseIsError = Error_1st_Value - 6;
+	const int Error_RequiredDataNotFound = Error_1st_Value - 7;
 
-	const int Error_Last_Value = Error_ResponseIsError;
+	const int Error_Last_Value = Error_RequiredDataNotFound;
 }
 
 #endif // _LISV_NET_RES_CODES_H_

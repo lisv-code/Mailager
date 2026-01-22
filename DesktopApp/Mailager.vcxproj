@@ -190,6 +190,7 @@
     <ClInclude Include="..\CoreAppLib\MailMsgFileDef.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgTransmitter.h" />
     <ClInclude Include="..\CoreAppLib\AppResCodes.h" />
+    <ClInclude Include="..\CoreMailLib\MailResCodes.h" />
     <ClInclude Include="..\CoreMailLib\MimeHeader.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgFile.h" />
     <ClInclude Include="..\CoreMailLib\MimeMediaTypes.h" />

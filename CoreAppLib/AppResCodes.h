@@ -7,7 +7,7 @@
 #define ResCode_NoContent 620000204
 
 // General (common) result codes
-#define Error_Gen_Undefined -1
+#define Error_Gen_Undefined -1 // The error type is unknown or undefined or not classified yet
 #define Error_Gen_ItemNotFound -2
 #define Error_Gen_TypeUnsupported -3
 
