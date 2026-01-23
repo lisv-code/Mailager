@@ -5,7 +5,7 @@
 #include "MimeMessageDef.h"
 
 class MimeParser::MimeEntity : public mimetic::MimeEntity {};
-using namespace MailLibResCodes_Gen;
+using namespace MailResCodes_Gen;
 namespace MimeParser_Imp
 {
 	// mimetic helper functions
@@ -56,7 +56,7 @@ int MimeParser::GetHdr(const char** field_names, int field_count, MimeHeader& ma
 	for (int i = 0; i < field_count; ++i) {
 		auto hdr_name = field_names[i];
 		result = ReadHdrValue(mimeData, hdr_name, mail_data, value_type);
-		if (result < 0) break;
+		if (result _Is_MailResCode_Err) break;
 	}
 	return result;
 }
@@ -86,8 +86,7 @@ int MimeParser::GetData(MimeNode& data, MimeHeaderValueType value_type) const
 		GetHdr(entity, data_item->Header, value_type);
 		data_item->Body = entity->body();
 
-		//mime_data = mimeData;
-		return 0;
+		return ResCode_Ok;
 	});
 }
 
@@ -106,7 +105,7 @@ int MimeParser::GetHdr(const MimeEntity* mime_entity, MimeHeader& mail_data,
 	int result = ResCode_Ok;
 	for (auto it = mime_entity->header().begin(); it != mime_entity->header().end(); ++it) {
 		result = read_mime_hdr_value(*it, mail_data, value_type);
-		if (result < 0) break;
+		if (result _Is_MailResCode_Err) break;
 	}
 	return result;
 }
@@ -137,7 +136,7 @@ int MimeParser::SetHdr(const MimeHeader& hdr_data, MimeEntity* mime_entity, bool
 int MimeParser::SetNode(const MimeNode& mail_data, MimeEntity* mime_entity)
 {
 	int result = SetHdr(mail_data.Header, mime_entity, false);
-	if (result < 0) return result;
+	if (result _Is_MailResCode_Err) return result;
 	if (mail_data.GetParts().empty()) {
 		mime_entity->body().set(mail_data.Body);
 	} else
@@ -145,7 +144,7 @@ int MimeParser::SetNode(const MimeNode& mail_data, MimeEntity* mime_entity)
 			auto new_entity = (MimeEntity*)new mimetic::MimeEntity();
 			mime_entity->body().parts().push_back(new_entity);
 			result = SetNode(*item, new_entity);
-			if (result < 0) break;
+			if (result _Is_MailResCode_Err) break;
 		}
 	return result;
 }
@@ -154,15 +153,15 @@ int MimeParser::EnumStruct(MimeEntity* entity, int level, MimeParser::MimeItemPr
 {
 	if (!entity) return 0;
 	int result = proc(entity, level);
-	if (result >= 0) {
+	if (result _Is_MailResCode_Ok) {
 		const mimetic::MimeEntityList& parts = ((mimetic::MimeEntity*)entity)->body().parts();
 		int proc_count = 0;
 		for (auto it = parts.begin(); it != parts.end(); ++it) {
 			result = EnumStruct((MimeEntity*)*it, 1 + level, proc);
-			if (result < 0) break;
+			if (result _Is_MailResCode_Err) break;
 			proc_count += result;
 		}
-		return result >= 0 ? proc_count + 1 : result;
+		return result _Is_MailResCode_Ok ? proc_count + 1 : result;
 	} else return result;
 }
 

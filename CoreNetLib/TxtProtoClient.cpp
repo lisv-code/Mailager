@@ -3,8 +3,8 @@
 #include <cctype>
 #include <cstring>
 #include "NetResCodes.h"
-using namespace NetLibGen_ResCodes;
-using namespace TxtProtoClient_ResCodes;
+using namespace NetResCodes_Gen;
+using namespace NetResCodes_TxtProtoClient;
 
 #define Txt_Proto_Line_End_Str "\x0D\x0A"
 
@@ -15,6 +15,7 @@ namespace TxtProtoClient_Imp
 	const char* ListItemEndStr = Txt_Proto_Line_End_Str;
 	const size_t ListItemEndLen = strlen(ListItemEndStr);
 
+	const char ListEndSymbol = '.'; // Note: just a single character value is handled correctly in this class
 	const char* ListEndStr = "." Txt_Proto_Line_End_Str;
 	const size_t ListEndLen = strlen(ListEndStr);
 }
@@ -45,9 +46,8 @@ const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm, CommandCon
 	const char* cmd_name = ctx && ctx->CmdName ? ctx->CmdName : cmd;
 	logger->LogFmt(llDebug, "%s Sending cmd %s...", GetLogScope(), cmd_name);
 	std::string net_cmd = cmd;
-	net_cmd += prm != NULL
-		? std::string(" ") + prm + CmdEndStr
-		: CmdEndStr;
+	if (prm) net_cmd += prm;
+	net_cmd += CmdEndStr;
 	lastErrCode = netClient.Send(net_cmd.c_str(), net_cmd.size());
 
 	if (ResCode_Ok != lastErrCode) return nullptr;
@@ -60,7 +60,7 @@ const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm, CommandCon
 		auto resp_pos = std::find_if(lastResp, lastResp + resp_data_size,
 			[](unsigned char c) { return 0 == std::isspace(c); }); // Skip leading spaces
 		const char* resp_msg = nullptr;
-		bool is_ok = CheckResponse(ctx, resp_pos, resp_data_size - (lastResp - resp_pos), &resp_msg);
+		bool is_ok = CheckResponse(ctx, resp_pos, resp_data_size - (resp_pos - lastResp), &resp_msg);
 		if (is_ok) {
 			ok_msg = resp_msg;
 			resp_data_size -= (ok_msg - lastResp); // Decrease the data_size by the prefix length (if it is)
@@ -75,14 +75,18 @@ const char* TxtProtoClient::SendCmd(const char* cmd, const char* prm, CommandCon
 	return ok_msg;
 }
 
-bool TxtProtoClient::SendList(ListItemSendProc item_proc)
+bool TxtProtoClient::SendList(ListItemSendProc item_proc, bool check_item_start_symbol)
 {
 	bool result = true;
 	const char* list_item;
 	std::string data_line;
 	size_t counter = 0;
 	while (result && nullptr != (list_item = item_proc(counter))) {
-		data_line = list_item;
+		if (check_item_start_symbol && (list_item[0] == ListEndSymbol)) {
+			data_line = ListEndSymbol; // RFC 5321 requires duplicate dot symbol if a leading dot encountered
+			data_line += list_item;
+		} else
+			data_line = list_item;
 		data_line += ListItemEndStr;
 		result = ResCode_Ok == netClient.Send(data_line.c_str(), data_line.size());
 		++counter;
@@ -122,7 +126,7 @@ int TxtProtoClient::ProcListItems(char* data, ListItemRecvProc item_proc, char**
 			return 1; // end of list
 		}
 		item_end[0] = 0;
-		if (!item_proc(*proc_end)) return -1; // interrupted
+		if (!item_proc(*proc_end)) return Error_InterruptedByCaller; // interrupted
 		*proc_end = item_end + ListItemEndLen;
 	}
 	return 0; // finished

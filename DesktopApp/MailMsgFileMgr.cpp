@@ -270,7 +270,7 @@ LisThread::TaskProcResult MailMsgFileMgr::MailRecvProc(
 		{
 			int res_code;
 			auto msg_file = mail_store.SaveMsgFile(file_path, true, !StopReceiveOnMsgFileError, res_code);
-			if ((res_code >= 0) && (msg_file.LoadInfo() >= 0)) {
+			if ((res_code >= 0) && (res_code = msg_file.LoadInfo() >= 0)) {
 				auto file_grp_it = grp_files->emplace(grp_files->end(),
 					std::make_shared<MailMsgFile>(std::move(msg_file))); // TODO: multithreading warning - collection modification
 				++file_count;

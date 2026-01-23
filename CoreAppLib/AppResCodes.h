@@ -2,6 +2,9 @@
 #ifndef _MAILAGER_APP_RES_CODES_H_
 #define _MAILAGER_APP_RES_CODES_H_
 
+#define _Is_Ok_ResCode >= 0
+#define _Is_Err_ResCode < 0
+
 #define ResCode_Ok 0
 #define ResCode_Created 620000201
 #define ResCode_NoContent 620000204
@@ -27,7 +30,16 @@
 #define Error_Conn_AuthProcess (ErrResGrp_Conn -4)
 #define Error_Conn_TransferOperation (ErrResGrp_Conn -5)
 
+// File system errors group definition
+#define ErrResGrp_FileSys -1000
+constexpr int ResCode_OfFileSys(long long code) { return code >= 0 ? code : ErrResGrp_FileSys - code; }
+
 // Network library errors group definition
-#define ErrResGrp_NetLib -1000
+#define ErrResGrp_NetLib -2000
+constexpr int ResCode_OfNetLib(int code) { return code >= 0 ? code : ErrResGrp_NetLib - code; }
+
+// Mail library errors group definition
+#define ErrResGrp_MailLib -3000
+constexpr int ResCode_OfMailLib(int code) { return code >= 0 ? code : ErrResGrp_MailLib - code; }
 
 #endif // _MAILAGER_APP_RES_CODES_H_

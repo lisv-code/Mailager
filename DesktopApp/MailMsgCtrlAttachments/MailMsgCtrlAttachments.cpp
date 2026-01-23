@@ -59,24 +59,35 @@ void MailMsgCtrlAttachments::SetMode(bool allow_edit)
 void MailMsgCtrlAttachments::LoadAttachments(const MimeNode& node, bool take_ownership)
 {
 	wndContainer->DestroyChildren();
-	int result = const_cast<MimeNode&>(node).EnumDataStructure([this, take_ownership](MimeNode* entity)
+	std::vector<MimeNode*> loaded_nodes;
+	int result = const_cast<MimeNode&>(node).EnumDataStructure([this, &loaded_nodes](MimeNode* entity)
 	{
 		auto node_type = MimeNodeRead::get_node_content_flags(entity);
 		if (MimeNodeContentFlags::ncfIsAttachment & node_type) {
-			AddAttachment(entity, take_ownership, false);
+			if (AddAttachment(entity, false, false)) loaded_nodes.push_back(entity);
 		}
 		return 0;
 	});
 	wndContainer->Show(wndContainer->GetChildren().GetCount());
 	wndContainer->GetParent()->Layout();
+	if (take_ownership) TakeDataOwnership(loaded_nodes.data(), loaded_nodes.size());
 }
 
-void MailMsgCtrlAttachments::AddAttachmentFileButton(const wxString& name, MimeNode* msg_node)
+void MailMsgCtrlAttachments::AddAttachmentFileButton(const wxString& name, MimeNode* data_node)
 {
 	auto btn = new wxButton(wndContainer, wxID_ANY, name);
 	btn->Bind(wxEVT_BUTTON, &MailMsgCtrlAttachments::AttachmentFileButton_ClickHandler, this);
-	btn->SetClientData((void*)msg_node);
+	btn->SetClientData((void*)data_node);
 	wndContainer->GetSizer()->Add(btn);
+}
+
+void MailMsgCtrlAttachments::TakeDataOwnership(MimeNode** data_nodes, size_t count)
+{
+	for (size_t i = 0; i < count; ++i) {
+		own_nodes.push_back(data_nodes[i]);
+		if (data_nodes[i]->GetParent())
+			data_nodes[i]->GetParent()->RemovePart(data_nodes[i], true);
+	}
 }
 
 bool MailMsgCtrlAttachments::AddAttachment(MimeNode* data_node, bool take_ownership, bool refresh_view)
@@ -85,10 +96,7 @@ bool MailMsgCtrlAttachments::AddAttachment(MimeNode* data_node, bool take_owners
 	std::basic_string<TCHAR> name;
 	MimeNodeRead::read_file_name(data_node, name);
 	AddAttachmentFileButton(name, data_node);
-	if (take_ownership) {
-		own_nodes.push_back(data_node);
-		if (data_node->GetParent()) data_node->GetParent()->RemovePart(data_node, true);
-	}
+	if (take_ownership) TakeDataOwnership(&data_node, 1);
 	if (refresh_view) {
 		wndContainer->Show();
 		wndContainer->GetParent()->Layout();

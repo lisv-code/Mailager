@@ -8,9 +8,8 @@
 #include "../CoreMailLib/MimeParser.h"
 #include "../CoreMailLib/MimeMessageDef.h"
 #include "../CoreMailLib/RfcDateTimeCodec.h"
+#include "AppResCodes.h"
 #include "MailMsgFile_Helper.h"
-
-using namespace MailLibResCodes_Gen;
 
 namespace MailStore_Imp
 {
@@ -34,11 +33,11 @@ int MailMsgStore::SetLocation(const FILE_PATH_CHAR* path, int grp_id)
 		storeLocation = path;
 		if ((FILE_PATH_CHAR)FILE_PATH_SEPARATOR_CHR != storeLocation.back())
 			storeLocation += FILE_PATH_SEPARATOR_CHR;
-		return 0;
+		return ResCode_Ok;
 	}
 	logger->LogFmt(llError,
 		Log_Scope " Store location intialization failed: %s.", (char*)LisStr::CStrConvert(path));
-	return -1; // ERROR: bad directory
+	return Error_Gen_Undefined; // ERROR: bad directory
 }
 
 std::vector<MailMsgFile> MailMsgStore::GetFileList()
@@ -65,16 +64,16 @@ MailMsgFile MailMsgStore::SaveMsgFile(const FILE_PATH_CHAR* src_path, bool move_
 	std::string dir_name, file_name;
 	res_code = ComposePathNames(dir_name, file_name, src_path);
 	std::basic_string<FILE_PATH_CHAR> dst_path;
-	if ((res_code >= 0) && !dir_name.empty() && !file_name.empty()) {
+	if ((res_code _Is_Ok_ResCode) && !dir_name.empty() && !file_name.empty()) {
 		res_code = StoreMessage(src_path, dir_name.c_str(), file_name.c_str(), dst_path);
 	} else {
 		logger->LogFmt(llError, "%s File path composition error %i", Log_Scope, res_code);
 		if (use_broken_storage) {
-			auto dir = MailLibResCodes_Gen::Error_Gen_DataFormatIsNotValid == res_code ? DirName_Broken : DirName_Unknown;
+			auto dir = MailResCodes_Gen::Error_Gen_DataFormatIsNotValid == res_code ? DirName_Broken : DirName_Unknown;
 			if (LisFileSys::DirExistCheck(storeLocation.c_str(), (FILE_PATH_CHAR*)LisStr::CStrConvert(dir), true)) {
-				auto ext = MailLibResCodes_Gen::Error_Gen_DataFormatIsNotValid == res_code ? FileExt_Mime : FileExt_Text;
+				auto ext = MailResCodes_Gen::Error_Gen_DataFormatIsNotValid == res_code ? FileExt_Mime : FileExt_Text;
 				dst_path = ComposeFilePath(storeLocation.c_str(), dir, GetFileNameGen(ext).c_str());
-				res_code = LisFileSys::FileCopy(src_path, dst_path.c_str()) >= 0;
+				res_code = ResCode_OfFileSys(LisFileSys::FileCopy(src_path, dst_path.c_str()));
 			}
 		} else {
 			dst_path = src_path;
@@ -82,7 +81,7 @@ MailMsgFile MailMsgStore::SaveMsgFile(const FILE_PATH_CHAR* src_path, bool move_
 	}
 	MailMsgFile msg_file(grpId, dst_path.c_str());
 
-	if (res_code >= 0) {
+	if (res_code _Is_Ok_ResCode) {
 		logger->LogFmt(llInfo, Log_Scope " File stored: %s.", (char*)LisStr::CStrConvert(dst_path.c_str()));
 		if (move_file) LisFileSys::FileDelete(src_path);
 	}
@@ -105,8 +104,8 @@ int MailMsgStore::DeleteAll()
 		nullptr,
 		(LisFileSys::DirEnumOptions)(LisFileSys::deoRecursive | LisFileSys::deoFiles | LisFileSys::deoDirLast));
 	int result = del_res < 0 ? del_res : enum_res;
-	if (result >= 0) result = LisFileSys::DirDelete(storeLocation.c_str());
-	return result;
+	if (result _Is_Ok_ResCode) result = LisFileSys::DirDelete(storeLocation.c_str());
+	return ResCode_OfFileSys(result);
 }
 
 int MailMsgStore::StoreMessage(const FILE_PATH_CHAR* src_path, const char* dst_dir, const char* dst_file,
@@ -118,14 +117,14 @@ int MailMsgStore::StoreMessage(const FILE_PATH_CHAR* src_path, const char* dst_d
 		if (LisFileSys::FileExistCheck(dst_path.c_str()))
 			logger->LogFmt(llWarn, Log_Scope " File already exists, overwrite: %s - %s.",
 				(char*)LisStr::CStrConvert(dst_dir), dst_file);
-		result = LisFileSys::FileCopy(src_path, dst_path.c_str()) > 0;
+		result = LisFileSys::FileCopy(src_path, dst_path.c_str());
 	} else {
 		logger->LogFmt(llError,
 			Log_Scope " File location intialization failed: %s.",
 			(char*)LisStr::CStrConvert((storeLocation
 				+ (FILE_PATH_CHAR*)LisStr::CStrConvert(dst_dir)).c_str()));
 	}
-	return result;
+	return ResCode_OfFileSys(result);
 }
 
 void MailMsgStore::ComposePathParts(std::string& dir_name, std::string& file_name, std::tm* time)
@@ -147,9 +146,9 @@ int MailMsgStore::ComposePathNames(std::string& dir_name, std::string& file_name
 	MimeParser parser;
 	std::ifstream stm;
 	MailMsgFile_Helper::init_input_stream(stm, data_file_path, true);
-	int result = parser.Load(stm, true);
+	int result = ResCode_OfMailLib(parser.Load(stm, true));
 	stm.close();
-	if (result < 0) return result;
+	if (result _Is_Err_ResCode) return result;
 
 	const int field_count = 5;
 	const int hash_fields_start_index = 1;
@@ -159,7 +158,8 @@ int MailMsgStore::ComposePathNames(std::string& dir_name, std::string& file_name
 	};
 
 	MimeHeader mail_info;
-	parser.GetHdr(field_names, field_count, mail_info, hvtRaw);
+	result = ResCode_OfMailLib(parser.GetHdr(field_names, field_count, mail_info, hvtRaw));
+	if (result _Is_Err_ResCode) return result;
 
 	std::tm mail_time = RfcDateTimeCodec::ParseDateTime(
 		mail_info.GetField(MailHdrName_Date).GetRaw(), RfcDateTimeCodec::TimeZoneOptions::tzoUtc);
@@ -184,8 +184,8 @@ int MailMsgStore::ComposePathNames(std::string& dir_name, std::string& file_name
 		file_name += (char*)LisStr::IntToStr(data_hash, buf, 36);
 		file_name += FileExt_Mime;
 	} else {
-		// Date couldn't be parsed - most probably the message is broken
-		result = MailLibResCodes_Gen::Error_Gen_DataFormatIsNotValid;
+		// ERROR: Date couldn't be parsed - most probably the message is broken
+		result = Error_Gen_Undefined;
 	}
 
 	return result;

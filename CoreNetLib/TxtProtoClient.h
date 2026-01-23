@@ -33,7 +33,7 @@ protected:
 	const char* SendCmd(const char* cmd, const char* prm = nullptr, CommandContext* ctx = nullptr);
 	const char* SendCmd(const char* cmd, const char* prm, CommandContext* ctx, size_t& resp_data_size);
 
-	bool SendList(ListItemSendProc item_proc);
+	bool SendList(ListItemSendProc item_proc, bool check_item_start_symbol);
 	bool RecvList(char* data_pos, size_t data_size, ListItemRecvProc item_proc);
 public:
 	TxtProtoClient() = delete;

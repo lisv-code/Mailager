@@ -63,7 +63,7 @@ int ConnectionAuth::GetPassword(std::string& auth_data, AuthEventHandler event_h
 {
 	auto store_key = PasswordStore::GetStoreKey(connection.Server.c_str(), connection.UserName.c_str());
 	int result = pswdStor.LoadPassword(store_key.c_str(), nullptr, auth_data);
-	if (0 > result && nullptr != event_handler) {
+	if ((result _Is_Err_ResCode) && nullptr != event_handler) {
 		EventData_PswdRequest evt_data;
 		evt_data.NeedSave = false;
 		if (event_handler(connection, etPswdRequest, &evt_data)) {
@@ -85,7 +85,7 @@ int ConnectionAuth::GetPlainToken(const char* authzid, std::string& auth_data, A
 {
 	std::string pswd;
 	int result = GetPassword(pswd, event_handler);
-	if (result >= 0) {
+	if (result _Is_Ok_ResCode) {
 		char buf[0xFFF] = { 0 };
 		result = AuthTokenProc::ComposeAuthPlainToken(buf, authzid, connection.UserName.c_str(), pswd.c_str());
 		auth_data = buf;
@@ -108,7 +108,7 @@ int ConnectionAuth::GetOAuth2Token(const OAuth2Settings& config, std::string& au
 	OAuth2TokenStor auth_token_stor;
 	std::basic_string<FILE_PATH_CHAR> store_path = basePath + FILE_PATH_TEXT(TokenStoreDir);
 	int result = auth_token_stor.SetLocation(store_path.c_str());
-	if (0 > result) {
+	if (result _Is_Err_ResCode) {
 		logger->LogFmt(llError, Log_Scope " Token store location intialization failed: %i - %s.",
 			result, (char*)LisStr::CStrConvert(store_path.c_str()));
 		return result;
@@ -120,7 +120,7 @@ int ConnectionAuth::GetOAuth2Token(const OAuth2Settings& config, std::string& au
 
 	if (result > 0) auth_token_stor.SaveToken(token_id.c_str(), token);
 
-	if (0 <= result) {
+	if (result _Is_Ok_ResCode) {
 		char buf[0xFFF] = { 0 };
 		AuthTokenProc::ComposeXOAuth2Token(buf,
 			connection.UserName.c_str(), token.token_type.c_str(), token.access_token.c_str());
@@ -138,24 +138,30 @@ int ConnectionAuth::RefreshOrGetToken(OAuth2Token& token, OAuth2Settings config,
 	if (token.expires <= 0 || (token.created + token.expires) < cur_time) {
 		OAuth2Token new_token;
 		OAuth2Client auth_client;
-		int result = auth_client.SetRedirectPort(
-			allowed_ports, sizeof(allowed_ports) / sizeof(unsigned short));
-		if (result < 0) return (ErrResGrp_NetLib - result); // ERROR: auth_client code
+		int result = auth_client.SetRedirectPort(allowed_ports,
+			sizeof(allowed_ports) / sizeof(unsigned short));
+		result = ResCode_OfNetLib(result);
+		if (result _Is_Err_ResCode) return result;
 		if (!token.refresh_token.empty()) {
 			new_token = auth_client.RefreshToken(config.TokenEndpoint.c_str(), token.refresh_token.c_str(),
 				config.ClientId.c_str(), config.ClientSecret.c_str());
-			if (new_token.expires < 0 && new_token.expires != OAuth2Client_ResCodes::Error_ResponseIsError)
-				return (ErrResGrp_NetLib - new_token.expires);  // ERROR: auth_client code
+			if (OAuth2Client::IsTokenError(new_token)
+				&& OAuth2Client::GetTokenError(new_token) != NetResCodes_OAuth2Client::Error_ResponseIsError)
+			{
+				return ResCode_OfNetLib(OAuth2Client::GetTokenError(new_token));
+			}
 			new_token.refresh_token = token.refresh_token;
 		}
 		if (new_token.expires <= 0) {
 			EventData_StopFunction evt_data;
-			evt_data = [&auth_client]() { return auth_client.Stop(); };
-			if (event_handler && !event_handler(connection, etStopFunction, &evt_data)) return Error_Gen_Operation_Interrupted;
+			evt_data = [&auth_client]() { return ResCode_OfNetLib(auth_client.Stop()); };
+			if (event_handler && !event_handler(connection, etStopFunction, &evt_data))
+				return Error_Gen_Operation_Interrupted;
 			char buf[0xFFF] = { 0 };
 			result = auth_client.GetCode(buf, config.AuthEndpoint.c_str(),
 				config.ClientId.c_str(), config.Scope.c_str());
-			if (result < 0) return (ErrResGrp_NetLib - result); // ERROR: auth_client code
+			result = ResCode_OfNetLib(result);
+			if (result _Is_Err_ResCode) return result;
 			new_token = auth_client.GetToken(config.TokenEndpoint.c_str(), buf,
 				config.ClientId.c_str(), config.ClientSecret.c_str());
 		}

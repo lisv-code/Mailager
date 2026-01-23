@@ -119,10 +119,10 @@ void MailMsgEditor::SaveMsgHdrData(MimeNode& msg_node)
 	msg_node.Header.SetRaw(MailHdrName_MimeVersion, MailHdrData_MimeVersion1);
 }
 
-void MailMsgEditor::SaveMsgBodyData(MimeNode& msg_node)
+void MailMsgEditor::SaveMsgBodyData(MimeNode& msg_node, bool pass_attachments_ownership)
 {
 	MimeNode* text_node = nullptr;
-	auto attachments = attachmentsCtrl.GetAttachments(true);
+	auto attachments = attachmentsCtrl.GetAttachments(pass_attachments_ownership);
 	if (attachments.empty()) {
 		text_node = &msg_node;
 	} else {
@@ -162,9 +162,10 @@ void MailMsgEditor::toolSaveMessage_OnToolClicked(wxCommandEvent& event)
 {
 	MimeNode mail_msg;
 	SaveMsgHdrData(mail_msg);
-	SaveMsgBodyData(mail_msg);
+	SaveMsgBodyData(mail_msg, true);
 	int result = mailMsgFile->SaveData(mail_msg, GetAccountId());
 	// TODO: handle saving errors
+	attachmentsCtrl.LoadAttachments(mail_msg, true);
 	RefreshSenderState();
 	RefreshToolState();
 }

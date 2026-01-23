@@ -6,7 +6,7 @@
 
 // TODO: ? consider using mimetic DateTime - mimetic/rfc822/datetime.h
 
-using namespace MailLibResCodes_Gen;
+using namespace MailResCodes_Gen;
 using namespace RfcDateTime;
 
 namespace RfcDateTimeCodec_Imp

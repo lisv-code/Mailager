@@ -3,11 +3,15 @@
 #include <cctype>
 #include <cstring>
 #include "NetResCodes.h"
-using namespace NetLibGen_ResCodes;
+
+using namespace NetResCodes_Gen;
+using namespace NetResCodes_TxtProtoClient;
 
 namespace SmtpClient_Imp
 {
 	const char* Log_Scope = "SmtpClnt";
+
+	static bool ensure_addr_spec(const char* input, std::string& output);
 }
 using namespace SmtpClient_Imp;
 
@@ -23,9 +27,9 @@ bool SmtpClient::Auth(AuthTokenType type, const char* token)
 {
 	switch (type) {
 	case attPlain:
-		return nullptr != SendCmd("AUTH PLAIN", token);
+		return nullptr != SendCmd("AUTH PLAIN ", token);
 	case attXOAuth2:
-		SendCmd("AUTH XOAUTH2", token);
+		SendCmd("AUTH XOAUTH2 ", token);
 		return ResCode_Ok == lastErrCode;
 	default:
 		return false;
@@ -34,26 +38,30 @@ bool SmtpClient::Auth(AuthTokenType type, const char* token)
 
 bool SmtpClient::Helo(const char* domain)
 {
-	return NULL != SendCmd("HELO", domain);
+	return NULL != SendCmd("HELO ", domain);
 }
 
 bool SmtpClient::Ehlo(const char* domain)
 {
-	const char* cmd_result = SendCmd("EHLO", domain);
+	const char* cmd_result = SendCmd("EHLO ", domain);
 	if (cmd_result) {
 		return true; // Just don't care what the data actually received
 	}
 	return false;
 }
 
-bool SmtpClient::MailFrom(const char* mailbox)
+int SmtpClient::MailFrom(const char* mailbox)
 {
-	return NULL != SendCmd("MAIL FROM:", mailbox);
+	std::string addr;
+	if (!ensure_addr_spec(mailbox, addr)) return Error_InputIsNotValid;
+	return nullptr != SendCmd("MAIL FROM:", addr.c_str()) ? ResCode_Ok : Error_ResponseNotSuccessful;
 }
 
-bool SmtpClient::RcptTo(const char* mailbox)
+int SmtpClient::RcptTo(const char* mailbox)
 {
-	return NULL != SendCmd("RCPT TO:", mailbox);
+	std::string addr;
+	if (!ensure_addr_spec(mailbox, addr)) return Error_InputIsNotValid;
+	return nullptr != SendCmd("RCPT TO:", addr.c_str()) ? ResCode_Ok : Error_ResponseNotSuccessful;
 }
 
 bool SmtpClient::Data(std::istream& data)
@@ -65,7 +73,7 @@ bool SmtpClient::Data(std::istream& data)
 		return SendList([&item_buf, &data, buf_size](int counter) {
 			data.getline(item_buf, buf_size);
 			return data ? item_buf : nullptr;
-		});
+		}, true);
 	}
 	return false;
 }
@@ -117,4 +125,36 @@ bool SmtpClient::CheckResponse(CommandContext* context, const char* response, si
 	unsigned int status_code = 0;
 	int parse_result = sscanf(response, "%u ", &status_code);
 	return (parse_result > 0) && (status_code >= 200) && (status_code < 400);
+}
+
+// **************************************** SmtpClient_Imp *****************************************
+
+// Ensures the address envelope according to RFC 5321 and 5322
+bool SmtpClient_Imp::ensure_addr_spec(const char* input, std::string& output)
+{
+	if (!input || !input[0]) { // input is null or empty
+		output = "<>";
+		return true;
+	}
+
+	bool is_bracket_start = false, is_bracket_end = false;
+	// Finding the beginning of the meaningful content
+	const char* pos0 = input;
+	while (*pos0 && std::isspace(*pos0)) { ++pos0; }
+	if ('<' == *pos0) is_bracket_start = true;
+	// Finding the end of the data
+	const char* posX = pos0;
+	bool is_quoted = false;
+	while (*posX && (is_quoted || !std::isspace(*posX))) {
+		if ('"' == *posX) is_quoted = !is_quoted;
+		++posX;
+	}
+	if (is_quoted) return false; // Most probably the content is broken - a quote must have a pair
+	if ('>' == *posX) is_bracket_end = true;
+	// Composing the result
+	if (!is_bracket_start) output = "<";
+	output.append(pos0, posX);
+	if (!is_bracket_end) output += ">";
+
+	return true;
 }

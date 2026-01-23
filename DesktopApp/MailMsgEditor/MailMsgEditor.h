@@ -29,7 +29,7 @@ class MailMsgEditor : public MailMsgEditorUI, public MailMsgFileView
 	void LoadMsgHdrData(const MimeNode* msg_node);
 	int LoadMsgBodyData(const MimeNode* msg_node);
 	void SaveMsgHdrData(MimeNode& msg_node);
-	void SaveMsgBodyData(MimeNode& msg_node);
+	void SaveMsgBodyData(MimeNode& msg_node, bool pass_attachments_ownership);
 
 	void RefreshSenderState();
 	void RefreshToolState();

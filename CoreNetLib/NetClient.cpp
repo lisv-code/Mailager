@@ -6,12 +6,12 @@
 
 #define _AsErrorCode *(-1)
 #define IsCurlError(res_code) ((res_code < 0) && (res_code > (CURL_LAST _AsErrorCode)))
-namespace NetClient_ResCodes
+namespace NetResCodes_Client
 {
 	extern int Error_1st_Value = CURL_LAST _AsErrorCode;
 }
-using namespace NetClient_ResCodes;
-using namespace NetLibGen_ResCodes;
+using namespace NetResCodes_Client;
+using namespace NetResCodes_Gen;
 
 namespace NetClient_Imp
 {

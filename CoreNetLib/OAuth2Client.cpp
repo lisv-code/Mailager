@@ -10,8 +10,8 @@
 using json = nlohmann::json;
 
 #include "NetResCodes.h"
-using namespace NetLibGen_ResCodes;
-using namespace OAuth2Client_ResCodes;
+using namespace NetResCodes_Gen;
+using namespace NetResCodes_OAuth2Client;
 
 namespace OAuth2Client_Imp
 {
@@ -55,7 +55,7 @@ int OAuth2Client::SetRedirectPort(const unsigned short allowed_ports[], size_t c
 	int result = Error_PortSetupFailed;
 	for (size_t i = 0; i < count; ++i) {
 		result = netServer.Start("127.0.0.1", allowed_ports[i]);
-		if (result >= 0) {
+		if (result _Is_NetResCode_Ok) {
 			netPort = allowed_ports[i];
 			break;
 		}
@@ -86,11 +86,11 @@ int OAuth2Client::GetCode(char* out_buf, const char* endpoint, const char* clien
 	if (result != 0) return Error_SysCmdFailure;
 
 	result = netServer.Connect(); // TODO: make the state cancellable (thread, timeout)
-	if (result != 0) return Error_NetConnection;
+	if (result _Is_NetResCode_Err) return result;
 
-	size_t data_size;
+	size_t data_size = 0;
 	result = netServer.Recv(buf1, buf1_size, data_size);
-	if (data_size) {
+	if ((result _Is_NetResCode_Ok) && data_size) {
 		buf1[data_size] = 0;
 		char* prm_val = (char*)FindRequestValue("code=", buf1);
 		if (prm_val) {
@@ -108,7 +108,7 @@ int OAuth2Client::GetCode(char* out_buf, const char* endpoint, const char* clien
 		size_t head_len = snprintf(buf1, buf1_size, auth_code_resp_head, body_len);
 		memcpy(buf1 + head_len, auth_code_resp_body, body_len);
 		buf1[head_len + body_len] = 0;
-		netServer.Send(buf1);
+		result = netServer.Send(buf1);
 	}
 	return result;
 }
@@ -135,7 +135,7 @@ OAuth2Token OAuth2Client::PerformTokenRequest(const char* query, const char* pay
 	size_t data_size;
 	int res_code = netClient.Exec(response_data, buf_size, data_size, query, payload);
 	std::time(&result.created);
-	if ((res_code >= 0) && data_size) {
+	if ((res_code _Is_NetResCode_Ok) && data_size) {
 		response_data[data_size] = 0;
 		const char* json_content = strstr(response_data, "{");
 		auto resp_data = json::parse(json_content, nullptr, false);
@@ -148,7 +148,7 @@ OAuth2Token OAuth2Client::PerformTokenRequest(const char* query, const char* pay
 			set_token_error(result, Error_ResponseUnrecognized, "data_not_recognized");
 		}
 	} else {
-		if (res_code < 0) set_token_error(result, res_code);
+		if (res_code _Is_NetResCode_Err) set_token_error(result, res_code);
 		else set_token_error(result, Error_ResponseNoData, "no_data_returned");
 	}
 	return result;
@@ -162,6 +162,11 @@ int OAuth2Client::Stop()
 bool OAuth2Client::IsTokenError(const OAuth2Token& token)
 {
 	return token.expires < 0;
+}
+
+int OAuth2Client::GetTokenError(const OAuth2Token& token)
+{
+	return token.expires;
 }
 
 std::string OAuth2Client::GetTokenErrorInfo(const OAuth2Token& token)

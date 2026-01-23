@@ -18,6 +18,8 @@ using namespace LisLog;
 
 namespace MailMsgReceiver_Imp
 {
+	const bool DeleteMailMessageFromServer = true;
+
 	static int init_auth(Pop3Client& mail_client,
 		const Connections::ConnectionInfo& connection, const char* auth_data);
 	static int receive_file(Pop3Client& mail_client,
@@ -45,7 +47,7 @@ int MailMsgReceiver::Receive(const char* auth_data, MailFileProc file_proc)
 	Pop3Client mail_client(ConnectionHelper::GetUrl(connection).c_str());
 
 	int result = init_auth(mail_client, connection, auth_data);
-	if (result < 0) {
+	if (result _Is_Err_ResCode) {
 		logger->LogFmt(llError, Log_Scope " grp#%i authentication failed.", grpId);
 		return result;
 	}
@@ -67,11 +69,11 @@ int MailMsgReceiver::Receive(const char* auth_data, MailFileProc file_proc)
 			+ (FILE_PATH_CHAR*)LisStr::CStrConvert(file_name.c_str());
 
 		int file_recv_res = receive_file(mail_client, uidl[i], file_path.c_str());
-		if (file_recv_res >= 0) {
+		if (file_recv_res _Is_Ok_ResCode) {
 			logger->LogFmt(llDebug, Log_Scope " grp#%i downloaded: %s.", grpId, file_name.c_str());
 			bool file_proc_res = file_proc(file_path.c_str());
 			if (file_proc_res) {
-				mail_client.Dele(uidl[i].number);
+				if (DeleteMailMessageFromServer) mail_client.Dele(uidl[i].number);
 			} else {
 				result = Error_Gen_Operation_Interrupted;
 				break;

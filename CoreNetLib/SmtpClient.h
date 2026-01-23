@@ -26,10 +26,12 @@ public:
 	bool Ehlo(const char* domain);
 
 	// Initiates a mail transfer and establishes the sender (reverse-path).
-	bool MailFrom(const char* mailbox);
+	// Returns net lib result code (not SMTP).
+	int MailFrom(const char* mailbox);
 
 	// Specifies the recipient (forward-path).
-	bool RcptTo(const char* mailbox);
+	// Returns net lib result code (not SMTP).
+	int RcptTo(const char* mailbox);
 
 	// Asks the server for permission to transfer the mail data and
 	// launches the delivery of the email contents line by line.

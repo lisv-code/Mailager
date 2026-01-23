@@ -1,7 +1,7 @@
+#include "MailMsgTransmitter.h"
 #include <cstring>
 #include <memory>
 #include <sstream>
-#include "MailMsgTransmitter.h"
 #include "../CoreNetLib/SmtpClient.h"
 #include "../CoreMailLib/MimeHeaderDef.h"
 #include "AppResCodes.h"
@@ -52,7 +52,7 @@ int MailMsgTransmitter::BeginTransmition(int grp_id,
 	}
 
 	int result = init_auth(trn_inf->MailClient, connection, auth_data);
-	if (result < 0) {
+	if (result _Is_Err_ResCode) {
 		logger->LogFmt(llError, Log_Scope " grp#%i authentication failed.", trn_inf->GrpId);
 		return result;
 	}
@@ -74,7 +74,7 @@ int MailMsgTransmitter::SendMailMessage(TransmissionHandle handle, MailMsgFile& 
 
 	MimeNode mail_msg;
 	int result = message.LoadData(mail_msg, true);
-	if (result >= 0) {
+	if (result _Is_Ok_ResCode) {
 		prepare_msg_to_send(mail_msg);
 		result = send_mail_msg(trnInf->MailClient, trnInf->Mailbox.c_str(), mail_msg);
 	} else {
@@ -139,26 +139,38 @@ void MailMsgTransmitter_Imp::remove_internal_headers(MimeNode& mail_msg)
 
 static int MailMsgTransmitter_Imp::send_mail_msg(SmtpClient& mail_client, const char* mailbox, MimeNode& mail_msg)
 {
-	bool result = true;
+	int result = ResCode_Ok;
 	// Sender
-	result = result && mail_client.MailFrom(mailbox);
+	result = ResCode_OfNetLib(mail_client.MailFrom(mailbox));
 	// Recipients
 	std::string str1;
-	if (result && mail_msg.Header.GetField(MailHdrName_To).GetRawStr(str1)) {
+	if ((result _Is_Ok_ResCode) && mail_msg.Header.GetField(MailHdrName_To).GetRawStr(str1)) {
 		auto rcpt = RfcHeaderFieldCodec::ReadAddresses(str1.c_str());
+		if (rcpt.empty()) return Error_Gen_Undefined; // Recepients list must not be empty
 		for (const auto& addr : rcpt) {
-			if (!addr.group.empty()) 
-				result = result && mail_client.RcptTo(addr.group.c_str()); // send a group by its name
+			if (!addr.group.empty())
+				// Sending a group by its name (temporary) ! non-compliant with RFC 5321 
+				result = ResCode_OfNetLib(mail_client.RcptTo(addr.group.c_str()));
 			else {
 				for (const auto& mbox : addr.mailboxes) {
-					result = result && mail_client.RcptTo(mbox.addr.c_str());
-	}	}	}	}
+					result = ResCode_OfNetLib(mail_client.RcptTo(mbox.addr.c_str()));
+					if (result _Is_Err_ResCode) break;
+			}	}
+			if (result _Is_Err_ResCode) break;
+	}	}
+	// TODO: process CC, BCC
 	// Data
-	MimeParser parser;
-	parser.SetData(mail_msg);
-	std::stringstream stm;
-	parser.Save(stm);
-	mail_client.Data(stm);
+	if (result _Is_Ok_ResCode) {
+		MimeParser parser;
+		result = ResCode_OfMailLib(parser.SetData(mail_msg));
+		if (result _Is_Ok_ResCode) {
+			std::stringstream stm;
+			parser.Save(stm);
+			if (!mail_client.Data(stm)) {
+				result = Error_Gen_Undefined; // Mail message data couldn't be sent
+			}
+		}
+	}
 
-	return result ? 0 : -1;
+	return result;
 }

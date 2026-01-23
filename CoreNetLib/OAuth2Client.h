@@ -21,5 +21,6 @@ public:
 	int Stop();
 
 	static bool IsTokenError(const OAuth2Token& token);
+	static int GetTokenError(const OAuth2Token& token);
 	static std::string GetTokenErrorInfo(const OAuth2Token& token);
 };

@@ -1,7 +1,7 @@
 #include "Pop3Client.h"
 #include <cstring>
 #include "NetResCodes.h"
-using namespace NetLibGen_ResCodes;
+using namespace NetResCodes_Gen;
 
 namespace Pop3Client_Imp
 {
@@ -14,6 +14,9 @@ namespace Pop3Client_Imp
 
 	const char* MailMsgItemEndStr = "\x0D\x0A";
 	const size_t MailMsgItemEndLen = strlen(MailMsgItemEndStr);
+
+	const char* ByteOrderMark_Utf8 = "\xEF\xBB\xBF";
+	const size_t Bom_Utf8_Len = strlen(ByteOrderMark_Utf8);
 
 	struct Pop3CmdCtx {
 		const char* RespOkPrefix;
@@ -32,8 +35,8 @@ Pop3Client::~Pop3Client() { }
 
 bool Pop3Client::Auth(const char* user, const char* pswd)
 {
-	SendCmd("USER", user);
-	SendCmd("PASS", pswd);
+	SendCmd("USER ", user);
+	SendCmd("PASS ", pswd);
 	return ResCode_Ok == lastErrCode;
 }
 
@@ -41,7 +44,7 @@ bool Pop3Client::Auth(AuthTokenType type, const char* token)
 {
 	switch (type) {
 	case attXOAuth2: {
-		const char* cmd_result = SendCmd("AUTH XOAUTH2", nullptr,
+		const char* cmd_result = SendCmd("AUTH XOAUTH2 ", nullptr,
 			&(CommandContext(nullptr, &(Pop3CmdCtx("+"))))); // Allowing SASL continuation indicator (RFC 5034)
 		// cmd_result may contain Challenge Response to continue with, but practically no POP3 servers use it
 		if (cmd_result && (ResCode_Ok == lastErrCode)) {
@@ -82,7 +85,7 @@ bool Pop3Client::List(std::vector<ListItem>& data)
 bool Pop3Client::Uidl(std::vector<UidlItem>& data, int number)
 {
 	size_t data_size;
-	const char* cmd_result = SendCmd("UIDL",
+	const char* cmd_result = SendCmd("UIDL ",
 		number > 0 ? std::to_string(number).c_str() : nullptr, nullptr, data_size);
 
 	if (cmd_result) {
@@ -103,14 +106,22 @@ bool Pop3Client::Uidl(std::vector<UidlItem>& data, int number)
 bool Pop3Client::Retr(std::ostream& data, int number)
 {
 	size_t data_size;
-	const char* cmd_result = SendCmd("RETR", std::to_string(number).c_str(), nullptr, data_size);
+	const char* cmd_result = SendCmd("RETR ", std::to_string(number).c_str(), nullptr, data_size);
 
 	if (cmd_result) {
 		int count = 0;
-		return RecvList(const_cast<char*>(cmd_result), data_size, [&data, &count](const char* src_item) {
+		return RecvList(const_cast<char*>(cmd_result), data_size, [&data, &count](const char* data_item) {
 			++count;
-			if (1 == count) return true; // Skip first item
-			data.write(src_item, strlen(src_item));
+			size_t data_size = strlen(data_item);
+			if (1 == count) {
+				// The 1st line contains status response as "+OK message follows" or "+OK <Number> octest" (RFC 1939)
+				return true; // Just skipping it, because the status has already been verified
+			} else if ((2 == count) && (0 == std::strncmp(data_item, ByteOrderMark_Utf8, Bom_Utf8_Len))) {
+				// Skipping the BOM header if it's found in the beginning of the message data
+				data_item += Bom_Utf8_Len;
+				data_size -= Bom_Utf8_Len;
+			}
+			data.write(data_item, data_size);
 			data.write(MailMsgItemEndStr, MailMsgItemEndLen);
 			return true;
 		});
@@ -120,7 +131,7 @@ bool Pop3Client::Retr(std::ostream& data, int number)
 
 bool Pop3Client::Dele(int number)
 {
-	return NULL != SendCmd("DELE", std::to_string(number).c_str());
+	return NULL != SendCmd("DELE ", std::to_string(number).c_str());
 }
 
 bool Pop3Client::Noop()

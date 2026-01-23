@@ -8,7 +8,6 @@
 #include "MailMsgFileDef.h"
 #include "MailMsgFile_Helper.h"
 
-#define ErrorCode_Base_MimeParser -10
 #define MailMsgStatus_Undefined 0xFFFF
 
 namespace MailMsgFile_Imp
@@ -72,19 +71,20 @@ int MailMsgFile::LoadMsgData(MimeNode* data, bool raw_hdr_values)
 {
 	std::ifstream stm;
 	int result = MailMsgFile_Helper::init_input_stream(stm, filePath, true);
-	if (result >= 0 && stm.good()) {
+	if ((result _Is_Ok_ResCode) && stm.good()) {
 		MimeParser parser;
-		int result = parser.Load(stm, false);
-		if (result >= 0) {
+		result = ResCode_OfMailLib(parser.Load(stm, false));
+		if (result _Is_Ok_ResCode) {
 			if (mailInfo.IsEmpty()) result = LoadMsgInfo(parser); // If meta-data not loaded yet, load it
-			if (data) result = parser.GetData(*data, raw_hdr_values ? hvtRaw : hvtAuto); // Load MIME node data
+			if (data) {
+				result = parser.GetData(*data, raw_hdr_values ? hvtRaw : hvtAuto); // Load MIME node data
+				result = ResCode_OfMailLib(result);
+			}
 		}
-		result = result >= 0 ? result : result + ErrorCode_Base_MimeParser;
 	} else {
 		result = ResCode_Ok;
 	}
 	stm.close();
-
 	return result;
 }
 
@@ -104,7 +104,8 @@ int MailMsgFile::LoadMsgInfo(MimeParser& parser)
 {
 	MimeHeader raw_data;
 	int result = parser.GetHdr(MailMsgHeaders_StatList, MailMsgHeaders_StatCount, raw_data, hvtRaw);
-	if (result >= 0) {
+	result = ResCode_OfMailLib(result);
+	if (result _Is_Ok_ResCode) {
 		auto hdr_fld = raw_data.GetField(MailHdrName_MailagerStatus);
 		if (hdr_fld.GetRaw()) {
 			mailStatus = MailMsgStatusCodec::ParseStatusString(hdr_fld.GetRaw(), mstMailager);
@@ -118,7 +119,7 @@ int MailMsgFile::LoadMsgInfo(MimeParser& parser)
 		}
 	}
 	result = parser.GetHdr(MailMsgHeaders_MainList, MailMsgHeaders_MainCount, mailInfo, hvtAuto);
-	return result;
+	return ResCode_OfMailLib(result);
 }
 
 MailMsgStatus MailMsgFile::_GetStatus() const
@@ -140,7 +141,7 @@ int MailMsgFile::ChangeStatus(MailMsgStatus added, MailMsgStatus removed)
 		const char *fld_names[] = { MailHdrName_MailagerStatus, 0 }, *fld_values[] = { status_str, 0 };
 		result = MailMsgFile_Helper::update_header_fields(filePath, fld_names, fld_values, true);
 	}
-	if (result >= 0)
+	if (result _Is_Ok_ResCode)
 		RaiseEvent(etStatusChanged, (void*)old_status);
 	return result;
 }
@@ -193,7 +194,7 @@ int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
 	int result = file.good() ? ResCode_Ok : Error_File_DataOperation; // TODO: handle the saving error (probably reset the filePath if it's newly obtained)
 	file.close();
 
-	if (result >= 0) { // Loading metadata from the saved file
+	if (result _Is_Ok_ResCode) { // Loading metadata from the saved file
 		mailInfo.Clear();
 		result = LoadInfo();
 		RaiseEvent(etDataSaved, nullptr);
@@ -236,7 +237,7 @@ int MailMsgFile::SetMailToSend()
 	const char* fld_values[] = { date_str.c_str(), msg_id_str.c_str(), 0};
 	int result = MailMsgFile_Helper::update_header_fields(filePath, fld_names, fld_values, false);
 
-	if (result >= 0)
+	if (result _Is_Ok_ResCode)
 		result = ChangeStatus(MailMsgStatus::mmsIsOutgoing, MailMsgStatus::mmsIsDraft);
 
 	return result;

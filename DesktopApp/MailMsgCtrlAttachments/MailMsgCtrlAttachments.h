@@ -13,7 +13,8 @@ private:
 	wxMenu mnuAttachmentFile;
 
 	void InitItemMenu(bool allow_edit);
-	void AddAttachmentFileButton(const wxString& name, MimeNode* msg_node);
+	void AddAttachmentFileButton(const wxString& name, MimeNode* data_node);
+	void TakeDataOwnership(MimeNode** data_nodes, size_t count);
 	void AttachmentFileButton_ClickHandler(wxCommandEvent& event);
 	void RemoveAttachment_EventHandler(wxCommandEvent& event);
 	void SaveAttachmentFile_EventHandler(wxCommandEvent& event);

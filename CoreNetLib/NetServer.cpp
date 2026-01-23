@@ -16,8 +16,8 @@
 #endif
 
 #include "NetResCodes.h"
-using namespace NetLibGen_ResCodes;
-using namespace NetServer_ResCodes;
+using namespace NetResCodes_Gen;
+using namespace NetResCodes_Server;
 
 namespace NetServer_Imp {
 #define Log_Scope "NetSrvr"
@@ -93,8 +93,8 @@ int NetServer::Connect()
 
 int NetServer::Send(const char* data)
 {
-	int result = send(sockClient, data, strlen(data), 0);
-	if (SOCKET_ERROR != result) { return ResCode_Ok;	}
+	int send_result = send(sockClient, data, strlen(data), 0);
+	if (SOCKET_ERROR != send_result) { return ResCode_Ok; }
 	else {
 		logger->LogFmt(llError, Log_Scope " Socket send failed: %ld.", SocketErrorCode);
 		return Error_Socket_Send;
@@ -104,12 +104,12 @@ int NetServer::Send(const char* data)
 int NetServer::Recv(char* buffer, size_t buffer_size, size_t& size_read)
 {
 #ifdef _WINDOWS
-	int result = recv(sockClient, buffer, buffer_size, 0);
+	int read_result = recv(sockClient, buffer, buffer_size, 0);
 #else
-	int result = read(sockClient, buffer, buffer_size);
+	int read_result = read(sockClient, buffer, buffer_size);
 #endif
-	if (SOCKET_ERROR != result) {
-		size_read = result;
+	if (SOCKET_ERROR != read_result) {
+		size_read = read_result;
 		return ResCode_Ok;
 	} else {
 		logger->LogFmt(llError, Log_Scope " Socket read failed: %ld.", SocketErrorCode);
