@@ -9,7 +9,7 @@ using namespace NetResCodes_TxtProtoClient;
 
 namespace SmtpClient_Imp
 {
-	const char* Log_Scope = "SmtpClnt";
+	const char* Log_Scope = "NetSmtp";
 
 	static bool ensure_addr_spec(const char* input, std::string& output);
 }

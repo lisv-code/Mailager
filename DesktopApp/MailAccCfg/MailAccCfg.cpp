@@ -16,8 +16,9 @@ namespace MailAccCfg_Imp
 
 	const wxChar* const Msg_ChangeSaveQuestion = wxT("Configuration has been changed:\n%s\n\nSave?");
 	const wxChar* const Msg_AccDeleteQuestion = wxT("Delete account #%i \"%s\"?");
-	const wxChar* const Msg_AccSaveError = wxT("Incorrect data for the account #%i \"%s\":\n%s");
-	const wxChar* const Msg_PortValueTypeError = wxT("the port value must be a number between 1 and 65535");
+	const wxChar* const Msg_AccDataValidationError = wxT("Incorrect data for the account #%i \"%s\":\n%s");
+	const wxChar* const Msg_AccDataRequiredValues = wxT("account must have a name or e-mail address or user name");
+	const wxChar* const Msg_AccDataPortValueInvalid = wxT("port value must be a number between 1 and 65535");
 	const wxChar* const Msg_GeneralSaveError = wxT("Something went wrong while applying the account changes.");
 }
 using namespace MailAccCfg_Imp;
@@ -33,6 +34,7 @@ MailAccCfg::~MailAccCfg() { }
 void MailAccCfg::InitUI()
 {
 	UiHelper::InitDialog(this);
+	btnOk->Enable(false);
 
 	init_prot_items(chcIncProto, true);
 	init_prot_items(chcOutProto, false);
@@ -80,23 +82,39 @@ void MailAccCfg::LoadViewData(int sel_idx)
 	chcOutAuth->Select(find_auth_item_index(acc->Outgoing.AuthType, acc->Outgoing.AuthSpec));
 
 	if (is_new) delete acc;
+	btnOk->Enable(true);
+}
+
+std::vector<wxString> MailAccCfg::ValidateViewData()
+{
+	std::vector<wxString> errors;
+	if (!check_text_value_required(txtAccName->GetValue()) && !check_text_value_required(txtEmailAddr->GetValue())
+		&& !check_text_value_required(txtIncUser->GetValue()) && !check_text_value_required(txtOutUser->GetValue()))
+		errors.push_back(Msg_AccDataRequiredValues);
+	if (!check_port_value(txtIncPort->GetValue()) || !check_port_value(txtOutPort->GetValue()))
+		errors.push_back(Msg_AccDataPortValueInvalid);
+	return errors;
+}
+
+void MailAccCfg::ShowValidationErrors(const AccountSettings* acc, const std::vector<wxString>& errors)
+{
+	wxString error_list;
+	for (const auto& item : errors) {
+		error_list += " - " + item + "\n";
+	}
+	wxMessageBox(
+		wxString::Format(Msg_AccDataValidationError,
+			(int)acc->Id, wxString::FromUTF8(acc->GetName()), error_list),
+		AppDef_Title, wxICON_ERROR | wxOK, this);
 }
 
 bool MailAccCfg::CheckAndSaveViewData(int sel_idx)
 {
 	if (sel_idx < 0) return true;
-
-	wxString validation_error;
-	if (!check_port_value(txtIncPort->GetValue()) || !check_port_value(txtOutPort->GetValue()))
-		validation_error = Msg_PortValueTypeError;
-
 	auto acc = FindAccount(sel_idx);
-
-	if (!validation_error.IsEmpty()) {
-		wxMessageBox(
-			wxString::Format(Msg_AccSaveError,
-				(int)acc->Id, wxString::FromUTF8(acc->GetName()), validation_error),
-			AppDef_Title, wxICON_ERROR | wxOK, this);
+	auto errors = ValidateViewData();
+	if (!errors.empty()) {
+		ShowValidationErrors(acc, errors);
 		return false;
 	}
 

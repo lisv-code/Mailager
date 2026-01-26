@@ -1,8 +1,8 @@
 #include "NetClient.h"
-#include <atomic>
 #include <string.h>
 #include <utility>
 #include "NetResCodes.h"
+#include "NetLibResources.h"
 
 #define _AsErrorCode *(-1)
 #define IsCurlError(res_code) ((res_code < 0) && (res_code > (CURL_LAST _AsErrorCode)))
@@ -15,9 +15,7 @@ using namespace NetResCodes_Gen;
 
 namespace NetClient_Imp
 {
-#define Log_Scope "NetClnt"
-
-	static std::atomic_int NetClientInstanceGlobalCount(0);
+#define Log_Scope "NetClt"
 
 	const size_t Data_Recv_Buffer_Size = 4096;
 	const long Socket_Wait_Timeout_Ms = 60000;
@@ -32,10 +30,7 @@ static int curl_wait_on_socket(curl_socket_t sockfd, bool for_recv, long timeout
 NetClient::NetClient()
 	: hConnection(NULL), hSocket(NULL), defTimeoutMs(0), defUserAgent()
 {
-	int inst_count = NetClientInstanceGlobalCount++;
-	if (0 == inst_count) {
-		curl_global_init(CURL_GLOBAL_DEFAULT);
-	}
+	NetLibResources::global_init();
 }
 
 NetClient::NetClient(NetClient&& src) noexcept
@@ -49,11 +44,7 @@ NetClient::NetClient(NetClient&& src) noexcept
 NetClient::~NetClient()
 {
 	Close();
-
-	int inst_count = --NetClientInstanceGlobalCount;
-	if (0 == inst_count) {
-		// curl_global_cleanup();
-	}
+	NetLibResources::global_free();
 }
 
 long NetClient::GetDefaultTimeout()

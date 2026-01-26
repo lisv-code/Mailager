@@ -13,6 +13,7 @@ namespace ConnectionUiCtrlHelper
 	int find_prot_item_index(Connections::ProtocolType prot_type, bool incoming);
 	int find_auth_item_index(Connections::AuthenticationType auth_type, const wxString auth_spec);
 
+	bool check_text_value_required(const wxString& value);
 	bool check_port_value(const wxString& value);
 
 	bool set_text_value(std::string& value, const wxTextCtrl* ctrl);

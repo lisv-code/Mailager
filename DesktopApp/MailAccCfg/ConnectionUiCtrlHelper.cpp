@@ -75,6 +75,11 @@ int ConnectionUiCtrlHelper::find_auth_item_index(Connections::AuthenticationType
 	return -1;
 }
 
+bool ConnectionUiCtrlHelper::check_text_value_required(const wxString& value)
+{
+	return !value.Strip().IsEmpty();
+}
+
 bool ConnectionUiCtrlHelper::check_port_value(const wxString& value)
 {
 	if (value.IsEmpty()) return true;

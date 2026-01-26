@@ -5,7 +5,7 @@ using namespace NetResCodes_Gen;
 
 namespace Pop3Client_Imp
 {
-	const char* Log_Scope = "Pop3Clnt";
+	const char* Log_Scope = "NetPop3";
 
 	const char* RespOkStr = "+OK";
 	const size_t RespOkLen = strlen(RespOkStr);

@@ -76,8 +76,9 @@ void MailMsgCtrlAttachments::LoadAttachments(const MimeNode& node, bool take_own
 void MailMsgCtrlAttachments::AddAttachmentFileButton(const wxString& name, MimeNode* data_node)
 {
 	auto btn = new wxButton(wndContainer, wxID_ANY, name);
-	btn->Bind(wxEVT_BUTTON, &MailMsgCtrlAttachments::AttachmentFileButton_ClickHandler, this);
 	btn->SetClientData((void*)data_node);
+	btn->Bind(wxEVT_BUTTON, &MailMsgCtrlAttachments::AttachmentFileButton_ClickHandler, this);
+	btn->Bind(wxEVT_CONTEXT_MENU, &MailMsgCtrlAttachments::AttachmentFileButton_ClickHandler, this);
 	wndContainer->GetSizer()->Add(btn);
 }
 

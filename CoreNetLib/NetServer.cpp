@@ -19,8 +19,9 @@
 using namespace NetResCodes_Gen;
 using namespace NetResCodes_Server;
 
-namespace NetServer_Imp {
-#define Log_Scope "NetSrvr"
+namespace NetServer_Imp
+{
+#define Log_Scope "NetSvr"
 }
 using namespace NetServer_Imp;
 using namespace LisLog;

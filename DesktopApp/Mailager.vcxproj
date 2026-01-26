@@ -206,6 +206,7 @@
     <ClInclude Include="..\CoreMailLib\RfcTextDef.h" />
     <ClInclude Include="..\CoreMailLib\RfcTextDecode.h" />
     <ClInclude Include="..\CoreMailLib\RfcTextEncode.h" />
+    <ClInclude Include="..\CoreNetLib\NetLibResources.h" />
     <ClInclude Include="..\CoreNetLib\NetResCodes.h" />
     <ClInclude Include="..\CoreNetLib\SmtpClient.h" />
     <ClInclude Include="..\CoreNetLib\TxtProtoClient.h" />
@@ -307,6 +308,7 @@
     <ClCompile Include="..\CoreMailLib\RfcTextDef.cpp" />
     <ClCompile Include="..\CoreMailLib\RfcTextDecode.cpp" />
     <ClCompile Include="..\CoreMailLib\RfcTextEncode.cpp" />
+    <ClCompile Include="..\CoreNetLib\NetLibResources.cpp" />
     <ClCompile Include="..\CoreNetLib\SmtpClient.cpp" />
     <ClCompile Include="..\CoreNetLib\TxtProtoClient.cpp" />
     <ClCompile Include="..\wxWidgetsX\fs_data.cpp" />

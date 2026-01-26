@@ -127,6 +127,8 @@
 		<Unit filename="../CoreMailLib/RfcTextEncode.h" />
 		<Unit filename="../CoreNetLib/NetClient.cpp" />
 		<Unit filename="../CoreNetLib/NetClient.h" />
+		<Unit filename="../CoreNetLib/NetLibResources.cpp" />
+		<Unit filename="../CoreNetLib/NetLibResources.h" />
 		<Unit filename="../CoreNetLib/NetResCodes.h" />
 		<Unit filename="../CoreNetLib/NetServer.cpp" />
 		<Unit filename="../CoreNetLib/NetServer.h" />

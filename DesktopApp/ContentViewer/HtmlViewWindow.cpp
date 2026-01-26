@@ -44,15 +44,14 @@ wxHtmlOpeningStatus HtmlViewWindow::OnOpeningURL(
 	auto result = wxHTML_BLOCK;
 	logger->LogFmt(LisLog::llTrace, Log_Scope " opening URL: %i %s", (int)type, (char*)url.char_str());
 	if (wxHTML_URL_IMAGE == type) {
-		wxString norm_url(url);
-		norm_url.Trim(true).Trim(false); // Normalize the URL. TODO: ? maybe consecutive dots should be fixed
+		wxString norm_url(ExtResMgr::SanitizeUrl(url));
 		if (norm_url.Left(schemePrefix.size()).IsSameAs(schemePrefix, false)) {
-			// URL has the scheme prefix: allow to process by default handler
+			// URL has specific scheme prefix: allow to process by default handler (UrlSchemeHandler_Cid)
 			result = wxHTML_OPEN;
 		} else {
 			auto uri_scheme = wxURI(norm_url).GetScheme();
 			if (LisStr::StrIStr(uri_scheme, _T(UriScheme_Data))) {
-				// DATA scheme: allow to process by default handler
+				// DATA scheme: allow to process by default handler (wxDataSchemeFSHandler)
 				result = wxHTML_OPEN;
 			} else if (LisStr::StrIStr(uri_scheme, _T(UriScheme_ContentId))) {
 				// CID scheme: insert the scheme prefix and redirect to further processing
@@ -61,9 +60,13 @@ wxHtmlOpeningStatus HtmlViewWindow::OnOpeningURL(
 			} else if (UrlSchemeHandler_Inet::CanOpenUrl(norm_url)) {
 				// I-net URL: allow to process if downloaded, else add to the list
 				// TODO: detect tracking links and omit them (? introduce server blacklist)
-				if (isExtDownload || ExtResMgr::GetInstance()->GetResourceData(norm_url, nullptr, true))
-					result = wxHTML_OPEN;
-				else status.ExternalImages.push_back(norm_url);
+				if (isExtDownload || ExtResMgr::GetInstance()->GetResourceData(norm_url, nullptr, true)) {
+					if (norm_url == url) result = wxHTML_OPEN;
+					else {
+						(*redirect) = norm_url; // Use sanitized URL to process
+						result = wxHTML_REDIRECT;
+					}
+				} else status.ExternalImages.push_back(norm_url);
 			}
 		}
 	}

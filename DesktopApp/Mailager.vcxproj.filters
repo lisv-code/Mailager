@@ -22,9 +22,6 @@
     <Filter Include="Header Files\_Lib_">
       <UniqueIdentifier>{75092973-994e-4e47-963f-20da54bf09f6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="View2">
-      <UniqueIdentifier>{1fa02d87-6d20-4ad3-8a57-4cf1e8cfe959}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\CoreAppLib">
       <UniqueIdentifier>{6a177efa-09ee-480d-9a6b-4284673c983e}</UniqueIdentifier>
     </Filter>
@@ -336,6 +333,9 @@
     <ClInclude Include="..\CoreMailLib\MailResCodes.h">
       <Filter>Header Files\CoreMailLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\CoreNetLib\NetLibResources.h">
+      <Filter>Header Files\CoreNetLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -620,6 +620,9 @@
     </ClCompile>
     <ClCompile Include="MailMsgViewer\MimeNodeViewInfo.cpp">
       <Filter>MailMsgViewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreNetLib\NetLibResources.cpp">
+      <Filter>Source Files\CoreNetLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

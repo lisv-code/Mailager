@@ -28,6 +28,7 @@ public:
 	ExtResMgr();
 	~ExtResMgr();
 	static ExtResMgr* GetInstance();
+	static std::string SanitizeUrl(const char* url);
 	bool StartDownload(const char* url);
 	bool GetResourceData(const char* url, std::istream** data, bool peek_cache_only);
 };
