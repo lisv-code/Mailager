@@ -1,0 +1,10 @@
+Package: mailager
+Version: #PKG_VERSION#
+Section: mail
+Priority: optional
+Architecture: amd64
+Depends: libcurl4 (>= 8.0), libmimetic0t64 (>= 0.9.8), libsecret-1-0 (>= 0.20), libwxgtk-webview3.2-1t64
+Homepage: http://lisv.site/mailager
+Maintainer: LISV <glfox.lis@gmail.com>
+Description: Mailager e-mail client desktop application
+

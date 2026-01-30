@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Mailager
+Comment=E-mail client application
+TryExec=/usr/bin/Mailager
+Exec=/usr/bin/Mailager %f
+Terminal=false
+Icon=/usr/share/icons/mailager.png
+Categories=Email;Office;Network;Utility;
+Keywords=Email;POP;SMTP;
+
