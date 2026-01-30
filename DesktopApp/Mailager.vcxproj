@@ -190,6 +190,9 @@
     <ClInclude Include="..\CoreAppLib\MailMsgFileDef.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgTransmitter.h" />
     <ClInclude Include="..\CoreAppLib\AppResCodes.h" />
+    <ClInclude Include="..\CoreAppLib\SecretStore.h" />
+    <ClInclude Include="..\CoreAppLib\SecretStoreFile.h" />
+    <ClInclude Include="..\CoreAppLib\SecretStoreWindows.h" />
     <ClInclude Include="..\CoreMailLib\MailResCodes.h" />
     <ClInclude Include="..\CoreMailLib\MimeHeader.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgFile.h" />
@@ -264,6 +267,9 @@
     <ClInclude Include="MailMainView\MailMainView.h" />
     <ClInclude Include="MailMainView\MailMainViewUI.h" />
     <ClCompile Include="..\CoreAppLib\MailMsgDataHelper.cpp" />
+    <ClCompile Include="..\CoreAppLib\SecretStore.cpp" />
+    <ClCompile Include="..\CoreAppLib\SecretStoreFile.cpp" />
+    <ClCompile Include="..\CoreAppLib\SecretStoreWindows.cpp" />
     <ClCompile Include="..\CoreMailLib\MimeHeaderDef.h" />
   </ItemGroup>
   <ItemGroup>

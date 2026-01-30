@@ -31,7 +31,7 @@ void CredentialsWnd::SetData(const char* server, const char* user, const char* p
 
 void CredentialsWnd::GetData(std::string& pswd, bool* need_save)
 {
-	pswd = txtPswd->GetValue();
+	pswd = txtPswd->GetValue().ToUTF8().data();
 	if (need_save)
 		*need_save = chkSave->GetValue();
 }

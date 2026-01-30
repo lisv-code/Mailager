@@ -25,6 +25,7 @@ int OAuth2TokenStor::SetLocation(const FILE_PATH_CHAR* path)
 
 int OAuth2TokenStor::SaveToken(const char* id, const OAuth2Token token)
 {
+	// TODO: consider saving tokens to SecretStore
 	std::ofstream file(storeLocation + (FILE_PATH_CHAR*)LisStr::CStrConvert(id), std::ios::out);
 	if (!file.fail()) {
 		json file_data;

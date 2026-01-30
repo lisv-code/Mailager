@@ -336,6 +336,15 @@
     <ClInclude Include="..\CoreNetLib\NetLibResources.h">
       <Filter>Header Files\CoreNetLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\CoreAppLib\SecretStore.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\SecretStoreWindows.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\SecretStoreFile.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -623,6 +632,15 @@
     </ClCompile>
     <ClCompile Include="..\CoreNetLib\NetLibResources.cpp">
       <Filter>Source Files\CoreNetLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\SecretStore.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\SecretStoreWindows.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\SecretStoreFile.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

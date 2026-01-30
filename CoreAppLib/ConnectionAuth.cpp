@@ -46,8 +46,7 @@ int ConnectionAuth::SetAuthData(const char* auth_data)
 		|| (Connections::AuthenticationType::catPlain == connection.AuthType))
 	{
 		return pswdStor.SavePassword(
-			PasswordStore::GetStoreKey(connection.Server.c_str(), connection.UserName.c_str()).c_str(),
-			connection.UserName.c_str(), auth_data);
+			connection.Server.c_str(), connection.UserName.c_str(), auth_data);
 	} else if (Connections::AuthenticationType::catOAuth2 == connection.AuthType) {
 		return ResCode_Ok; // No need here to save any data for this type
 	} else {
@@ -61,15 +60,16 @@ int ConnectionAuth::SetAuthData(const char* auth_data)
 
 int ConnectionAuth::GetPassword(std::string& auth_data, AuthEventHandler event_handler)
 {
-	auto store_key = PasswordStore::GetStoreKey(connection.Server.c_str(), connection.UserName.c_str());
-	int result = pswdStor.LoadPassword(store_key.c_str(), nullptr, auth_data);
+	int result = pswdStor.LoadPassword(
+		connection.Server.c_str(), connection.UserName.c_str(), auth_data);
 	if ((result _Is_Err_ResCode) && nullptr != event_handler) {
 		EventData_PswdRequest evt_data;
 		evt_data.NeedSave = false;
 		if (event_handler(connection, etPswdRequest, &evt_data)) {
 			auth_data = evt_data.PswdData;
 			if (evt_data.NeedSave)
-				pswdStor.SavePassword(store_key.c_str(), connection.UserName.c_str(), auth_data.c_str());
+				pswdStor.SavePassword(
+					connection.Server.c_str(), connection.UserName.c_str(), auth_data.c_str());
 			result = ResCode_Ok;
 		} else {
 			logger->LogTxt(llWarn, Log_Scope " Authentication interrupted.");

@@ -14,11 +14,10 @@
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="`wx-config  --version=3.2 --static=yes --unicode=yes --debug=yes --cflags`" />
+					<Add option="`wx-config --debug=yes`" />
 				</Compiler>
 				<Linker>
-					<Add option="`wx-config  --version=3.2 --static=yes --unicode=yes --debug=yes --libs`" />
-					<Add library="libmimetic" />
+					<Add option="`wx-config --debug=yes`" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -29,13 +28,12 @@
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="`wx-config  --version=3.2 --static=yes --unicode=yes --debug=no --cflags`" />
+					<Add option="`wx-config --debug=no`" />
 					<Add option="-DNDEBUG" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add option="`wx-config  --version=3.2 --static=yes --unicode=yes --debug=no --libs`" />
-					<Add library="libmimetic" />
+					<Add option="`wx-config --debug=no`" />
 				</Linker>
 			</Target>
 		</Build>
@@ -43,12 +41,18 @@
 			<Add option="-Wall" />
 			<Add option="-std=c++14" />
 			<Add option="-fpermissive" />
+			<Add option="`wx-config --version=3.2 --static=no --unicode=yes --cflags`" />
+			<Add option="`pkg-config --cflags --libs libsecret-1`" />
 			<Add option="-DUNICODE" />
+			<Add option="-DHAVE_STDINT_H" />
 			<Add directory="../../CppLib" />
 			<Add directory="../../../CppLib" />
 		</Compiler>
 		<Linker>
-			<Add option="`wx-config --libs std,aui,webview`" />
+			<Add option="`wx-config  --version=3.2 --static=no --unicode=yes --libs std,aui,webview`" />
+			<Add option="`pkg-config --libs libsecret-1`" />
+			<Add library="libcurl" />
+			<Add library="libmimetic" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='cp &quot;$(PROJECT_DIR)Mailager.cfg&quot; $(TARGET_OUTPUT_DIR)' />
@@ -99,6 +103,12 @@
 		<Unit filename="../CoreAppLib/OAuth2TokenStor.h" />
 		<Unit filename="../CoreAppLib/PasswordStore.cpp" />
 		<Unit filename="../CoreAppLib/PasswordStore.h" />
+		<Unit filename="../CoreAppLib/SecretStore.cpp" />
+		<Unit filename="../CoreAppLib/SecretStore.h" />
+		<Unit filename="../CoreAppLib/SecretStoreFile.cpp" />
+		<Unit filename="../CoreAppLib/SecretStoreFile.h" />
+		<Unit filename="../CoreAppLib/SecretStoreLinux.cpp" />
+		<Unit filename="../CoreAppLib/SecretStoreLinux.h" />
 		<Unit filename="../CoreMailLib/MailResCodes.h" />
 		<Unit filename="../CoreMailLib/MimeHeader.cpp" />
 		<Unit filename="../CoreMailLib/MimeHeader.h" />

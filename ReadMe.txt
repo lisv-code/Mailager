@@ -9,7 +9,7 @@ Target OS: Windows, Linux.
 - LISV CppLib
 
 - wxWidgets https://www.wxwidgets.org/
-wxWindows Library Licence (LGPL-like, but derived works in binary form may be distributed on the user’s own terms)
+wxWindows Library Licence (LGPL-like, but derived works in binary form may be distributed on the user's own terms)
 https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.6/wxWidgets-3.2.6.7z
 
 - libcurl https://curl.se/libcurl/

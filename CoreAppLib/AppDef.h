@@ -14,6 +14,6 @@
 #endif // _WINDOWS
 
 #define AppDef_NetDefaultUserAgent "Mozilla/5.0 (compatible; " AppDef_Title "/0.1) Gecko/20100101 curl/8.6.0"
-#define AppDef_PswdStorePrefix AppDef_Author "_" AppDef_Title "/"
+#define AppDef_PswdStoreGroup AppDef_Author "_" AppDef_Title
 
 #endif // #ifndef _MAILAGER_APP_DEF_H_
