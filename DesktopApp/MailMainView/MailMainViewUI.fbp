@@ -247,35 +247,22 @@
                         <property name="id">wxID_ANY</property>
                         <property name="kind">wxITEM_NORMAL</property>
                         <property name="label">config</property>
-                        <property name="name">toolConfigMasterView</property>
+                        <property name="name">toolMasterViewConfig</property>
                         <property name="permission">protected</property>
                         <property name="statusbar"></property>
                         <property name="tooltip">Configure main view</property>
-                        <event name="OnToolClicked">toolConfigMasterView_OnToolClicked</event>
+                        <event name="OnToolClicked">toolMasterViewConfig_OnToolClicked</event>
                       </object>
                       <object class="tool" expanded="false">
                         <property name="bitmap">Load From Art Provider; &quot;IcoToolRefresh&quot;; wxART_OTHER</property>
                         <property name="context_menu">0</property>
                         <property name="id">wxID_ANY</property>
                         <property name="kind">wxITEM_NORMAL</property>
-                        <property name="label">sync1</property>
-                        <property name="name">toolStartSyncMail</property>
+                        <property name="label">sync</property>
+                        <property name="name">toolMailSyncProc</property>
                         <property name="permission">protected</property>
                         <property name="statusbar"></property>
                         <property name="tooltip">Start mail sync</property>
-                        <event name="OnToolClicked">toolStartSyncMail_OnToolClicked</event>
-                      </object>
-                      <object class="tool" expanded="true">
-                        <property name="bitmap">Load From Art Provider; &quot;IcoToolStop&quot;; wxART_OTHER</property>
-                        <property name="context_menu">0</property>
-                        <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_NORMAL</property>
-                        <property name="label">sync2</property>
-                        <property name="name">toolStopSyncMail</property>
-                        <property name="permission">protected</property>
-                        <property name="statusbar"></property>
-                        <property name="tooltip">Stop mail sync</property>
-                        <event name="OnToolClicked">toolStopSyncMail_OnToolClicked</event>
                       </object>
                       <object class="toolSeparator" expanded="true">
                         <property name="permission">protected</property>
@@ -286,11 +273,11 @@
                         <property name="id">wxID_ANY</property>
                         <property name="kind">wxITEM_NORMAL</property>
                         <property name="label">newmsg</property>
-                        <property name="name">toolCreateMailMsg</property>
+                        <property name="name">toolMailMsgCreate</property>
                         <property name="permission">protected</property>
                         <property name="statusbar"></property>
                         <property name="tooltip">Create mail message</property>
-                        <event name="OnToolClicked">toolCreateMailMsg_OnToolClicked</event>
+                        <event name="OnToolClicked">toolMailMsgCreate_OnToolClicked</event>
                       </object>
                     </object>
                   </object>

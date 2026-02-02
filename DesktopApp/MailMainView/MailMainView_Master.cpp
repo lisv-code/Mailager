@@ -6,7 +6,7 @@
 
 namespace MailMainView_Master_Imp
 {
-	typedef struct FolderStatusMatch {
+	struct FolderStatusMatch {
 		int FolderId;
 		MailMsgStatus StatusSet, StatusExc;
 	};

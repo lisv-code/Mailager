@@ -20,13 +20,7 @@ private:
 	MailMsgFileMgr* msgFileMgr;
 	MailMsgViewMgr* msgViewMgr;
 
-	// These menus are initialized specifically, then destroyed by the toolbar
-	wxMenu* mnuMailSyncStart = nullptr;
-	wxMenuItem *mnuMailSyncStartRecv = nullptr, *mnuMailSyncStartSend = nullptr;
-	wxMenu* mnuMailSyncStop = nullptr;
-	wxMenuItem *mnuMailSyncStopRecv = nullptr, *mnuMailSyncStopSend = nullptr;
-
-	void AdjustMailSyncUiControls();
+	void AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus acc_busy_state);
 	int AccountCfg_EventHandler(const AccountCfg* acc_cfg, const AccountCfg::EventInfo& evt_info);
 	void RefreshMasterToolsState(const wxDataViewItem* item = nullptr);
 	void RefreshDetailToolsState(bool enable_filter);
@@ -39,10 +33,10 @@ private:
 	void mnuMailSyncStopSend_OnMenuSelection(wxCommandEvent& event);
 
 	// ****** MainViewUI override ******
-	virtual void toolConfigMasterView_OnToolClicked(wxCommandEvent& event) override;
-	virtual void toolStartSyncMail_OnToolClicked(wxCommandEvent& event) override;
-	virtual void toolStopSyncMail_OnToolClicked(wxCommandEvent& event) override;
-	virtual void toolCreateMailMsg_OnToolClicked(wxCommandEvent& event) override;
+	virtual void toolMasterViewConfig_OnToolClicked(wxCommandEvent& event) override;
+	virtual void toolStartSyncMail_OnToolClicked(wxCommandEvent& event); // not override however related
+	virtual void toolStopSyncMail_OnToolClicked(wxCommandEvent& event); // not override however related
+	virtual void toolMailMsgCreate_OnToolClicked(wxCommandEvent& event) override;
 	virtual void dvAccFolders_OnDataViewCtrlSelectionChanged(wxDataViewEvent& event) override;
 	virtual void toolMailMsgFilterSwitch_OnToolClicked(wxCommandEvent& event) override;
 	virtual void cmbMailMsgFilterValue_OnKeyDown(wxKeyEvent& event) override;

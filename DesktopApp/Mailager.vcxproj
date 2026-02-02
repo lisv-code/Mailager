@@ -271,6 +271,7 @@
     <ClCompile Include="..\CoreAppLib\SecretStoreFile.cpp" />
     <ClCompile Include="..\CoreAppLib\SecretStoreWindows.cpp" />
     <ClCompile Include="..\CoreMailLib\MimeHeaderDef.h" />
+    <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

@@ -6,7 +6,8 @@ Target OS: Windows, Linux.
 
 ## Dev libs
 
-- LISV CppLib
+- LISV CppLib https://github.com/lisv-code/CppLib
+MIT License
 
 - wxWidgets https://www.wxwidgets.org/
 wxWindows Library Licence (LGPL-like, but derived works in binary form may be distributed on the user's own terms)

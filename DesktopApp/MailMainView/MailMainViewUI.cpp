@@ -24,15 +24,13 @@ MailMainViewUI::MailMainViewUI( wxWindow* parent, wxWindowID id, const wxPoint& 
 
 	tlbrMaster = new wxToolBar( pnlMasterView, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT|wxTB_HORIZONTAL|wxBORDER_RAISED );
 	tlbrMaster->SetToolSeparation( 4 );
-	toolConfigMasterView = tlbrMaster->AddTool( wxID_ANY, wxT("config"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolConfig"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Configure main view"), wxEmptyString, NULL );
+	toolMasterViewConfig = tlbrMaster->AddTool( wxID_ANY, wxT("config"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolConfig"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Configure main view"), wxEmptyString, NULL );
 
-	toolStartSyncMail = tlbrMaster->AddTool( wxID_ANY, wxT("sync1"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolRefresh"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Start mail sync"), wxEmptyString, NULL );
-
-	toolStopSyncMail = tlbrMaster->AddTool( wxID_ANY, wxT("sync2"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolStop"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Stop mail sync"), wxEmptyString, NULL );
+	toolMailSyncProc = tlbrMaster->AddTool( wxID_ANY, wxT("sync"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolRefresh"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Start mail sync"), wxEmptyString, NULL );
 
 	tlbrMaster->AddSeparator();
 
-	toolCreateMailMsg = tlbrMaster->AddTool( wxID_ANY, wxT("newmsg"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolEdit"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Create mail message"), wxEmptyString, NULL );
+	toolMailMsgCreate = tlbrMaster->AddTool( wxID_ANY, wxT("newmsg"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolEdit"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Create mail message"), wxEmptyString, NULL );
 
 	tlbrMaster->Realize();
 
@@ -120,10 +118,8 @@ MailMainViewUI::MailMainViewUI( wxWindow* parent, wxWindowID id, const wxPoint& 
 	this->Layout();
 
 	// Connect Events
-	this->Connect( toolConfigMasterView->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolConfigMasterView_OnToolClicked ) );
-	this->Connect( toolStartSyncMail->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolStartSyncMail_OnToolClicked ) );
-	this->Connect( toolStopSyncMail->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolStopSyncMail_OnToolClicked ) );
-	this->Connect( toolCreateMailMsg->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolCreateMailMsg_OnToolClicked ) );
+	this->Connect( toolMasterViewConfig->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolMasterViewConfig_OnToolClicked ) );
+	this->Connect( toolMailMsgCreate->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolMailMsgCreate_OnToolClicked ) );
 	dvAccFolders->Connect( wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( MailMainViewUI::dvAccFolders_OnDataViewCtrlSelectionChanged ), NULL, this );
 	this->Connect( toolMailMsgFilterSwitch->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolMailMsgFilterSwitch_OnToolClicked ) );
 	cmbMailMsgFilterValue->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( MailMainViewUI::cmbMailMsgFilterValue_OnKeyDown ), NULL, this );
@@ -143,10 +139,8 @@ MailMainViewUI::MailMainViewUI( wxWindow* parent, wxWindowID id, const wxPoint& 
 MailMainViewUI::~MailMainViewUI()
 {
 	// Disconnect Events
-	this->Disconnect( toolConfigMasterView->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolConfigMasterView_OnToolClicked ) );
-	this->Disconnect( toolStartSyncMail->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolStartSyncMail_OnToolClicked ) );
-	this->Disconnect( toolStopSyncMail->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolStopSyncMail_OnToolClicked ) );
-	this->Disconnect( toolCreateMailMsg->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolCreateMailMsg_OnToolClicked ) );
+	this->Disconnect( toolMasterViewConfig->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolMasterViewConfig_OnToolClicked ) );
+	this->Disconnect( toolMailMsgCreate->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolMailMsgCreate_OnToolClicked ) );
 	dvAccFolders->Disconnect( wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( MailMainViewUI::dvAccFolders_OnDataViewCtrlSelectionChanged ), NULL, this );
 	this->Disconnect( toolMailMsgFilterSwitch->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MailMainViewUI::toolMailMsgFilterSwitch_OnToolClicked ) );
 	cmbMailMsgFilterValue->Disconnect( wxEVT_KEY_DOWN, wxKeyEventHandler( MailMainViewUI::cmbMailMsgFilterValue_OnKeyDown ), NULL, this );

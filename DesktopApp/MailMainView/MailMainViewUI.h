@@ -38,10 +38,9 @@ class MailMainViewUI : public wxPanel
 		wxSplitterWindow* wndMasterSplitter;
 		wxPanel* pnlMasterView;
 		wxToolBar* tlbrMaster;
-		wxToolBarToolBase* toolConfigMasterView;
-		wxToolBarToolBase* toolStartSyncMail;
-		wxToolBarToolBase* toolStopSyncMail;
-		wxToolBarToolBase* toolCreateMailMsg;
+		wxToolBarToolBase* toolMasterViewConfig;
+		wxToolBarToolBase* toolMailSyncProc;
+		wxToolBarToolBase* toolMailMsgCreate;
 		wxDataViewCtrl* dvAccFolders;
 		wxDataViewColumn* dvcAccFoldersCol0;
 		wxDataViewColumn* dvcAccFoldersCol1;
@@ -59,10 +58,8 @@ class MailMainViewUI : public wxPanel
 		wxPanel* pnlMailMsgView;
 
 		// Virtual event handlers, override them in your derived class
-		virtual void toolConfigMasterView_OnToolClicked( wxCommandEvent& event ) = 0;
-		virtual void toolStartSyncMail_OnToolClicked( wxCommandEvent& event ) = 0;
-		virtual void toolStopSyncMail_OnToolClicked( wxCommandEvent& event ) = 0;
-		virtual void toolCreateMailMsg_OnToolClicked( wxCommandEvent& event ) = 0;
+		virtual void toolMasterViewConfig_OnToolClicked( wxCommandEvent& event ) = 0;
+		virtual void toolMailMsgCreate_OnToolClicked( wxCommandEvent& event ) = 0;
 		virtual void dvAccFolders_OnDataViewCtrlSelectionChanged( wxDataViewEvent& event ) = 0;
 		virtual void toolMailMsgFilterSwitch_OnToolClicked( wxCommandEvent& event ) = 0;
 		virtual void cmbMailMsgFilterValue_OnKeyDown( wxKeyEvent& event ) = 0;

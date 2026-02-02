@@ -256,6 +256,8 @@
 		<Unit filename="SysHelper.h" />
 		<Unit filename="UiHelper.cpp" />
 		<Unit filename="UiHelper.h" />
+		<Unit filename="Version.h" />
+		<Unit filename="VersionX.cpp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

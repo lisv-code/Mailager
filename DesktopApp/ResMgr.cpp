@@ -10,6 +10,7 @@
 
 #include <wx/mstream.h>
 #include "ResourcX.h"
+#include "Version.h"
 
 const wxChar* resXNames[] = { wxT("IcoAppMain"),
 	wxT("IcoBtnNo"), wxT("IcoBtnOk"),
@@ -68,10 +69,9 @@ ResMgr::VersionInfo ResMgr::GetVersionInfo()
 	LisStr::StrCopy(aVerInfValues[2], result.Comments, ResMgr::VersionInfoFieldLen - 1);
 	for (int i = 0; i < 3/*Values count*/; ++i) free(aVerInfValues[i]);
 #else
-	// TODO: implement version info (X OSes)
-	LisStr::StrCopy(_T("0.x.x.x"), result.Version, ResMgr::VersionInfoFieldLen - 1);
-	result.Copyright[0] = 0;
-	result.Comments[0] = 0;
+	LisStr::StrCopy(_T("" APP_VERSION), result.Version, ResMgr::VersionInfoFieldLen - 1);
+	LisStr::StrCopy(_T("" APP_COPYRIGHT), result.Copyright, ResMgr::VersionInfoFieldLen - 1);
+	LisStr::StrCopy(_T("" APP_COMMENT), result.Comments, ResMgr::VersionInfoFieldLen - 1);
 #endif
 	return result;
 }

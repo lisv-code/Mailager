@@ -38,9 +38,8 @@ MailMainView::MailMainView(wxWindow* parent, MailMsgFileMgr* msg_file_mgr, MailM
 		std::bind(&MailMainView::AccountCfg_EventHandler,
 			this, std::placeholders::_1, std::placeholders::_2));
 	CreateMasterViewModel(masterModelViewOption1);
-	tlbrMaster->RemoveTool(toolStopSyncMail->GetId()); // Initial state update is required
 
-	AdjustMailSyncUiControls();
+	AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus::gpsNone);
 
 	RefreshMasterToolsState();
 	RefreshDetailToolsState(false);
@@ -59,7 +58,7 @@ MailMainView::~MailMainView()
 	FreeMailMsgProcEvent();
 }
 
-void MailMainView::toolConfigMasterView_OnToolClicked(wxCommandEvent& event)
+void MailMainView::toolMasterViewConfig_OnToolClicked(wxCommandEvent& event)
 {
 	wxBeginBusyCursor();
 	CreateMasterViewModel(!masterModelViewOption1);
@@ -97,7 +96,7 @@ void MailMainView::mnuMailSyncStopSend_OnMenuSelection(wxCommandEvent& event)
 	StopMailSync(false, true);
 }
 
-void MailMainView::toolCreateMailMsg_OnToolClicked(wxCommandEvent& event)
+void MailMainView::toolMailMsgCreate_OnToolClicked(wxCommandEvent& event)
 {
 	wxBeginBusyCursor();
 	msgViewMgr->OpenStdView(msgFileMgr->CreateMailMsg(GetCurrentAccountId()));
@@ -234,39 +233,54 @@ void MailMainView::mnuMailMsgItemDelete_OnMenuSelection(wxCommandEvent& event)
 	}
 }
 
-void MailMainView::AdjustMailSyncUiControls()
+void MailMainView::AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus acc_busy_state)
 {
-	// Replacing the tools by wxITEM_DROPDOWN type (RAD tools don't allow this type yet).
-	// TODO: this wxITEM_DROPDOWN quick fix is supposed to be temporary, until fixed in a RAD editor
+	static auto start_icon = wxArtProvider::GetBitmap(wxASCII_STR("IcoToolRefresh"), wxASCII_STR(wxART_OTHER));
+	static auto stop_icon = wxArtProvider::GetBitmap(wxASCII_STR("IcoToolStop"), wxASCII_STR(wxART_OTHER));
 
-	auto pos = tlbrMaster->GetToolPos(toolStartSyncMail->GetId());
+	auto tool_icon = acc_busy_state ? stop_icon : start_icon;
+	auto tool_help = acc_busy_state ? ToolHlp_MailSyncStop : ToolHlp_MailSyncStart;
+	int tool_id;
 
-	tlbrMaster->RemoveTool(toolStartSyncMail->GetId());
-	delete toolStartSyncMail;
-	toolStartSyncMail = tlbrMaster->InsertTool(pos, wxID_ANY, wxEmptyString,
-		wxArtProvider::GetBitmap(wxASCII_STR("IcoToolRefresh"), wxASCII_STR(wxART_OTHER)), wxNullBitmap,
-		wxITEM_DROPDOWN, ToolHlp_MailSyncStart, wxEmptyString, nullptr);
-	this->Bind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStartSyncMail_OnToolClicked, this, toolStartSyncMail->GetId());
+	if (!toolMailSyncProc->GetDropdownMenu()) { // The tool has no dropdown menu - replace the control
+		// Replacing the tools by wxITEM_DROPDOWN type (RAD tools don't allow this type yet).
+		// TODO: this wxITEM_DROPDOWN quick fix is supposed to be temporary, until fixed in the RAD editor
+		auto pos = tlbrMaster->GetToolPos(toolMailSyncProc->GetId());
+		tlbrMaster->DeleteTool(toolMailSyncProc->GetId());
+		toolMailSyncProc = tlbrMaster->InsertTool(pos, wxID_ANY, wxEmptyString, tool_icon, wxNullBitmap,
+			wxITEM_DROPDOWN, tool_help, wxEmptyString, nullptr);
+		tool_id = toolMailSyncProc->GetId();
+	} else {
+		tool_id = toolMailSyncProc->GetId();
+		tlbrMaster->SetToolNormalBitmap(tool_id, tool_icon);
+		tlbrMaster->SetToolShortHelp(tool_id, tool_help);
+	}
 
-	mnuMailSyncStart = new wxMenu();
-	mnuMailSyncStartRecv = mnuMailSyncStart->Append(wxID_ANY, MnuLbl_MailSyncStartRecv);
-	mnuMailSyncStart->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStartRecv_OnMenuSelection, this, mnuMailSyncStartRecv->GetId());
-	mnuMailSyncStartSend = mnuMailSyncStart->Append(wxID_ANY, MnuLbl_MailSyncStartSend);
-	mnuMailSyncStart->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStartSend_OnMenuSelection, this, mnuMailSyncStartSend->GetId());
-	toolStartSyncMail->SetDropdownMenu(mnuMailSyncStart);
+	auto tool_menu = new wxMenu();
+	if (!acc_busy_state) {
+		this->Unbind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStopSyncMail_OnToolClicked, this);
+		this->Bind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStartSyncMail_OnToolClicked, this, tool_id);
 
-	delete toolStopSyncMail;
-	toolStopSyncMail = tlbrMaster->CreateTool(wxID_ANY, wxEmptyString,
-		wxArtProvider::GetBitmap(wxASCII_STR("IcoToolStop"), wxASCII_STR(wxART_OTHER)), wxNullBitmap,
-		wxITEM_DROPDOWN, nullptr, ToolHlp_MailSyncStop, wxEmptyString);
-	this->Bind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStopSyncMail_OnToolClicked, this, toolStopSyncMail->GetId());
+		auto menu_item = tool_menu->Append(wxID_ANY, MnuLbl_MailSyncStartRecv);
+		tool_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStartRecv_OnMenuSelection, this, menu_item->GetId());
+		menu_item = tool_menu->Append(wxID_ANY, MnuLbl_MailSyncStartSend);
+		tool_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStartSend_OnMenuSelection, this, menu_item->GetId());
+	} else {
+		this->Unbind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStartSyncMail_OnToolClicked, this);
+		this->Bind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStopSyncMail_OnToolClicked, this, tool_id);
 
-	mnuMailSyncStop = new wxMenu();
-	mnuMailSyncStopRecv = mnuMailSyncStop->Append(wxID_ANY, MnuLbl_MailSyncStopRecv);
-	mnuMailSyncStop->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStopRecv_OnMenuSelection, this, mnuMailSyncStopRecv->GetId());
-	mnuMailSyncStopSend = mnuMailSyncStop->Append(wxID_ANY, MnuLbl_MailSyncStopSend);
-	mnuMailSyncStop->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStopSend_OnMenuSelection, this, mnuMailSyncStopSend->GetId());
-	toolStopSyncMail->SetDropdownMenu(mnuMailSyncStop);
+		auto menu_item = tool_menu->Append(wxID_ANY, MnuLbl_MailSyncStopRecv);
+		tool_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStopRecv_OnMenuSelection, this, menu_item->GetId());
+		menu_item->Enable(MailMsgFileMgr::GrpProcStatus::gpsProcReceiving & acc_busy_state);
+
+		menu_item = tool_menu->Append(wxID_ANY, MnuLbl_MailSyncStopSend);
+		tool_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStopSend_OnMenuSelection, this, menu_item->GetId());
+		menu_item->Enable(MailMsgFileMgr::GrpProcStatus::gpsProcSending & acc_busy_state);
+	}
+	
+	toolMailSyncProc->SetDropdownMenu(tool_menu); // Previous menu is deleted automatically if exists
+
+	tlbrMaster->Realize();
 }
 
 int MailMainView::AccountCfg_EventHandler(const AccountCfg* acc_cfg, const AccountCfg::EventInfo& evt_info)
@@ -286,24 +300,8 @@ void MailMainView::RefreshMasterToolsState(const wxDataViewItem* item)
 	}
 	auto acc_busy_state =
 		item ? GetAccItemBusyState(*item, msgFileMgr) : MailMsgFileMgr::GrpProcStatus::gpsNone;
-	if (acc_busy_state) {
-		auto pos = tlbrMaster->GetToolPos(toolStartSyncMail->GetId());
-		if (wxNOT_FOUND != pos) {
-			tlbrMaster->RemoveTool(toolStartSyncMail->GetId());
-			tlbrMaster->InsertTool(pos, toolStopSyncMail);
-		}
-	} else {
-		auto pos = tlbrMaster->GetToolPos(toolStopSyncMail->GetId());
-		if (wxNOT_FOUND != pos) {
-			tlbrMaster->RemoveTool(toolStopSyncMail->GetId());
-			tlbrMaster->InsertTool(pos, toolStartSyncMail);
-		}
-	}
-	tlbrMaster->Realize();
-	// mnuMailSyncStartRecv->Enable(!acc_busy_state);
-	// mnuMailSyncStartSend->Enable(!acc_busy_state);
-	mnuMailSyncStopRecv->Enable(MailMsgFileMgr::GrpProcStatus::gpsProcReceiving & acc_busy_state);
-	mnuMailSyncStopSend->Enable(MailMsgFileMgr::GrpProcStatus::gpsProcSending & acc_busy_state);
+
+	CallAfter([this, acc_busy_state]() { AdjustMailSyncUiControls(acc_busy_state); });
 }
 
 void MailMainView::RefreshDetailToolsState(bool enable_filter)
