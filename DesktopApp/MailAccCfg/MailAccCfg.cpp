@@ -11,14 +11,15 @@ namespace MailAccCfg_Imp
 {
 	const wxChar* const Inf_AccCreated = wxT("%i new account(s) created");
 	const wxChar* const Inf_AccModified = wxT("%i account(s) modified");
-	const wxChar* const Inf_AccDeleted = wxT("%i account(s) deleted");
+	const wxChar* const Inf_AccDeleted = wxT("%i account(s) removed");
 	const wxChar* const Inf_Delimiter = wxT(", ");
 
 	const wxChar* const Msg_ChangeSaveQuestion = wxT("Configuration has been changed:\n%s\n\nSave?");
-	const wxChar* const Msg_AccDeleteQuestion = wxT("Delete account #%i \"%s\"?");
+	const wxChar* const Msg_AccDeleteQuestion = wxT("Remove account #%i \"%s\"?");
 	const wxChar* const Msg_AccDataValidationError = wxT("Incorrect data for the account #%i \"%s\":\n%s");
 	const wxChar* const Msg_AccDataRequiredValues = wxT("account must have a name or e-mail address or user name");
 	const wxChar* const Msg_AccDataPortValueInvalid = wxT("port value must be a number between 1 and 65535");
+	const wxChar* const Msg_AccDataAuthValueInvalid = wxT("authentication type is not valid");
 	const wxChar* const Msg_GeneralSaveError = wxT("Something went wrong while applying the account changes.");
 }
 using namespace MailAccCfg_Imp;
@@ -44,7 +45,7 @@ void MailAccCfg::InitUI()
 
 void MailAccCfg::LoadAccounts()
 {
-	auto accounts = accMgr.LoadAccounts();
+	auto accounts = accMgr.LoadData();
 	for (auto acc_inf : accounts) {
 		chcAccount->Append(wxString::FromUTF8(acc_inf.second), (void*)acc_inf.first);
 	}
@@ -57,15 +58,24 @@ AccountSettings* MailAccCfg::FindAccount(int sel_idx)
 	return accMgr.FindAccount(acc_id);
 }
 
-void MailAccCfg::LoadViewData(int sel_idx)
+std::vector<wxString> MailAccCfg::ValidateAccData(const AccountSettings& acc)
+{
+	std::vector<wxString> errors;
+	if ((acc.Incoming.AuthType && (chcIncAuth->GetSelection() < 0))
+		|| (acc.Outgoing.AuthType && (chcOutAuth->GetSelection() < 0)))
+		errors.push_back(Msg_AccDataAuthValueInvalid);
+	return errors;
+}
+
+void MailAccCfg::LoadAccViewData(int sel_idx)
 {
 	curSelAccIdx = sel_idx;
 	auto acc = FindAccount(sel_idx);
 	bool is_new = nullptr == acc;
 	if (is_new) acc = new AccountSettings;
 
-	txtAccName->SetValue(wxString::FromUTF8(acc->AccountName.c_str()));
-	txtEmailAddr->SetValue(wxString::FromUTF8(acc->EMailAddress.c_str()));
+	txtAccName->SetValue(wxString::FromUTF8(acc->AccountName));
+	txtEmailAddr->SetValue(wxString::FromUTF8(acc->EMailAddress));
 
 	chcIncProto->Select(find_prot_item_index(acc->Incoming.Protocol, true));
 	chkIncSsl->SetValue(acc->Incoming.IsSsl);
@@ -82,21 +92,32 @@ void MailAccCfg::LoadViewData(int sel_idx)
 	chcOutAuth->Select(find_auth_item_index(acc->Outgoing.AuthType, acc->Outgoing.AuthSpec));
 
 	if (is_new) delete acc;
+	else {
+		auto errors = ValidateAccData(*acc);
+		if (!errors.empty()) ShowAccValidationErrors(acc, errors);
+	}
 	btnOk->Enable(true);
 }
 
-std::vector<wxString> MailAccCfg::ValidateViewData()
+std::vector<wxString> MailAccCfg::ValidateAccViewData(const AccountSettings* acc)
 {
 	std::vector<wxString> errors;
+	if (!acc) {
+		errors.push_back(Msg_GeneralSaveError);
+		return errors;
+	}
 	if (!check_text_value_required(txtAccName->GetValue()) && !check_text_value_required(txtEmailAddr->GetValue())
 		&& !check_text_value_required(txtIncUser->GetValue()) && !check_text_value_required(txtOutUser->GetValue()))
 		errors.push_back(Msg_AccDataRequiredValues);
 	if (!check_port_value(txtIncPort->GetValue()) || !check_port_value(txtOutPort->GetValue()))
 		errors.push_back(Msg_AccDataPortValueInvalid);
+	if ((acc->Incoming.AuthType && (chcIncAuth->GetSelection() < 0))
+		|| (acc->Outgoing.AuthType && (chcOutAuth->GetSelection() < 0)))
+		errors.push_back(Msg_AccDataAuthValueInvalid);
 	return errors;
 }
 
-void MailAccCfg::ShowValidationErrors(const AccountSettings* acc, const std::vector<wxString>& errors)
+void MailAccCfg::ShowAccValidationErrors(const AccountSettings* acc, const std::vector<wxString>& errors)
 {
 	wxString error_list;
 	for (const auto& item : errors) {
@@ -108,13 +129,13 @@ void MailAccCfg::ShowValidationErrors(const AccountSettings* acc, const std::vec
 		AppDef_Title, wxICON_ERROR | wxOK, this);
 }
 
-bool MailAccCfg::CheckAndSaveViewData(int sel_idx)
+bool MailAccCfg::CheckAndSaveAccViewData(int sel_idx)
 {
 	if (sel_idx < 0) return true;
 	auto acc = FindAccount(sel_idx);
-	auto errors = ValidateViewData();
+	auto errors = ValidateAccViewData(acc);
 	if (!errors.empty()) {
-		ShowValidationErrors(acc, errors);
+		ShowAccValidationErrors(acc, errors);
 		return false;
 	}
 
@@ -146,16 +167,16 @@ bool MailAccCfg::CheckAndSaveViewData(int sel_idx)
 bool MailAccCfg::GetChangeInfo(wxString& info)
 {
 	info.Clear();
-	auto changes = accMgr.GetEditState();
+	auto changes = accMgr.GetAccEditState();
 	bool is_changed = changes.size() > 0;
-	int state_value = changes[AccEditMgr::EditState::esCreated];
+	int state_value = changes[ListEditMgr_Def::EditState::Created];
 	if (state_value > 0) info += wxString::Format(Inf_AccCreated, state_value);
-	state_value = changes[AccEditMgr::EditState::esModified];
+	state_value = changes[ListEditMgr_Def::EditState::Modified];
 	if (state_value > 0) {
 		if (!info.IsEmpty()) info += Inf_Delimiter;
 		info += wxString::Format(Inf_AccModified, state_value);
 	}
-	state_value = changes[AccEditMgr::EditState::esDeleted];
+	state_value = changes[ListEditMgr_Def::EditState::Deleted];
 	if (state_value > 0) {
 		if (!info.IsEmpty()) info += Inf_Delimiter;
 		info += wxString::Format(Inf_AccDeleted, state_value);
@@ -166,7 +187,7 @@ bool MailAccCfg::GetChangeInfo(wxString& info)
 void MailAccCfg::ApplyChanges()
 {
 	wxBeginBusyCursor();
-	if (0 > accMgr.ApplyChanges())
+	if (!accMgr.ApplyChanges())
 		wxMessageBox(Msg_GeneralSaveError, AppDef_Title, wxICON_ERROR | wxOK, this);
 	wxEndBusyCursor();
 }
@@ -180,14 +201,14 @@ void MailAccCfg::MailAccCfgUI_OnInitDialog(wxInitDialogEvent& event)
 
 void MailAccCfg::toolAccCreate_OnToolClicked(wxCommandEvent& event)
 {
-	if (!CheckAndSaveViewData(curSelAccIdx)) return;
+	if (!CheckAndSaveAccViewData(curSelAccIdx)) return;
 	int acc_id = accMgr.CreateAccount();
 	std::string acc_inf = NewAccNamePrefix;
 	acc_inf += std::to_string(acc_id);
 	acc_inf += AccChangeIndicator;
 	int sel_idx = chcAccount->Append(acc_inf, (void*)acc_id);
 	chcAccount->SetSelection(sel_idx);
-	LoadViewData(sel_idx);
+	LoadAccViewData(sel_idx);
 }
 
 void MailAccCfg::toolAccDelete_OnToolClicked(wxCommandEvent& event)
@@ -201,15 +222,15 @@ void MailAccCfg::toolAccDelete_OnToolClicked(wxCommandEvent& event)
 		accMgr.DeleteAccount(acc->Id);
 		chcAccount->Delete(sel_idx);
 		chcAccount->SetSelection(-1);
-		LoadViewData(-1);
+		LoadAccViewData(-1);
 	}
 }
 
 void MailAccCfg::chcAccount_OnChoice(wxCommandEvent& event)
 {
 	wxBeginBusyCursor();
-	if (CheckAndSaveViewData(curSelAccIdx))
-		LoadViewData(chcAccount->GetSelection());
+	if (CheckAndSaveAccViewData(curSelAccIdx))
+		LoadAccViewData(chcAccount->GetSelection());
 	else
 		chcAccount->SetSelection(curSelAccIdx);
 	wxEndBusyCursor();
@@ -217,8 +238,8 @@ void MailAccCfg::chcAccount_OnChoice(wxCommandEvent& event)
 
 void MailAccCfg::btnOk_OnButtonClick(wxCommandEvent& event)
 {
-	//EndModal(wxID_OK);
-	if (!CheckAndSaveViewData(chcAccount->GetSelection())) {
+	// EndModal(wxID_OK); // No need, because the button has id = wxID_OK
+	if (!CheckAndSaveAccViewData(chcAccount->GetSelection())) {
 		return;
 	}
 	ApplyChanges();
@@ -227,14 +248,14 @@ void MailAccCfg::btnOk_OnButtonClick(wxCommandEvent& event)
 
 void MailAccCfg::btnNo_OnButtonClick(wxCommandEvent& event)
 {
-	//EndModal(wxID_CANCEL);
+	// EndModal(wxID_CANCEL); // No need, because the button has id = wxID_CANCEL
 	// Not saving any changes
 	event.Skip();
 }
 
 void MailAccCfg::MailAccCfgUI_OnClose(wxCloseEvent& event)
 {
-	if (!CheckAndSaveViewData(chcAccount->GetSelection())) {
+	if (!CheckAndSaveAccViewData(chcAccount->GetSelection())) {
 		event.Veto();
 		return;
 	}

@@ -9,8 +9,8 @@ class SysHelper
 	SysHelper();
 	~SysHelper();
 public:
-	static bool Open(const char* location);
+	static bool SysOpen(const char* location);
 #ifdef _WINDOWS
-	static bool Open(const TCHAR* location);
+	static bool SysOpen(const TCHAR* location);
 #endif
 };

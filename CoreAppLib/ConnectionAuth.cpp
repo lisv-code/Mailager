@@ -5,6 +5,7 @@
 #include "../CoreNetLib/OAuth2Client.h"
 #include "AppResCodes.h"
 #include "AuthTokenProc.h"
+#include "OAuth2Config.h"
 #include "OAuth2TokenStor.h"
 
 #define Log_Scope "ConnAuth"
@@ -32,7 +33,12 @@ int ConnectionAuth::GetAuthData(std::string& auth_data, AuthEventHandler event_h
 	} else if (Connections::AuthenticationType::catPlain == connection.AuthType) {
 		result = GetPlainToken(nullptr, auth_data, event_handler);
 	} else if (Connections::AuthenticationType::catOAuth2 == connection.AuthType) {
-		result = GetOAuth2Token(OAuth2Cfg::GetCfg(connection.AuthSpec.c_str()), auth_data, event_handler);
+		auto auth_prov = OAuth2Cfg.FindProvider(connection.AuthSpec.c_str());
+		if (auth_prov) result = GetOAuth2Token(*auth_prov, auth_data, event_handler);
+		else {
+			logger->LogFmt(llError, Log_Scope " OAuth2 provider configuration not found: %s.", connection.AuthSpec.c_str());
+			result = Error_Gen_ItemNotFound;
+		}
 	} else {
 		logger->LogFmt(llError, Log_Scope " Authentication type is unknown: %s.", connection.AuthType);
 		result = Error_Gen_TypeUnsupported;
@@ -103,7 +109,7 @@ std::string ConnectionAuth::GetTokenId()
 	return result;
 }
 
-int ConnectionAuth::GetOAuth2Token(const OAuth2Settings& config, std::string& auth_data, AuthEventHandler event_handler)
+int ConnectionAuth::GetOAuth2Token(const OAuth2ProviderSettings& config, std::string& auth_data, AuthEventHandler event_handler)
 {
 	OAuth2TokenStor auth_token_stor;
 	std::basic_string<FILE_PATH_CHAR> store_path = basePath + FILE_PATH_TEXT(TokenStoreDir);
@@ -131,7 +137,7 @@ int ConnectionAuth::GetOAuth2Token(const OAuth2Settings& config, std::string& au
 	return result;
 }
 
-int ConnectionAuth::RefreshOrGetToken(OAuth2Token& token, OAuth2Settings config, AuthEventHandler event_handler)
+int ConnectionAuth::RefreshOrGetToken(OAuth2Token& token, OAuth2ProviderSettings config, AuthEventHandler event_handler)
 {
 	std::time_t cur_time;
 	std::time(&cur_time);

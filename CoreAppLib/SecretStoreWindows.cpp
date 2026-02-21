@@ -22,6 +22,12 @@ public:
 		: keyGroup(LisStr::CStrConvert(key_group))
 	{ }
 
+	virtual const char* GetStoreInfo(const FILE_PATH_CHAR** location) const
+	{
+		if (location) *location = keyGroup.c_str();
+		return "Windows Credential Store";
+	}
+
 	bool Store(const char* key, const char* value, size_t size) override
 	{
 		if (!key || (size && !value)) return false;
@@ -101,6 +107,12 @@ public:
 		: filePath(file_path)
 	{ }
 
+	virtual const char* GetStoreInfo(const FILE_PATH_CHAR** location) const
+	{
+		if (location) *location = filePath.c_str();
+		return "File store with Windows DPAPI";
+	}
+
 	bool Store(const char* key, const char* value, size_t size) override
 	{
 		if (!key || (size && !value)) return false;
@@ -178,19 +190,21 @@ bool SecretStoreWindows_Imp::is_credentials_manager_available()
 	HMODULE lib = ::LoadLibrary(_TEXT("advapi32.dll"));
 	if (!lib) return false;
 
+	bool result = false;
 	auto pCredWriteW = reinterpret_cast<decltype(&CredWriteW)>(::GetProcAddress(lib, "CredWriteW"));
-	if (!pCredWriteW) return false;
+	if (pCredWriteW) {
+		CREDENTIALW cred{};
+		cred.Type = CRED_TYPE_GENERIC;
+		cred.TargetName = const_cast<wchar_t*>(CrdMgrChk_TargetName);
+		const wchar_t* blob = L"test";
+		cred.CredentialBlob = (LPBYTE)blob;
+		cred.CredentialBlobSize = static_cast<DWORD>(wcslen(blob) * sizeof(wchar_t));
+		cred.Persist = CRED_PERSIST_LOCAL_MACHINE;
 
-	CREDENTIALW cred{};
-	cred.Type = CRED_TYPE_GENERIC;
-	cred.TargetName = const_cast<wchar_t*>(CrdMgrChk_TargetName);
-	const wchar_t* blob = L"test";
-	cred.CredentialBlob = (LPBYTE)blob;
-	cred.CredentialBlobSize = static_cast<DWORD>(wcslen(blob) * sizeof(wchar_t));
-	cred.Persist = CRED_PERSIST_LOCAL_MACHINE;
-
-	BOOL is_ok = pCredWriteW(&cred, 0);
-	if (is_ok) ::CredDeleteW(CrdMgrChk_TargetName, CRED_TYPE_GENERIC, 0);
-
-	return is_ok == TRUE;
+		BOOL is_ok = pCredWriteW(&cred, 0);
+		if (is_ok) ::CredDeleteW(CrdMgrChk_TargetName, CRED_TYPE_GENERIC, 0);
+		result = TRUE == is_ok;
+	}
+	FreeLibrary(lib);
+	return result;
 }

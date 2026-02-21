@@ -10,7 +10,7 @@ SysHelper::SysHelper() { }
 
 SysHelper::~SysHelper() { }
 
-bool SysHelper::Open(const char* location)
+bool SysHelper::SysOpen(const char* location)
 {
 	bool result;
 	char buf[0xFFF];
@@ -20,7 +20,7 @@ bool SysHelper::Open(const char* location)
 }
 
 #ifdef _WINDOWS
-bool SysHelper::Open(const TCHAR* location)
+bool SysHelper::SysOpen(const TCHAR* location)
 {
 	bool result;
 	result = 32 < (int)ShellExecute(NULL, _T("open"), location, NULL, NULL, SW_SHOWNORMAL);

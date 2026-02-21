@@ -5,7 +5,7 @@
 #include <LisCommon/Logger.h>
 #include "../CoreNetLib/OAuth2Token.h"
 #include "ConnectionInfo.h"
-#include "OAuth2Config.h"
+#include "OAuth2Settings.h"
 #include "PasswordStore.h"
 
 class ConnectionAuth
@@ -29,8 +29,8 @@ private:
 	int GetPlainToken(const char* authzid, std::string& auth_data, AuthEventHandler event_handler);
 
 	std::string GetTokenId();
-	int GetOAuth2Token(const OAuth2Settings& config, std::string& auth_data, AuthEventHandler event_handler);
-	int RefreshOrGetToken(OAuth2Token& token, OAuth2Settings config, AuthEventHandler event_handler);
+	int GetOAuth2Token(const OAuth2ProviderSettings& config, std::string& auth_data, AuthEventHandler event_handler);
+	int RefreshOrGetToken(OAuth2Token& token, OAuth2ProviderSettings config, AuthEventHandler event_handler);
 public:
 	ConnectionAuth(const FILE_PATH_CHAR* base_path, const Connections::ConnectionInfo& connection);
 	int GetAuthData(std::string& auth_data, AuthEventHandler event_handler);

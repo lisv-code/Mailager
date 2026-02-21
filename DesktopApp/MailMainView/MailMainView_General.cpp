@@ -2,7 +2,7 @@
 #include <vector>
 #include <wx/tglbtn.h>
 #include "../../CoreMailLib/MimeHeaderDef.h"
-#include "../../CoreAppLib/AccountCfg.h"
+#include "../../CoreAppLib/AccountConfig.h"
 #include "../../CoreAppLib/AppDef.h"
 #include "../ResMgr.h"
 #include "MasterViewModel.h"
@@ -34,7 +34,7 @@ MailMainView::MailMainView(wxWindow* parent, MailMsgFileMgr* msg_file_mgr, MailM
 
 	InitMailMsgProcEvent();
 
-	AccCfg.EventSubscribe(AccountCfg_Def::etAccountsChanged,
+	AccCfg.EventSubscribe(AccountConfig_Def::etAccountsChanged,
 		std::bind(&MailMainView::AccountCfg_EventHandler,
 			this, std::placeholders::_1, std::placeholders::_2));
 	CreateMasterViewModel(masterModelViewOption1);
@@ -283,7 +283,7 @@ void MailMainView::AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus acc_bu
 	tlbrMaster->Realize();
 }
 
-int MailMainView::AccountCfg_EventHandler(const AccountCfg* acc_cfg, const AccountCfg::EventInfo& evt_info)
+int MailMainView::AccountCfg_EventHandler(const AccountConfig* acc_cfg, const AccountConfig::EventInfo& evt_info)
 {
 	wxBeginBusyCursor();
 	for (int acc_id : evt_info.data->DeletedAccIds) msgFileMgr->RemoveGroup(acc_id);

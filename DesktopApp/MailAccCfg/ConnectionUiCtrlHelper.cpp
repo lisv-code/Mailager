@@ -27,7 +27,7 @@ namespace ConnectionUiCtrlHelper
 	static std::vector<Connections::AuthenticationType> AuthTypes;
 	static std::vector<wxString> AuthNames;
 
-	typedef std::vector<const char*> SpecList;
+	typedef std::vector<wxString> SpecList;
 	static void load_auth_data();
 	static bool is_auth_type_spec(Connections::AuthenticationType auth_type);
 	static SpecList load_auth_spec(Connections::AuthenticationType auth_type);
@@ -163,11 +163,16 @@ static bool ConnectionUiCtrlHelper::is_auth_type_spec(Connections::Authenticatio
 
 static SpecList ConnectionUiCtrlHelper::load_auth_spec(Connections::AuthenticationType auth_type)
 {
+	SpecList result;
 	switch (auth_type) {
-	case Connections::AuthenticationType::catOAuth2:
-		return OAuth2Cfg::GetSpecs();
+	case Connections::AuthenticationType::catOAuth2: {
+		auto prov_iter = OAuth2Cfg.GetProvIter();
+		for (auto it = prov_iter.first; it < prov_iter.second; ++it)
+			if (it->Status != OAuth2ProviderStatus_Disabled)
+				result.push_back(wxString::FromUTF8(it->Name));
+	}
 	default:
-		return SpecList();
+		return result;
 	}
 }
 

@@ -9,7 +9,9 @@ namespace NetLibResources_Imp
 #define Log_Scope "NetRsc"
 
 	static int NetLibUsageGlobalCount = 0;
-	static std::mutex NetLibUsageGlobalMutex;
+	static std::mutex NetLibUsageGlobalMutex, NetLibConfigGlobalMutex;
+
+	static NetworkSettings GlobalSettings;
 }
 using namespace NetLibResources_Imp;
 using namespace LisLog;
@@ -37,4 +39,36 @@ void NetLibResources::global_free()
 		if (logger)
 			logger->LogTxt(llDebug, Log_Scope " global Cleanup done.");
 	}
+}
+
+// ************************************ NetworkSettings related ************************************
+
+NetworkSettings::NetworkSettings() { }
+
+NetworkSettings::NetworkSettings(const NetworkSettings& src)
+	: CertificateAuthorityBundle(src.CertificateAuthorityBundle),
+	SslVerifyPeer(src.SslVerifyPeer), SslVerifyHost(src.SslVerifyPeer),
+	HttpUserAgent(src.HttpUserAgent)
+{
+}
+
+NetworkSettings& NetworkSettings::operator=(const NetworkSettings& src)
+{
+	CertificateAuthorityBundle = src.CertificateAuthorityBundle;
+	SslVerifyPeer = src.SslVerifyPeer;
+	SslVerifyHost = src.SslVerifyPeer;
+	HttpUserAgent = src.HttpUserAgent;
+	return *this;
+}
+
+NetworkSettings NetLibResources::global_cfg_get()
+{
+	std::lock_guard<std::mutex> lock(NetLibConfigGlobalMutex);
+	return NetworkSettings(GlobalSettings);
+}
+
+void NetLibResources::global_cfg_set(NetworkSettings cfg)
+{
+	std::lock_guard<std::mutex> lock(NetLibConfigGlobalMutex);
+	GlobalSettings = cfg;
 }

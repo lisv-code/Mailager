@@ -58,8 +58,8 @@ int MailMsgTransmitter::BeginTransmition(int grp_id,
 	}
 
 	logger->LogFmt(llInfo, Log_Scope " grp#%i connected to the server.", trn_inf->GrpId);
-	if (!mailbox) mailbox = connection.UserName.c_str();
-	trn_inf->MailClient.Vrfy(mailbox);
+	// if (!mailbox) mailbox = connection.UserName.c_str();
+	// trn_inf->MailClient.Vrfy(mailbox); // Most servers don't support VRFY for security reasons
 
 	if (trnInf) delete trnInf;
 	trnInf = trn_inf_ptr.release();

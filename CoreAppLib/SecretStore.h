@@ -16,10 +16,12 @@
 struct SecretStoreSettings
 {
 	// For file-based backends (Windows XP DPAPI, generic fallback)
-	const FILE_PATH_CHAR *FilePath; // path to file where the secrets to be stored
+	const FILE_PATH_CHAR* FilePath; // path to file where the secrets to be stored
 
 	// For keyring-like backends (Credential Manager, libsecret, Keychain)
-	const TCHAR* KeyGroup; // service or application name
+	const FILE_PATH_CHAR* KeyGroup; // service or application name
+
+	// TODO: storage type priority parameter (e.g. may prefer file store over system-provided)
 };
 
 class SecretStore
@@ -28,6 +30,9 @@ public:
 	static std::unique_ptr<SecretStore> CreateInstance(const SecretStoreSettings& cfg);
 
 	virtual ~SecretStore() = default;
+
+	virtual const char* GetStoreInfo(const FILE_PATH_CHAR** location = nullptr) const = 0;
+
 	virtual bool Store(const char* key, const char* value, size_t size) = 0;
 	virtual bool Load(const char* key, std::string& value) = 0;
 	virtual bool Delete(const char* key) = 0;

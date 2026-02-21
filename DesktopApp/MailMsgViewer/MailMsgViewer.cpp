@@ -30,7 +30,7 @@ using namespace MailMsgViewer_Imp;
 MailMsgViewer::MailMsgViewer(wxWindow* parent) : MailMsgViewerUI(parent), MailMsgFileView(),
 	contentViewer(), attachmentsCtrl(this, pnlAttachments, false)
 {
-	InitContentViewer(AppCfg.Get().MailMessageContentViewer);
+	InitContentViewer(AppCfg.GetGeneral().MailMessageContentViewer);
 }
 
 MailMsgViewer::~MailMsgViewer()
@@ -78,7 +78,7 @@ void MailMsgViewer::toolSaveContent_OnToolClicked(wxCommandEvent& event)
 
 void MailMsgViewer::toolOpenMessage_OnToolClicked(wxCommandEvent& event)
 {
-	if (!SysHelper::Open(mailMsgFile->GetFilePath())) {
+	if (!SysHelper::SysOpen(mailMsgFile->GetFilePath())) {
 		wxMessageBox(Msg_ErrorOpeningMsgExt, AppDef_Title, wxICON_ERROR | wxOK);
 	}
 }

@@ -11,7 +11,8 @@ class MainWnd: public MainWndUI, public IMailMsgViewCtrl
 	virtual void mnuViewToolbar_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void mnuViewStatusBar_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void mnuViewLog_OnMenuSelection(wxCommandEvent& event) override;
-	virtual void mnuToolsAccountsConfig_OnMenuSelection(wxCommandEvent& event) override;
+	virtual void mnuSettingsAccounts_OnMenuSelection(wxCommandEvent& event) override;
+	virtual void mnuSettingsOauth2_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void mnuHelpAbout_OnMenuSelection(wxCommandEvent& event) override;
 	virtual void toolEditAction1_OnToolClicked(wxCommandEvent& event) override;
 	virtual void toolEditAction2_OnToolClicked(wxCommandEvent& event) override;

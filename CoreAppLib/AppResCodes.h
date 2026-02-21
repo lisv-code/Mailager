@@ -6,24 +6,28 @@
 #define _Is_Err_ResCode < 0
 
 #define ResCode_Ok 0
-#define ResCode_Created 620000201
-#define ResCode_NoContent 620000204
+#define ResCode_Created 629000201
+#define ResCode_NoContent 629000204
 
 // General (common) result codes
 #define Error_Gen_Undefined -1 // The error type is unknown or undefined or not classified yet
-#define Error_Gen_ItemNotFound -2
-#define Error_Gen_TypeUnsupported -3
+#define Error_Gen_Initialization -2
+#define Error_Gen_ItemNotFound -3
+#define Error_Gen_TypeUnsupported -4
 
 #define Error_Gen_Operation_Interrupted -9
 
+// Logger errors
+#define ErrResGrp_Logger -20
+
 // File (stream) errors
-#define ErrResGrp_File -10
+#define ErrResGrp_File -30
 #define Error_File_Initialization (ErrResGrp_File -1) // Input parameters or config values are invalid or not set
 #define Error_File_DataOperation (ErrResGrp_File -2) // Operation with a file or data stream failed
 #define Error_File_DataFormat (ErrResGrp_File -3) // Broken stream or wrong data format
 
 // Connection (communication) errors
-#define ErrResGrp_Conn -30
+#define ErrResGrp_Conn -40
 #define Error_Conn_Protocol (ErrResGrp_Conn -1) // Unknown or unsupported protocol
 #define Error_Conn_Handshake (ErrResGrp_Conn -2)
 #define Error_Conn_AuthConfig (ErrResGrp_Conn -3)
@@ -32,7 +36,8 @@
 
 // File system errors group definition
 #define ErrResGrp_FileSys -1000
-constexpr int ResCode_OfFileSys(long long code) { return code >= 0 ? code : ErrResGrp_FileSys - code; }
+constexpr int ResCode_OfFileSys(long long code) {
+	return code >= 0 ? static_cast<int>(code) : ErrResGrp_FileSys - static_cast<int>(code); }
 
 // Network library errors group definition
 #define ErrResGrp_NetLib -2000

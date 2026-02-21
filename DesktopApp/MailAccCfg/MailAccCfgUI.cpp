@@ -27,9 +27,9 @@ MailAccCfgUI::MailAccCfgUI( wxWindow* parent, wxWindowID id, const wxString& tit
 
 	tlbrAccEdit = new wxToolBar( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL|wxBORDER_SIMPLE );
 	tlbrAccEdit->SetToolSeparation( 4 );
-	toolAccCreate = tlbrAccEdit->AddTool( wxID_ANY, wxT("create"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolCreate"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Create new account"), wxEmptyString, NULL );
+	toolAccCreate = tlbrAccEdit->AddTool( wxID_ANY, wxT("create"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolCreate"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Add new account"), wxEmptyString, NULL );
 
-	toolAccDelete = tlbrAccEdit->AddTool( wxID_ANY, wxT("delete"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolDelete"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Delete account"), wxEmptyString, NULL );
+	toolAccDelete = tlbrAccEdit->AddTool( wxID_ANY, wxT("delete"), wxArtProvider::GetBitmap( wxASCII_STR("IcoToolDelete"), wxASCII_STR(wxART_OTHER) ), wxNullBitmap, wxITEM_NORMAL, wxT("Remove account"), wxEmptyString, NULL );
 
 	tlbrAccEdit->Realize();
 
@@ -171,15 +171,15 @@ MailAccCfgUI::MailAccCfgUI( wxWindow* parent, wxWindowID id, const wxString& tit
 	btnOk = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxDefaultSize, 0 );
 
 	btnOk->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR("IcoBtnOk"), wxASCII_STR(wxART_OTHER) ) );
-	bSizer2->Add( btnOk, 0, 0, 4 );
+	bSizer2->Add( btnOk, 0, wxALL, 2 );
 
 	btnNo = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
 
 	btnNo->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR("IcoBtnNo"), wxASCII_STR(wxART_OTHER) ) );
-	bSizer2->Add( btnNo, 0, wxLEFT, 4 );
+	bSizer2->Add( btnNo, 0, wxALL, 2 );
 
 
-	bSizer1->Add( bSizer2, 0, wxALIGN_RIGHT|wxALL, 2 );
+	bSizer1->Add( bSizer2, 0, wxALIGN_RIGHT|wxALL, 4 );
 
 
 	this->SetSizer( bSizer1 );

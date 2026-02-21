@@ -7,7 +7,7 @@ struct AccountSettings
 	int Id; // Global identifier within the current application instance
 	int Status;
 
-	// The strings are UTF-8
+	// The strings contain UTF-8
 	std::string Directory;
 	std::string AccountName;
 	std::string EMailAddress;

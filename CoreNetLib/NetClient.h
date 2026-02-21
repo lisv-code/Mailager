@@ -1,6 +1,5 @@
 #pragma once
 #include <iostream>
-#include <string>
 #include <curl/curl.h>
 #include <LisCommon/Logger.h>
 
@@ -13,7 +12,6 @@ private:
 	CURL* hConnection;
 	curl_socket_t hSocket;
 	long defTimeoutMs;
-	std::string defUserAgent;
 
 	CURLcode SetCurlDebugFunction(CURL* handle);
 	void SetCurlDefaultOptions(CURL* handle);
@@ -42,8 +40,6 @@ public:
 
 	long GetDefaultTimeout();
 	void SetDefaultTimeout(long timeout_ms);
-	const char* GetDefaultUserAgent();
-	void SetDefaultUserAgent(const char* user_agent);
 
 	int Open(const char* url);
 	void Close();

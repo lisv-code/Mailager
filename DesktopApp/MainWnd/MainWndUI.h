@@ -38,7 +38,7 @@ class MainWndUI : public wxFrame
 		wxMenu* mnuFile;
 		wxMenu* mnuEdit;
 		wxMenu* mnuView;
-		wxMenu* mnuTools;
+		wxMenu* mnuSettings;
 		wxMenu* mnuHelp;
 		wxToolBar* tbarMain;
 		wxToolBarToolBase* toolEditAction1;
@@ -52,7 +52,8 @@ class MainWndUI : public wxFrame
 		virtual void mnuViewToolbar_OnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void mnuViewStatusBar_OnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void mnuViewLog_OnMenuSelection( wxCommandEvent& event ) = 0;
-		virtual void mnuToolsAccountsConfig_OnMenuSelection( wxCommandEvent& event ) = 0;
+		virtual void mnuSettingsAccounts_OnMenuSelection( wxCommandEvent& event ) = 0;
+		virtual void mnuSettingsOauth2_OnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void mnuHelpAbout_OnMenuSelection( wxCommandEvent& event ) = 0;
 		virtual void toolEditAction1_OnToolClicked( wxCommandEvent& event ) = 0;
 		virtual void toolEditAction2_OnToolClicked( wxCommandEvent& event ) = 0;

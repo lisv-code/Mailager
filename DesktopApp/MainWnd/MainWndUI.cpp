@@ -24,7 +24,7 @@ MainWndUI::MainWndUI( wxWindow* parent, wxWindowID id, const wxString& title, co
 
 	mnuEdit = new wxMenu();
 	wxMenuItem* mnuEditNewMailMessage;
-	mnuEditNewMailMessage = new wxMenuItem( mnuEdit, wxID_ANY, wxString( wxT("New Mail Message") ) , wxEmptyString, wxITEM_NORMAL );
+	mnuEditNewMailMessage = new wxMenuItem( mnuEdit, wxID_ANY, wxString( wxT("New mail message") ) , wxEmptyString, wxITEM_NORMAL );
 	mnuEdit->Append( mnuEditNewMailMessage );
 
 	mnubarMain->Append( mnuEdit, wxT("Edit") );
@@ -33,6 +33,7 @@ MainWndUI::MainWndUI( wxWindow* parent, wxWindowID id, const wxString& title, co
 	wxMenuItem* mnuViewToolbar;
 	mnuViewToolbar = new wxMenuItem( mnuView, wxID_ANY, wxString( wxT("Toolbar") ) , wxEmptyString, wxITEM_NORMAL );
 	mnuView->Append( mnuViewToolbar );
+	mnuViewToolbar->Enable( false );
 
 	wxMenuItem* mnuViewStatusBar;
 	mnuViewStatusBar = new wxMenuItem( mnuView, wxID_ANY, wxString( wxT("Status bar") ) , wxEmptyString, wxITEM_NORMAL );
@@ -44,12 +45,18 @@ MainWndUI::MainWndUI( wxWindow* parent, wxWindowID id, const wxString& title, co
 
 	mnubarMain->Append( mnuView, wxT("View") );
 
-	mnuTools = new wxMenu();
-	wxMenuItem* mnuToolsAccountsConfig;
-	mnuToolsAccountsConfig = new wxMenuItem( mnuTools, wxID_ANY, wxString( wxT("Accounts Configuration...") ) , wxEmptyString, wxITEM_NORMAL );
-	mnuTools->Append( mnuToolsAccountsConfig );
+	mnuSettings = new wxMenu();
+	wxMenuItem* mnuSettingsAccounts;
+	mnuSettingsAccounts = new wxMenuItem( mnuSettings, wxID_ANY, wxString( wxT("Accounts...") ) , wxEmptyString, wxITEM_NORMAL );
+	mnuSettings->Append( mnuSettingsAccounts );
 
-	mnubarMain->Append( mnuTools, wxT("Tools") );
+	mnuSettings->AppendSeparator();
+
+	wxMenuItem* mnuSettingsOauth2;
+	mnuSettingsOauth2 = new wxMenuItem( mnuSettings, wxID_ANY, wxString( wxT("OAuth2 configuration...") ) , wxEmptyString, wxITEM_NORMAL );
+	mnuSettings->Append( mnuSettingsOauth2 );
+
+	mnubarMain->Append( mnuSettings, wxT("Settings") );
 
 	mnuHelp = new wxMenu();
 	wxMenuItem* mnuHelpAbout;
@@ -88,7 +95,8 @@ MainWndUI::MainWndUI( wxWindow* parent, wxWindowID id, const wxString& title, co
 	mnuView->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuViewToolbar_OnMenuSelection ), this, mnuViewToolbar->GetId());
 	mnuView->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuViewStatusBar_OnMenuSelection ), this, mnuViewStatusBar->GetId());
 	mnuView->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuViewLog_OnMenuSelection ), this, mnuViewLog->GetId());
-	mnuTools->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuToolsAccountsConfig_OnMenuSelection ), this, mnuToolsAccountsConfig->GetId());
+	mnuSettings->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuSettingsAccounts_OnMenuSelection ), this, mnuSettingsAccounts->GetId());
+	mnuSettings->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuSettingsOauth2_OnMenuSelection ), this, mnuSettingsOauth2->GetId());
 	mnuHelp->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWndUI::mnuHelpAbout_OnMenuSelection ), this, mnuHelpAbout->GetId());
 	this->Connect( toolEditAction1->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MainWndUI::toolEditAction1_OnToolClicked ) );
 	this->Connect( toolEditAction2->GetId(), wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( MainWndUI::toolEditAction2_OnToolClicked ) );

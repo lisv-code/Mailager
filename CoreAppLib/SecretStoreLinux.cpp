@@ -28,6 +28,12 @@ public:
 	{
 	}
 
+	virtual const char* GetStoreInfo(const FILE_PATH_CHAR** location) const
+	{
+		if (location) *location = serviceName.c_str();
+		return "Secret Service via libsecret";
+	}
+
 	bool Store(const char* key, const char* value, size_t size) override
 	{
 		if (!key || (size && !value)) return false;
@@ -121,6 +127,6 @@ private:
 
 std::unique_ptr<SecretStore> SecretStoreLinux::CreateInstance(const SecretStoreSettings& cfg)
 {
-	auto key_grp = LisStr::CStrConvert(cfg.KeyGroup ? cfg.KeyGroup : _TEXT(""));
+	auto key_grp = LisStr::CStrConvert(cfg.KeyGroup ? cfg.KeyGroup : FILE_PATH_TEXT(""));
 	return std::unique_ptr<SecretStore>(new SecretStoreLinKeyring(key_grp));
 }

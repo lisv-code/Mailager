@@ -2,7 +2,7 @@
 #include "MailMsgEditorUI.h"
 #include "../MailMsgFileView.h"
 #include "../../CoreMailLib/MimeNode.h"
-#include "../../CoreAppLib/AccountCfg.h"
+#include "../../CoreAppLib/AccountConfig.h"
 #include "../MailMsgCtrlAttachments/MailMsgCtrlAttachments.h"
 
 namespace MailMsgEditor_Def
@@ -13,10 +13,10 @@ namespace MailMsgEditor_Def
 class MailMsgEditor : public MailMsgEditorUI, public MailMsgFileView
 {
 	/****** Account (Sender) ******/
-	AccountCfg::EventSubscriptionId accCfgSubId;
+	AccountConfig::EventSubscriptionId accCfgSubId;
 	void AccountInfo_Setup();
 	void AccountInfo_Cleanup();
-	int AccCfg_EventHandler(const AccountCfg* acc_cfg, const AccountCfg::EventInfo& evt_info);
+	int AccCfg_EventHandler(const AccountConfig* acc_cfg, const AccountConfig::EventInfo& evt_info);
 	const int GetAccountId(int sel_idx = -1) const;
 	const AccountSettings* FindAccount(int sel_idx) const;
 	const int FindSenderIdx(int acc_id = -1, const char* mailbox = nullptr) const;

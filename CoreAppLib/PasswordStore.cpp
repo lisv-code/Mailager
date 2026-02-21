@@ -20,10 +20,16 @@ std::string PasswordStore::GetStoreKey(const char* host, const char* user)
 PasswordStore::PasswordStore()
 {
 	SecretStoreSettings sss{};
-	sss.KeyGroup = _TEXT("" AppDef_PswdStoreGroup);
+	sss.KeyGroup = FILE_PATH_TEXT("" AppDef_PswdStoreGroup);
 	// TODO: provide the path to the SecretStore file
 	// sss.FilePath = ...;
 	ss = SecretStore::CreateInstance(sss);
+
+	const char* ss_type;
+	const FILE_PATH_CHAR *ss_location;
+	ss_type = ss->GetStoreInfo(&ss_location);
+	logger->LogFmt(llDebug, Log_Scope " Password store backend: %s. Location: %s.",
+		ss_type, (char*)LisStr::CStrConvert(ss_location));
 }
 
 int PasswordStore::LoadPassword(const char* host, const char* user, std::string& pswd)

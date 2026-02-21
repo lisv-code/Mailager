@@ -112,7 +112,7 @@
             <property name="help"></property>
             <property name="id">wxID_ANY</property>
             <property name="kind">wxITEM_NORMAL</property>
-            <property name="label">New Mail Message</property>
+            <property name="label">New mail message</property>
             <property name="name">mnuEditNewMailMessage</property>
             <property name="permission">none</property>
             <property name="shortcut"></property>
@@ -127,7 +127,7 @@
           <object class="wxMenuItem" expanded="true">
             <property name="bitmap"></property>
             <property name="checked">0</property>
-            <property name="enabled">1</property>
+            <property name="enabled">0</property>
             <property name="help"></property>
             <property name="id">wxID_ANY</property>
             <property name="kind">wxITEM_NORMAL</property>
@@ -168,8 +168,8 @@
           </object>
         </object>
         <object class="wxMenu" expanded="true">
-          <property name="label">Tools</property>
-          <property name="name">mnuTools</property>
+          <property name="label">Settings</property>
+          <property name="name">mnuSettings</property>
           <property name="permission">protected</property>
           <object class="wxMenuItem" expanded="true">
             <property name="bitmap"></property>
@@ -178,12 +178,30 @@
             <property name="help"></property>
             <property name="id">wxID_ANY</property>
             <property name="kind">wxITEM_NORMAL</property>
-            <property name="label">Accounts Configuration...</property>
-            <property name="name">mnuToolsAccountsConfig</property>
+            <property name="label">Accounts...</property>
+            <property name="name">mnuSettingsAccounts</property>
             <property name="permission">none</property>
             <property name="shortcut"></property>
             <property name="unchecked_bitmap"></property>
-            <event name="OnMenuSelection">mnuToolsAccountsConfig_OnMenuSelection</event>
+            <event name="OnMenuSelection">mnuSettingsAccounts_OnMenuSelection</event>
+          </object>
+          <object class="separator" expanded="true">
+            <property name="name">m_separator1</property>
+            <property name="permission">none</property>
+          </object>
+          <object class="wxMenuItem" expanded="true">
+            <property name="bitmap"></property>
+            <property name="checked">0</property>
+            <property name="enabled">1</property>
+            <property name="help"></property>
+            <property name="id">wxID_ANY</property>
+            <property name="kind">wxITEM_NORMAL</property>
+            <property name="label">OAuth2 configuration...</property>
+            <property name="name">mnuSettingsOauth2</property>
+            <property name="permission">none</property>
+            <property name="shortcut"></property>
+            <property name="unchecked_bitmap"></property>
+            <event name="OnMenuSelection">mnuSettingsOauth2_OnMenuSelection</event>
           </object>
         </object>
         <object class="wxMenu" expanded="true">

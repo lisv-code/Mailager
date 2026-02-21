@@ -7,13 +7,13 @@
 
 namespace MailMsgEditor_Imp
 {
-	static void load_accounts(const AccountCfg& src, wxItemContainer* dst, int sel_acc_id);
+	static void load_accounts(const AccountConfig& src, wxItemContainer* dst, int sel_acc_id);
 }
 using namespace MailMsgEditor_Imp;
 
 void MailMsgEditor::AccountInfo_Setup()
 {
-	accCfgSubId = AccCfg.EventSubscribe(AccountCfg_Def::EventType::etAccountsChanged,
+	accCfgSubId = AccCfg.EventSubscribe(AccountConfig_Def::EventType::etAccountsChanged,
 		std::bind(&MailMsgEditor::AccCfg_EventHandler,
 			this, std::placeholders::_1, std::placeholders::_2));
 	load_accounts(AccCfg, chcSender, AccountId_Empty);
@@ -24,9 +24,9 @@ void MailMsgEditor::AccountInfo_Cleanup()
 	AccCfg.EventUnsubscribe(accCfgSubId);
 }
 
-int MailMsgEditor::AccCfg_EventHandler(const AccountCfg* acc_cfg, const AccountCfg::EventInfo& evt_info)
+int MailMsgEditor::AccCfg_EventHandler(const AccountConfig* acc_cfg, const AccountConfig::EventInfo& evt_info)
 {
-	if (AccountCfg_Def::EventType::etAccountsChanged != evt_info.type) return 0;
+	if (AccountConfig_Def::EventType::etAccountsChanged != evt_info.type) return 0;
 	const auto& del_acc_ids = evt_info.data->DeletedAccIds;
 	int cur_acc_id = GetAccountId();
 	if (std::find(del_acc_ids.begin(), del_acc_ids.end(), cur_acc_id) != del_acc_ids.end()) {
@@ -81,13 +81,12 @@ void MailMsgEditor::chcSender_OnChoice(wxCommandEvent& event)
 	RefreshToolState();
 }
 
-static void MailMsgEditor_Imp::load_accounts(const AccountCfg& src, wxItemContainer* dst, int sel_acc_id)
+static void MailMsgEditor_Imp::load_accounts(const AccountConfig& src, wxItemContainer* dst, int sel_acc_id)
 {
 	dst->Clear();
-	AccountCfg::AccountsIterator acc_list_begin, acc_list_end;
-	src.GetIter(acc_list_begin, acc_list_end);
+	auto acc_iter = src.GetIter();
 	int sel_idx = -1;
-	for (auto it = acc_list_begin; it != acc_list_end; ++it) {
+	for (auto it = acc_iter.first; it != acc_iter.second; ++it) {
 		wxString name(wxString::FromUTF8(it->GetName()));
 		if (name.IsEmpty()) name = "#" + wxString::Format("%i", it->Id);
 		name += " <";

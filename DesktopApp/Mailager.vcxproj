@@ -73,12 +73,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>D:\Projects\CppLib\wxWidgets\include;D:\Projects\CppLib\wxWidgets\include\msvc;D:\Projects\CppLib\libcurl\include;D:\Projects\CppLib;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Projects\CppLib\wxWidgets\lib\vc_lib;D:\Projects\CppLib\libcurl\lib\x86;D:\Projects\CppLib\mimetic\lib\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\Projects\CppLib\wxWidgets\lib\vc_lib;D:\Projects\CppLib\libcurl\lib\x86;D:\Projects\CppLib\mbedtls\build32s_debug\lib;D:\Projects\CppLib\mimetic\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>D:\Projects\CppLib\wxWidgets\include;D:\Projects\CppLib\wxWidgets\include\msvc;D:\Projects\CppLib\libcurl\include;D:\Projects\CppLib;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Projects\CppLib\wxWidgets\lib\vc_lib;D:\Projects\CppLib\libcurl\lib\x86;D:\Projects\CppLib\mimetic\lib\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\Projects\CppLib\wxWidgets\lib\vc_lib;D:\Projects\CppLib\libcurl\lib\x86;D:\Projects\CppLib\mbedtls\build32s_release\lib;D:\Projects\CppLib\mimetic\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -102,10 +102,11 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>wxmsw32ud_core.lib;wxbase32ud.lib;comctl32.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a_debug.lib;crypt32.lib;normaliz.lib;wldap32.lib;libmimetic_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxmsw32ud_core.lib;wxbase32ud.lib;comctl32.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a_debug.lib;crypt32.lib;normaliz.lib;wldap32.lib;secur32.lib;libmimetic_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(ProjectDir)$(TargetName).cfg" "$(TargetDir)"
+xcopy /D /Y "$(ProjectDir)oauth2.cfg" "$(TargetDir)"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -125,10 +126,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>wxmsw32u_core.lib;wxbase32u.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a.lib;crypt32.lib;normaliz.lib;wldap32.lib;libmimetic.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxmsw32u_core.lib;wxbase32u.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a.lib;crypt32.lib;normaliz.lib;wldap32.lib;secur32.lib;mbedcrypto.lib;mbedtls.lib;mbedx509.lib;libmimetic.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(ProjectDir)$(TargetName).cfg" "$(TargetDir)"
+xcopy /D /Y "$(ProjectDir)oauth2.cfg" "$(TargetDir)"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -144,10 +146,11 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>wxmsw32ud_core.lib;wxbase32ud.lib;comctl32.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a_debug.lib;crypt32.lib;normaliz.lib;wldap32.lib;libmimetic_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxmsw32ud_core.lib;wxbase32ud.lib;comctl32.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a_debug.lib;crypt32.lib;normaliz.lib;wldap32.lib;secur32.lib;libmimetic_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(ProjectDir)$(TargetName).cfg" "$(TargetDir)"
+xcopy /D /Y "$(ProjectDir)oauth2.cfg" "$(TargetDir)"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -167,10 +170,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>wxmsw32u_core.lib;wxbase32u.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a.lib;crypt32.lib;normaliz.lib;wldap32.lib;libmimetic.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxmsw32u_core.lib;wxbase32u.lib;rpcrt4.lib;winmm.lib;advapi32.lib;wsock32.lib;libcurl_a.lib;crypt32.lib;normaliz.lib;wldap32.lib;secur32.lib;libmimetic.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(ProjectDir)$(TargetName).cfg" "$(TargetDir)"
+xcopy /D /Y "$(ProjectDir)oauth2.cfg" "$(TargetDir)"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -182,14 +186,16 @@
     <ClInclude Include="..\..\CppLib\LisCommon\FileSystem.h" />
     <ClInclude Include="..\..\CppLib\LisCommon\ThreadTaskMgr.h" />
     <ClInclude Include="..\..\CppLib\LisWin\WinUtils.h" />
-    <ClInclude Include="..\CoreAppLib\AccountCfg.h" />
+    <ClInclude Include="..\CoreAppLib\AccountConfig.h" />
     <ClInclude Include="..\CoreAppLib\AppDef.h" />
     <ClInclude Include="..\CoreAppLib\ConnectionHelper.h" />
     <ClInclude Include="..\CoreAppLib\ConnectionInfo.h" />
+    <ClInclude Include="..\CoreAppLib\ListEditMgr.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgDataHelper.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgFileDef.h" />
     <ClInclude Include="..\CoreAppLib\MailMsgTransmitter.h" />
     <ClInclude Include="..\CoreAppLib\AppResCodes.h" />
+    <ClInclude Include="..\CoreAppLib\OAuth2Settings.h" />
     <ClInclude Include="..\CoreAppLib\SecretStore.h" />
     <ClInclude Include="..\CoreAppLib\SecretStoreFile.h" />
     <ClInclude Include="..\CoreAppLib\SecretStoreWindows.h" />
@@ -260,6 +266,9 @@
     <ClInclude Include="..\CoreNetLib\NetClient.h" />
     <ClInclude Include="MainWnd\MainWnd.h" />
     <ClInclude Include="MainWnd\MainWndUI.h" />
+    <ClInclude Include="OAuth2Cfg\OAuth2Cfg.h" />
+    <ClInclude Include="OAuth2Cfg\OAuth2CfgUI.h" />
+    <ClInclude Include="OAuth2Cfg\OAuth2EditMgr.h" />
     <ClInclude Include="ResMgr.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SysHelper.h" />
@@ -267,6 +276,7 @@
     <ClInclude Include="MailMainView\MailMainView.h" />
     <ClInclude Include="MailMainView\MailMainViewUI.h" />
     <ClCompile Include="..\CoreAppLib\MailMsgDataHelper.cpp" />
+    <ClCompile Include="..\CoreAppLib\OAuth2Settings.cpp" />
     <ClCompile Include="..\CoreAppLib\SecretStore.cpp" />
     <ClCompile Include="..\CoreAppLib\SecretStoreFile.cpp" />
     <ClCompile Include="..\CoreAppLib\SecretStoreWindows.cpp" />
@@ -298,7 +308,7 @@
     <ClCompile Include="..\..\CppLib\LisCommon\FileSystem.cpp" />
     <ClCompile Include="..\..\CppLib\LisCommon\ThreadTaskMgr.cpp" />
     <ClCompile Include="..\..\CppLib\LisWin\WinUtils.cpp" />
-    <ClCompile Include="..\CoreAppLib\AccountCfg.cpp" />
+    <ClCompile Include="..\CoreAppLib\AccountConfig.cpp" />
     <ClCompile Include="..\CoreAppLib\AccountSettings.cpp" />
     <ClCompile Include="..\CoreAppLib\ConnectionHelper.cpp" />
     <ClCompile Include="..\CoreAppLib\MailMsgTransmitter.cpp" />
@@ -365,6 +375,9 @@
     <ClCompile Include="MainApp.cpp" />
     <ClCompile Include="MainWnd\MainWnd.cpp" />
     <ClCompile Include="MainWnd\MainWndUI.cpp" />
+    <ClCompile Include="OAuth2Cfg\OAuth2Cfg.cpp" />
+    <ClCompile Include="OAuth2Cfg\OAuth2CfgUI.cpp" />
+    <ClCompile Include="OAuth2Cfg\OAuth2EditMgr.cpp" />
     <ClCompile Include="ResMgr.cpp" />
     <ClCompile Include="SysHelper.cpp" />
     <ClCompile Include="UiHelper.cpp" />
@@ -380,6 +393,7 @@
     <None Include="MailMsgViewer\MailMsgViewerUI.fbp" />
     <None Include="MainWnd\MainWndUI.fbp" />
     <None Include="MailMainView\MailMainViewUI.fbp" />
+    <None Include="OAuth2Cfg\OAuth2CfgUI.fbp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

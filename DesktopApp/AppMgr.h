@@ -2,7 +2,6 @@
 
 class ApplicationManager
 {
-	int InitLogger(long default_log_level = -1);
 public:
 	ApplicationManager();
 	~ApplicationManager();

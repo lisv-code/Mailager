@@ -30,9 +30,9 @@ void HtmlViewWindow::OnLinkClicked(const wxHtmlLinkInfo& link)
 			wxICON_QUESTION | wxOK | wxCANCEL | wxCANCEL_DEFAULT, this->GetParent()))
 	{
 #ifdef _WINDOWS
-		SysHelper::Open((const TCHAR*)(link.GetHref()));
+		SysHelper::SysOpen((const TCHAR*)(link.GetHref()));
 #else
-		SysHelper::Open(link.GetHref());
+		SysHelper::SysOpen(link.GetHref());
 #endif
 	}
 }

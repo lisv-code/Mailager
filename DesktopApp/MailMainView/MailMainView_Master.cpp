@@ -1,6 +1,6 @@
 #include "MailMainView.h"
 #include <algorithm>
-#include "../../CoreAppLib/AccountCfg.h"
+#include "../../CoreAppLib/AccountConfig.h"
 #include "../AppCfg.h"
 #include "MasterViewModel.h"
 
@@ -50,10 +50,9 @@ int MailMainView::GetCurrentAccountId()
 
 void MailMainView::CreateMasterViewModel(bool group_by_folder)
 {
-	AccountCfg::AccountsIterator acc_list_begin, acc_list_end;
-	AccCfg.GetIter(acc_list_begin, acc_list_end);
+	auto acc_iter = AccCfg.GetIter();
 	std::vector<const AccountSettings*> accounts;
-	for (auto it = acc_list_begin; it != acc_list_end; ++it)
+	for (auto it = acc_iter.first; it != acc_iter.second; ++it)
 		accounts.push_back(&(*it));
 
 	auto master_view_model =

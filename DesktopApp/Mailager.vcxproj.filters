@@ -70,6 +70,9 @@
     <Filter Include="MailMsgCtrlAttachments">
       <UniqueIdentifier>{77d4f395-e063-4561-97de-831b75977313}</UniqueIdentifier>
     </Filter>
+    <Filter Include="OAuth2Cfg">
+      <UniqueIdentifier>{2158ab53-606f-4a01-8882-091f898cac07}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -114,7 +117,7 @@
     <ClInclude Include="MailMainView\MasterViewModel.h">
       <Filter>MailMainView</Filter>
     </ClInclude>
-    <ClInclude Include="..\CoreAppLib\AccountCfg.h">
+    <ClInclude Include="..\CoreAppLib\AccountConfig.h">
       <Filter>Header Files\CoreAppLib</Filter>
     </ClInclude>
     <ClInclude Include="..\CoreAppLib\AccountSettings.h">
@@ -348,6 +351,21 @@
     <ClInclude Include="Version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\CoreAppLib\OAuth2Settings.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="OAuth2Cfg\OAuth2Cfg.h">
+      <Filter>OAuth2Cfg</Filter>
+    </ClInclude>
+    <ClInclude Include="OAuth2Cfg\OAuth2CfgUI.h">
+      <Filter>OAuth2Cfg</Filter>
+    </ClInclude>
+    <ClInclude Include="OAuth2Cfg\OAuth2EditMgr.h">
+      <Filter>OAuth2Cfg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\ListEditMgr.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -438,7 +456,7 @@
     <ClCompile Include="MailMainView\MasterViewModel.cpp">
       <Filter>MailMainView</Filter>
     </ClCompile>
-    <ClCompile Include="..\CoreAppLib\AccountCfg.cpp">
+    <ClCompile Include="..\CoreAppLib\AccountConfig.cpp">
       <Filter>Source Files\CoreAppLib</Filter>
     </ClCompile>
     <ClCompile Include="..\CoreAppLib\AccountSettings.cpp">
@@ -645,6 +663,18 @@
     <ClCompile Include="..\CoreAppLib\SecretStoreFile.cpp">
       <Filter>Source Files\CoreAppLib</Filter>
     </ClCompile>
+    <ClCompile Include="..\CoreAppLib\OAuth2Settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OAuth2Cfg\OAuth2Cfg.cpp">
+      <Filter>OAuth2Cfg</Filter>
+    </ClCompile>
+    <ClCompile Include="OAuth2Cfg\OAuth2CfgUI.cpp">
+      <Filter>OAuth2Cfg</Filter>
+    </ClCompile>
+    <ClCompile Include="OAuth2Cfg\OAuth2EditMgr.cpp">
+      <Filter>OAuth2Cfg</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Mailager.cfg" />
@@ -668,6 +698,9 @@
     </None>
     <None Include="MailAccCfg\MailAccCfgUI.fbp">
       <Filter>MailAccCfg</Filter>
+    </None>
+    <None Include="OAuth2Cfg\OAuth2CfgUI.fbp">
+      <Filter>OAuth2Cfg</Filter>
     </None>
   </ItemGroup>
 </Project>

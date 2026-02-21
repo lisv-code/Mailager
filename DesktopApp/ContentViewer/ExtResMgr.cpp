@@ -2,7 +2,6 @@
 #include <cstring>
 #include "../../CoreAppLib/AppResCodes.h"
 #include "../../CoreNetLib/NetClient.h"
-#include "../AppCfg.h"
 
 #define Log_Scope "ExtResMgr"
 
@@ -137,7 +136,6 @@ LisThread::TaskProcResult ExtResMgr::ResourceDownloadProc(
 	std::stringstream stm(std::ios::in | std::ios::out | std::ios::binary);
 	NetClient net_client;
 	net_client.SetDefaultTimeout(TransferTimeoutMs);
-	net_client.SetDefaultUserAgent(AppCfg.Get().NetUserAgent.c_str());
 	int result = ResCode_OfNetLib(net_client.Exec(stm, url.c_str(), nullptr));
 	if ((result _Is_Ok_ResCode) && stm.fail())
 		result = Error_File_DataOperation;

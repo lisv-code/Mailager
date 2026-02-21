@@ -28,7 +28,7 @@ size_t curl_write_data(char* ptr, size_t size, size_t nmemb, void* userdata);
 static int curl_wait_on_socket(curl_socket_t sockfd, bool for_recv, long timeout_ms);
 
 NetClient::NetClient()
-	: hConnection(NULL), hSocket(NULL), defTimeoutMs(0), defUserAgent()
+	: hConnection(NULL), hSocket(NULL), defTimeoutMs(0)
 {
 	NetLibResources::global_init();
 }
@@ -36,7 +36,7 @@ NetClient::NetClient()
 NetClient::NetClient(NetClient&& src) noexcept
 	: hConnection(std::exchange(src.hConnection, (CURL*)nullptr)),
 	hSocket(std::exchange(src.hSocket, (curl_socket_t)nullptr)),
-	defTimeoutMs(src.defTimeoutMs), defUserAgent(src.defUserAgent)
+	defTimeoutMs(src.defTimeoutMs)
 {
 	if (hConnection) SetCurlDebugFunction(hConnection); // Calling it to update `this` reference
 }
@@ -57,16 +57,6 @@ void NetClient::SetDefaultTimeout(long timeout_ms)
 	defTimeoutMs = timeout_ms;
 }
 
-const char* NetClient::GetDefaultUserAgent()
-{
-	return defUserAgent.c_str();
-}
-
-void NetClient::SetDefaultUserAgent(const char* user_agent)
-{
-	defUserAgent = user_agent;
-}
-
 CURLcode NetClient::SetCurlDebugFunction(CURL* handle)
 {
 	CURLcode result = curl_easy_setopt(handle, CURLOPT_DEBUGFUNCTION, curl_debug_function);
@@ -77,13 +67,19 @@ CURLcode NetClient::SetCurlDebugFunction(CURL* handle)
 void NetClient::SetCurlDefaultOptions(CURL* handle)
 {
 	curl_easy_setopt(handle, CURLOPT_VERBOSE, 1L);
-	// curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1L); // for better multi-threading compatibility
+	curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1L); // for better multi-threading compatibility
 	curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
 	if (defTimeoutMs) curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, defTimeoutMs);
-	if (!defUserAgent.empty()) curl_easy_setopt(handle, CURLOPT_USERAGENT, defUserAgent.c_str());
 
-	// curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0L);
-	// curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0L);
+	auto cfg = NetLibResources::global_cfg_get();
+	if (!cfg.CertificateAuthorityBundle.IsEmpty())
+		curl_easy_setopt(handle, CURLOPT_CAINFO, cfg.CertificateAuthorityBundle.Get().c_str());
+	if (!cfg.SslVerifyPeer.IsEmpty())
+		curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, cfg.SslVerifyPeer.Get() ? 1L : 0L);
+	if (!cfg.SslVerifyHost.IsEmpty())
+		curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, cfg.SslVerifyHost.Get() ? 2L : 0L);
+	if (!cfg.HttpUserAgent.IsEmpty())
+		curl_easy_setopt(handle, CURLOPT_USERAGENT, cfg.HttpUserAgent.Get().c_str());
 }
 
 int NetClient::Open(const char* url)

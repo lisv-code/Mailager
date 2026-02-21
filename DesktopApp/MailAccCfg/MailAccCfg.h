@@ -10,10 +10,11 @@ class MailAccCfg: public MailAccCfgUI
 	void InitUI();
 	void LoadAccounts();
 	AccountSettings* FindAccount(int sel_idx);
-	void LoadViewData(int sel_idx);
-	std::vector<wxString> ValidateViewData();
-	void ShowValidationErrors(const AccountSettings* acc, const std::vector<wxString>& errors);
-	bool CheckAndSaveViewData(int sel_idx);
+	std::vector<wxString> ValidateAccData(const AccountSettings& acc);
+	void LoadAccViewData(int sel_idx);
+	std::vector<wxString> ValidateAccViewData(const AccountSettings* acc);
+	void ShowAccValidationErrors(const AccountSettings* acc, const std::vector<wxString>& errors);
+	bool CheckAndSaveAccViewData(int sel_idx);
 	bool GetChangeInfo(wxString& info);
 	void ApplyChanges();
 

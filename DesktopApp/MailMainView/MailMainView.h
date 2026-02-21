@@ -2,7 +2,7 @@
 #include "MailMainViewUI.h"
 #include <mutex>
 #include <LisCommon/Logger.h>
-#include "../../CoreAppLib/AccountCfg.h"
+#include "../../CoreAppLib/AccountConfig.h"
 #include "../MailMsgFileMgr.h"
 #include "../MailMsgViewMgr.h"
 
@@ -21,7 +21,7 @@ private:
 	MailMsgViewMgr* msgViewMgr;
 
 	void AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus acc_busy_state);
-	int AccountCfg_EventHandler(const AccountCfg* acc_cfg, const AccountCfg::EventInfo& evt_info);
+	int AccountCfg_EventHandler(const AccountConfig* acc_cfg, const AccountConfig::EventInfo& evt_info);
 	void RefreshMasterToolsState(const wxDataViewItem* item = nullptr);
 	void RefreshDetailToolsState(bool enable_filter);
 	void StartMailSync(bool receiving, bool sending);

@@ -1,18 +1,33 @@
 #pragma once
-#include <string>
 #include <vector>
+#include <utility>
+#include <LisCommon/FileSystem.h>
+#include "OAuth2Settings.h"
 
-struct OAuth2Settings
+class OAuth2Config
 {
-	std::string AuthEndpoint;
-	std::string TokenEndpoint;
-	std::string Scope;
-	std::string ClientId;
-	std::string ClientSecret;
+public:
+	struct GeneralSettings {
+		bool VerificationRequired;
+	};
+	typedef std::vector<OAuth2ProviderSettings> ProviderSettingsCollection;
+	typedef ProviderSettingsCollection::const_iterator ProvidersIterator;
+
+	OAuth2Config();
+
+	const FILE_PATH_CHAR* GetCfgPath() const;
+	void SetCfgPath(const FILE_PATH_CHAR* file_path);
+	int Load(const FILE_PATH_CHAR* alt_file_paths[], size_t alt_path_count);
+	int Save(GeneralSettings* gen_cfg, OAuth2ProviderSettings* prov_items, size_t prov_count);
+
+	const GeneralSettings& GetGeneral() const;
+	std::pair<ProvidersIterator, ProvidersIterator> GetProvIter() const;
+	const OAuth2ProviderSettings* FindProvider(const char* name) const;
+
+private:
+	std::basic_string<FILE_PATH_CHAR> filePath;
+	GeneralSettings genCfg;
+	ProviderSettingsCollection providers;
 };
 
-namespace OAuth2Cfg
-{
-	std::vector<const char*> GetSpecs();
-	OAuth2Settings GetCfg(const char* spec);
-}
+extern OAuth2Config OAuth2Cfg; // OAuth2 Configuration global singleton

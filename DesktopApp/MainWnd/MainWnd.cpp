@@ -1,15 +1,17 @@
 ﻿#include "MainWnd.h"
 #include <string>
+#include <wx/aboutdlg.h>
 #include <LisCommon/StrUtils.h>
 #include "../../CoreAppLib/AppDef.h"
 #include "../../CoreAppLib/MailMsgFileDef.h"
-#include "../ResMgr.h"
-#include "../MailMainView/MailMainView.h"
 #include "../LogView/LogView.h"
 #include "../MailAccCfg/MailAccCfg.h"
+#include "../MailMainView/MailMainView.h"
+#include "../OAuth2Cfg/OAuth2Cfg.h"
+#include "../ResMgr.h"
+#include "../Version.h"
 
 #define Res_AppMainIcon "IcoAppMain"
-#define Log_Scope "DspMain"
 #define SBar_FldIdx_TxtLog 0
 
 wxDEFINE_EVENT(LOG_WRITE_EVENT, wxCommandEvent);
@@ -32,13 +34,6 @@ MainWnd::MainWnd(wxWindow* parent) : MainWndUI(parent)
 	CreateMailMainView();
 
 	LogInit(true);
-
-	auto data = ResMgr::GetVersionInfo();
-	logger->LogFmt(LisLog::llInfo, Log_Scope " application started %s.",
-		(char*)LisStr::CStrConvert(data.Version));
-#ifndef NDEBUG
-	logger->LogTxt(LisLog::llInfo, Log_Scope " DEBUG build.");
-#endif
 }
 
 MainWnd::~MainWnd()
@@ -85,9 +80,15 @@ void MainWnd::mnuViewLog_OnMenuSelection(wxCommandEvent& event)
 	UpdateMain_ViewCreated(new LogView(tabCtrlMain), LogView_Def::WndTitle, false);
 }
 
-void MainWnd::mnuToolsAccountsConfig_OnMenuSelection(wxCommandEvent& event)
+void MainWnd::mnuSettingsAccounts_OnMenuSelection(wxCommandEvent& event)
 {
 	MailAccCfg wnd(this);
+	wnd.ShowModal();
+}
+
+void MainWnd::mnuSettingsOauth2_OnMenuSelection(wxCommandEvent& event)
+{
+	OAuth2Cfg wnd(this);
 	wnd.ShowModal();
 }
 
@@ -155,15 +156,13 @@ void MainWnd::LogWriteEventHandler(wxCommandEvent& event)
 	sbarMain->SetStatusText(event.GetString(), SBar_FldIdx_TxtLog);
 }
 
-#include <wx/aboutdlg.h>
-
 void MainWnd::mnuHelpAbout_OnMenuSelection(wxCommandEvent& event)
 {
 	wxAboutDialogInfo dlg;
 	dlg.SetIcon(ResMgr::GetIcon(wxT(Res_AppMainIcon)));
 	dlg.SetName(wxT(AppDef_Title));
 	auto data = ResMgr::GetVersionInfo();
-	dlg.SetVersion(data.Version);
+	dlg.SetVersion(wxString::Format("%s %i-bit", data.Version, (int)APP_BITNESS));
 	dlg.SetCopyright(data.Copyright);
 	dlg.SetDescription(data.Comments);
 	dlg.SetWebSite(wxT("http://lisv.site/mailager"));

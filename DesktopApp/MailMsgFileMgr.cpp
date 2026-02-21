@@ -3,7 +3,7 @@
 #include <future>
 #include <utility>
 #include "../CoreAppLib/AppResCodes.h"
-#include "../CoreAppLib/AccountCfg.h"
+#include "../CoreAppLib/AccountConfig.h"
 #include "../CoreAppLib/MailMsgReceiver.h"
 #include "../CoreAppLib/MailMsgStore.h"
 #include "../CoreAppLib/MailMsgTransmitter.h"
@@ -78,7 +78,7 @@ int MailMsgFileMgr::LoadList(GrpId grp_id)
 {
 	auto grp_data = GetGrpData(grp_id);
 	if (!grp_data) return Error_Gen_ItemNotFound;
-	auto store_path = MailMsgStore::GetStoreDirPath(AppCfg.Get().AppDataDir.c_str(), grp_data->MailAcc.Directory.c_str());
+	auto store_path = MailMsgStore::GetStoreDirPath(AppCfg.GetGeneral().UsrDataDir.c_str(), grp_data->MailAcc.Directory.c_str());
 	MailMsgStore mail_store;
 	int res_code = mail_store.SetLocation(store_path.c_str(), grp_id);
 	if (res_code >= 0) {
@@ -182,7 +182,7 @@ int MailMsgFileMgr::MailMsgFile_EventHandler(const MailMsgFile* mail_msg, const 
 		std::basic_string<FILE_PATH_CHAR> *evt_prm = static_cast<MailMsgFile_EventData_DataSaving*>(evt_info.data);
 		if (evt_prm) {
 			auto acc = AccCfg.FindAccount(mail_msg->GetGrpId());
-			if (acc) *evt_prm = MailMsgStore::GenerateFilePath(AppCfg.Get().AppDataDir.c_str(), acc->Directory.c_str());
+			if (acc) *evt_prm = MailMsgStore::GenerateFilePath(AppCfg.GetGeneral().UsrDataDir.c_str(), acc->Directory.c_str());
 			else result = Error_Gen_ItemNotFound; // Event parameter data is probably incorrect
 		} else result = Error_Gen_Undefined;
 	} else if (MailMsgFile_EventType::etDataSaved == evt_info.type) {
@@ -259,10 +259,10 @@ LisThread::TaskProcResult MailMsgFileMgr::MailRecvProc(
 	// ** Receiving mail...
 	int file_count = 0;
 	MailMsgReceiver rcvr;
-	res_code = rcvr.SetLocation(AppCfg.Get().TmpDataDir.c_str(), mail_grp->MailAcc.Incoming, grp_id);
+	res_code = rcvr.SetLocation(AppCfg.GetGeneral().TmpDataDir.c_str(), mail_grp->MailAcc.Incoming, grp_id);
 	if (res_code >= 0) {
 		auto mail_store_path = MailMsgStore::GetStoreDirPath(
-			AppCfg.Get().AppDataDir.c_str(), mail_grp->MailAcc.Directory.c_str());
+			AppCfg.GetGeneral().UsrDataDir.c_str(), mail_grp->MailAcc.Directory.c_str());
 		MailMsgStore mail_store;
 		mail_store.SetLocation(mail_store_path.c_str(), grp_id);
 		auto grp_files = &mail_grp->MsgFiles;
@@ -385,7 +385,7 @@ int MailMsgFileMgr::GetAuthData(std::string& auth_data, const Connections::Conne
 			return false; // unknown auth type
 		};
 
-	ConnectionAuth auth(AppCfg.Get().AppDataDir.c_str(), connection);
+	ConnectionAuth auth(AppCfg.GetGeneral().UsrDataDir.c_str(), connection);
 	int result = auth.GetAuthData(auth_data, auth_event_handler);
 	if (stop_func_reset) proc_ctrl->StopFunc = nullptr; // The auth call has finished, so the function is not valid anymore
 	return result;

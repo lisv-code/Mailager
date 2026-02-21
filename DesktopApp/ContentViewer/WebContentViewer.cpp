@@ -121,9 +121,9 @@ void WebContentViewer::OpenUrl(const wxString& url)
 		wxICON_QUESTION | wxOK | wxCANCEL | wxCANCEL_DEFAULT, viewCtrl->GetParent()))
 	{
 #ifdef _WINDOWS
-		SysHelper::Open((const TCHAR*)url);
+		SysHelper::SysOpen((const TCHAR*)url);
 #else
-		SysHelper::Open(url);
+		SysHelper::SysOpen(url);
 #endif
 	}
 }
