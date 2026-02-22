@@ -10,8 +10,11 @@ echo Build target: $BUILD_TARGET, version: $BUILD_VERSION.
 SRC_BIN_DIR=../../DesktopApp/bin/$BUILD_TARGET
 cp "$SRC_BIN_DIR/Mailager" ./mailager/usr/bin/
 chmod 755 ./mailager/usr/bin/Mailager
-cp "$SRC_BIN_DIR/Mailager.cfg" ./mailager/usr/etc/
-chmod 644 ./mailager/usr/etc/Mailager.cfg
+DST_CFG_DIR=./mailager/usr/etc/LISV_Mailager
+cp "$SRC_BIN_DIR/Mailager.cfg" $DST_CFG_DIR/
+chmod 644 $DST_CFG_DIR/Mailager.cfg
+cp "$SRC_BIN_DIR/oauth2.cfg" $DST_CFG_DIR/
+chmod 644 $DST_CFG_DIR/oauth2.cfg
 # SRC_RES_DIR=../../Resource
 # cp "$SRC_RES_DIR/AppMain.png" ./mailager/usr/share/icons/mailager.png
 
@@ -23,7 +26,7 @@ sed -i "s|#PKG_VERSION#|$BUILD_VERSION|g" ./mailager/DEBIAN/control
 
 # Build package
 dpkg-deb --build mailager
-PKG_FILE_NAME=mailager_${BUILD_VERSION}_amd64.deb
+PKG_FILE_NAME=mailager_${BUILD_VERSION}_debian_amd64.deb
 mv mailager.deb $PKG_FILE_NAME
 echo Result package: $PKG_FILE_NAME
 

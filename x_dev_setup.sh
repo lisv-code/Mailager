@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# apt install build-essential # Not sure if it's really necessary
+# Prepare Linux environment for Mailager development (dev libs & IDE)
 
 apt install libcurl4-openssl-dev
 apt install libmimetic-dev
@@ -8,5 +8,6 @@ apt install libsecret-1-dev
 apt install libwxgtk-webview3.2-dev
 
 apt install codeblocks
-# Code::Blocks probably better install manually using a newer package
+# Note: likely makes sense to install Code::Blocks manually using a newer package
+# , see https://www.codeblocks.org/downloads/binaries/#imagesoslinux48pnglogo-linux-32-and-64-bit
 
