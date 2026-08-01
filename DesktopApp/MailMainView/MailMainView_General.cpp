@@ -34,12 +34,12 @@ MailMainView::MailMainView(wxWindow* parent, MailMsgFileMgr* msg_file_mgr, MailM
 
 	InitMailMsgProcEvent();
 
-	AccCfg.EventSubscribe(AccountConfig_Def::etAccountsChanged,
+	AccCfg.EventSubscribe(AccountConfig_EventType::AccountsChanged,
 		std::bind(&MailMainView::AccountCfg_EventHandler,
 			this, std::placeholders::_1, std::placeholders::_2));
 	CreateMasterViewModel(masterModelViewOption1);
 
-	AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus::gpsNone);
+	AdjustMailSyncUiControls(MailSyncProcStatus::spsNone);
 
 	RefreshMasterToolsState();
 	RefreshDetailToolsState(false);
@@ -99,7 +99,7 @@ void MailMainView::mnuMailSyncStopSend_OnMenuSelection(wxCommandEvent& event)
 void MailMainView::toolMailMsgCreate_OnToolClicked(wxCommandEvent& event)
 {
 	wxBeginBusyCursor();
-	msgViewMgr->OpenStdView(msgFileMgr->CreateMailMsg(GetCurrentAccountId()));
+	msgViewMgr->OpenStdView(msgFileMgr->MsgRegistry.CreateDraft(GetCurrentAccountId()));
 	wxEndBusyCursor();
 }
 
@@ -233,13 +233,13 @@ void MailMainView::mnuMailMsgItemDelete_OnMenuSelection(wxCommandEvent& event)
 	}
 }
 
-void MailMainView::AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus acc_busy_state)
+void MailMainView::AdjustMailSyncUiControls(MailSyncProcStatus acc_busy_state)
 {
 	static auto start_icon = wxArtProvider::GetBitmap(wxASCII_STR("IcoToolRefresh"), wxASCII_STR(wxART_OTHER));
 	static auto stop_icon = wxArtProvider::GetBitmap(wxASCII_STR("IcoToolStop"), wxASCII_STR(wxART_OTHER));
 
-	auto tool_icon = acc_busy_state ? stop_icon : start_icon;
-	auto tool_help = acc_busy_state ? ToolHlp_MailSyncStop : ToolHlp_MailSyncStart;
+	auto tool_icon = acc_busy_state != MailSyncProcStatus::spsNone ? stop_icon : start_icon;
+	auto tool_help = acc_busy_state != MailSyncProcStatus::spsNone ? ToolHlp_MailSyncStop : ToolHlp_MailSyncStart;
 	int tool_id;
 
 	if (!toolMailSyncProc->GetDropdownMenu()) { // The tool has no dropdown menu - replace the control
@@ -257,7 +257,7 @@ void MailMainView::AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus acc_bu
 	}
 
 	auto tool_menu = new wxMenu();
-	if (!acc_busy_state) {
+	if (MailSyncProcStatus::spsNone == acc_busy_state) {
 		this->Unbind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStopSyncMail_OnToolClicked, this);
 		this->Bind(wxEVT_COMMAND_TOOL_CLICKED, &MailMainView::toolStartSyncMail_OnToolClicked, this, tool_id);
 
@@ -271,11 +271,11 @@ void MailMainView::AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus acc_bu
 
 		auto menu_item = tool_menu->Append(wxID_ANY, MnuLbl_MailSyncStopRecv);
 		tool_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStopRecv_OnMenuSelection, this, menu_item->GetId());
-		menu_item->Enable(MailMsgFileMgr::GrpProcStatus::gpsProcReceiving & acc_busy_state);
+		menu_item->Enable(MailSyncProcStatus::spsReceiving & acc_busy_state);
 
 		menu_item = tool_menu->Append(wxID_ANY, MnuLbl_MailSyncStopSend);
 		tool_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &MailMainView::mnuMailSyncStopSend_OnMenuSelection, this, menu_item->GetId());
-		menu_item->Enable(MailMsgFileMgr::GrpProcStatus::gpsProcSending & acc_busy_state);
+		menu_item->Enable(MailSyncProcStatus::spsSending & acc_busy_state);
 	}
 	
 	toolMailSyncProc->SetDropdownMenu(tool_menu); // Previous menu is deleted automatically if exists
@@ -286,7 +286,7 @@ void MailMainView::AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus acc_bu
 int MailMainView::AccountCfg_EventHandler(const AccountConfig* acc_cfg, const AccountConfig::EventInfo& evt_info)
 {
 	wxBeginBusyCursor();
-	for (int acc_id : evt_info.data->DeletedAccIds) msgFileMgr->RemoveGroup(acc_id);
+	for (int acc_id : evt_info.data.DeletedAccIds) msgFileMgr->RemoveGroup(acc_id);
 	CreateMasterViewModel(masterModelViewOption1);
 	CreateDetailViewModel(nullptr);
 	wxEndBusyCursor();
@@ -298,8 +298,7 @@ void MailMainView::RefreshMasterToolsState(const wxDataViewItem* item)
 	if (!item) {
 		item = &dvAccFolders->GetSelection();
 	}
-	auto acc_busy_state =
-		item ? GetAccItemBusyState(*item, msgFileMgr) : MailMsgFileMgr::GrpProcStatus::gpsNone;
+	auto acc_busy_state = item ? GetAccItemBusyState(*item) : MailSyncProcStatus::spsNone;
 
 	CallAfter([this, acc_busy_state]() { AdjustMailSyncUiControls(acc_busy_state); });
 }
@@ -323,7 +322,7 @@ void MailMainView::RefreshDetailToolsState(bool enable_filter)
 	tlbrDetail->Realize();
 }
 
-void MailMainView::StartMailSync(bool receiving, bool sending)
+void MailMainView::StartMailSync(bool receive, bool send)
 {
 	wxBeginBusyCursor();
 	const auto item = dvAccFolders->GetSelection();
@@ -331,9 +330,7 @@ void MailMainView::StartMailSync(bool receiving, bool sending)
 		auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
 		auto accounts = data_item->GetAccounts();
 		for (auto& account : accounts) {
-			msgFileMgr->InitGroup(account->Id, *account); // Refresh account info just in case
-			if (receiving) msgFileMgr->StartMailRecv(account->Id);
-			if (sending) msgFileMgr->StartMailSend(account->Id);
+			msgFileMgr->StartMailSync(account->Id, receive, send);
 		}
 		RefreshMasterToolsState(&item);
 	}
@@ -353,10 +350,8 @@ void MailMainView::StopMailSync(bool receiving, bool sending)
 				wxICON_QUESTION | wxOK | wxCANCEL | wxCANCEL_DEFAULT, this))
 		{
 			for (auto account : accounts) {
-				logger->LogFmt(LisLog::llInfo,
-					Log_Scope " Stopping acc#%i mail sync...", account->Id);
-				if (sending) msgFileMgr->StopMailSend(account->Id);
-				if (receiving) msgFileMgr->StopMailRecv(account->Id);
+				logger->LogFmt(LisLog::llInfo, Log_Scope " Stopping acc#%i mail sync...", account->Id);
+				msgFileMgr->StopMailSync(account->Id, receiving, sending);
 			}
 			RefreshMasterToolsState(&item);
 		}

@@ -29,7 +29,7 @@ namespace MailMsgFile_Imp
 using namespace MailMsgFile_Imp;
 
 MailMsgFile::MailMsgFile(int grp_id, const FILE_PATH_CHAR* file_path)
-	: MailMsgFile_EventDispatcher(),
+	: MailMsgFile_EvtDisp(),
 	grpId(grp_id), mailStatus(MailMsgStatus_Undefined)
 {
 	if (file_path) filePath = LisStr::StrCopy(file_path);
@@ -37,18 +37,12 @@ MailMsgFile::MailMsgFile(int grp_id, const FILE_PATH_CHAR* file_path)
 }
 
 MailMsgFile::MailMsgFile(int grp_id, MailMsgStatus msg_status)
-	: MailMsgFile_EventDispatcher(),
+	: MailMsgFile_EvtDisp(),
 	grpId(grp_id), filePath(nullptr), mailStatus(msg_status)
 { }
 
-MailMsgFile::MailMsgFile(const MailMsgFile& src) noexcept
-	: MailMsgFile_EventDispatcher(src),
-	grpId(src.grpId), filePath(LisStr::StrCopy(src.filePath)),
-	mailStatus(src.mailStatus), mailInfo(src.mailInfo)
-{ }
-
 MailMsgFile::MailMsgFile(MailMsgFile&& src) noexcept
-	: MailMsgFile_EventDispatcher(src),
+	: MailMsgFile_EvtDisp(std::move(src)),
 	grpId(std::exchange(src.grpId, MailMsgGrpId_Empty)), filePath(std::exchange(src.filePath, nullptr)),
 	mailStatus(std::exchange(src.mailStatus, MailMsgStatus_Undefined)), mailInfo(std::move(src.mailInfo))
 { }
@@ -133,8 +127,9 @@ int MailMsgFile::ChangeStatus(MailMsgStatus added, MailMsgStatus removed)
 	auto new_status = (MailMsgStatus)((old_status | added) & ~removed);
 	if (old_status == new_status) return ResCode_Ok; // No actual changes
 
-	if (RaiseEvent(etStatusChanging, (void*)new_status) < 0) return Error_Gen_Operation_Interrupted;
 	int result = ResCode_Ok;
+	RaiseEvent(MailMsgFile_EventType::StatusChanging, MailMsgFile_EventData(new_status), &result);
+	if (result _Is_Err_ResCode) return Error_Gen_Operation_Interrupted;
 	const char* status_str = header_update_status(mailInfo, new_status);
 	mailStatus = new_status;
 	if (filePath) {
@@ -142,7 +137,7 @@ int MailMsgFile::ChangeStatus(MailMsgStatus added, MailMsgStatus removed)
 		result = MailMsgFile_Helper::update_header_fields(filePath, fld_names, fld_values, true);
 	}
 	if (result _Is_Ok_ResCode)
-		RaiseEvent(etStatusChanged, (void*)old_status);
+		RaiseEvent(MailMsgFile_EventType::StatusChanged, MailMsgFile_EventData(old_status));
 	return result;
 }
 
@@ -168,11 +163,14 @@ int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
 	if (!filePath) { // Trying to obtain file path if not defined yet
 		if (MailMsgGrpId_Empty == grp_id) return Error_File_Initialization;
 		std::swap(grpId, grp_id); // Set new grpId
-		MailMsgFile_EventData_DataSaving evt_prm;
-		if (filePath) evt_prm = filePath;
-		if (RaiseEvent(etDataSaving, (void*)&evt_prm) >= 0 && !evt_prm.empty()) {
+		MailMsgFile_EventData_DataSaving file_path;
+		if (filePath) file_path = filePath;
+		int evt_result = -1;
+		MailMsgFile_EventData evt_prm(& file_path);
+		RaiseEvent(MailMsgFile_EventType::DataSaving, evt_prm, &evt_result);
+		if (evt_result >= 0 && !file_path.empty()) {
 			if (filePath) free(filePath);
-			filePath = LisStr::StrCopy(evt_prm.c_str());
+			filePath = LisStr::StrCopy(file_path.c_str());
 		} else {
 			std::swap(grpId, grp_id); // Rollback grpId
 			return Error_Gen_Operation_Interrupted;
@@ -197,7 +195,7 @@ int MailMsgFile::SaveData(const MimeNode& data, int grp_id)
 	if (result _Is_Ok_ResCode) { // Loading metadata from the saved file
 		mailInfo.Clear();
 		result = LoadInfo();
-		RaiseEvent(etDataSaved, nullptr);
+		RaiseEvent(MailMsgFile_EventType::DataSaved, nullptr);
 	}
 
 	return result;
@@ -210,7 +208,7 @@ int MailMsgFile::DeleteFile()
 	if (CheckStatusFlags(MailMsgStatus::mmsIsDeleted)) {
 		if (LisFileSys::FileDelete(filePath)) {
 			result = ResCode_Ok;
-			RaiseEvent(etFileDeleted, nullptr);
+			RaiseEvent(MailMsgFile_EventType::FileDeleted, nullptr);
 		}
 	} else {
 		result = ChangeStatus(MailMsgStatus::mmsIsDeleted, MailMsgStatus::mmsNone);

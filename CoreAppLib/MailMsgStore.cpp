@@ -46,8 +46,7 @@ std::vector<MailMsgFile> MailMsgStore::GetFileList()
 	std::vector<MailMsgFile> result;
 	LisFileSys::DirEnum(
 		[grp_id = this->grpId, &result](const LisFileSys::FileEntry& file) {
-			MailMsgFile mail(grp_id, file.Path.c_str());
-			result.push_back(mail);
+			result.emplace_back(grp_id, file.Path.c_str());
 			return true;
 		},
 		storeLocation.c_str(),

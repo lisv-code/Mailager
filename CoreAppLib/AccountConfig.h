@@ -9,17 +9,14 @@
 
 class AccountConfig; // forward declaration
 
-namespace AccountConfig_Def
-{
-	enum EventType { etAccountsChanged };
-	struct EventData {
-		std::vector<const AccountSettings*> Accounts;
-		std::vector<int> DeletedAccIds;
-	};
-	typedef EventDispatcherBase<AccountConfig, EventType, const EventData*> AccountConfig_EventDispatcher;
-}
+enum class AccountConfig_EventType { AccountsChanged };
+struct AccountConfig_EventData {
+	std::vector<const AccountSettings*> Accounts;
+	std::vector<int> DeletedAccIds;
+};
+typedef EventDispatcherBase<AccountConfig, AccountConfig_EventType, const AccountConfig_EventData&> AccountConfig_EvtDisp;
 
-class AccountConfig : public AccountConfig_Def::AccountConfig_EventDispatcher
+class AccountConfig : public AccountConfig_EvtDisp
 {
 public:
 	typedef std::vector<AccountSettings> AccountsContainer;

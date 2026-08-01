@@ -9,21 +9,28 @@
 
 class MailMsgFile; // forward declaration
 
-enum MailMsgFile_EventType
-{
-	etDataSaving, // see MailMsgFile_EventParam_DataSaving
-	etDataSaved, // nullptr
-	etFileDeleted, // nullptr
-	etStatusChanging, // MailMsgStatus - new status value
-	etStatusChanged // MailMsgStatus - old status value
+enum class MailMsgFile_EventType {
+	DataSaving, // data: current file path (can be modified by handler)
+	DataSaved, // no event data
+	FileDeleted, // no event data
+	StatusChanging, // data: MailMsgStatus - new status value
+	StatusChanged // data: MailMsgStatus - old status value
 };
-typedef std::basic_string<FILE_PATH_CHAR> MailMsgFile_EventData_DataSaving; // current path value, accepts new path to be set
-typedef EventDispatcherBase<MailMsgFile, MailMsgFile_EventType, void*> MailMsgFile_EventDispatcher;
+typedef std::basic_string<FILE_PATH_CHAR> MailMsgFile_EventData_DataSaving;
+typedef MailMsgStatus MailMsgFile_EventData_StatusChange;
+union MailMsgFile_EventData {
+	void* Reserved;
+	MailMsgFile_EventData_DataSaving* FilePath;
+	MailMsgFile_EventData_StatusChange StatusValue;
+	MailMsgFile_EventData(MailMsgFile_EventData_DataSaving* file_path): FilePath(file_path) { }
+	MailMsgFile_EventData(MailMsgFile_EventData_StatusChange status_value) : StatusValue(status_value) { }
+};
+typedef EventDispatcherBase<MailMsgFile, MailMsgFile_EventType, const MailMsgFile_EventData&> MailMsgFile_EvtDisp;
 
 /// <summary>
 /// Mail message basic metadata container, data access and mail operations
 /// </summary>
-class MailMsgFile : public MailMsgFile_EventDispatcher
+class MailMsgFile : public MailMsgFile_EvtDisp
 {
 	int grpId;
 	FILE_PATH_CHAR* filePath;
@@ -38,7 +45,6 @@ class MailMsgFile : public MailMsgFile_EventDispatcher
 public:
 	MailMsgFile(int grp_id, const FILE_PATH_CHAR* file_path);
 	MailMsgFile(int grp_id, MailMsgStatus msg_status);
-	MailMsgFile(const MailMsgFile& src) noexcept;
 	MailMsgFile(MailMsgFile&& src) noexcept;
 	~MailMsgFile();
 

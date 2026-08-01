@@ -86,15 +86,14 @@ bool MailMainView::IsFolderMatches(int folder_id, MailMsgFile* mail_msg)
 	return result;
 }
 
-MailMsgFileMgr::GrpProcStatus MailMainView::GetAccItemBusyState(const wxDataViewItem& item,
-	MailMsgFileMgr* msg_mgr)
+MailSyncProcStatus MailMainView::GetAccItemBusyState(const wxDataViewItem& item)
 {
 	auto data_item = (MasterViewModel::DataItem*)item.m_pItem;
-	if (!data_item) return MailMsgFileMgr::GrpProcStatus::gpsNone;
+	if (!data_item) return MailSyncProcStatus::spsNone;
 	auto accounts = data_item->GetAccounts();
-	auto status = MailMsgFileMgr::GrpProcStatus::gpsNone;
+	auto status = MailSyncProcStatus::spsNone;
 	for (auto& account : accounts) {
-		status = (MailMsgFileMgr::GrpProcStatus)(status | msg_mgr->GetProcStatus(account->Id));
+		status = status | msgFileMgr->GetSyncStatus(account->Id);
 	}
 	return status;
 }

@@ -13,7 +13,7 @@ using namespace MailMsgEditor_Imp;
 
 void MailMsgEditor::AccountInfo_Setup()
 {
-	accCfgSubId = AccCfg.EventSubscribe(AccountConfig_Def::EventType::etAccountsChanged,
+	accCfgEvtSubHdl = AccCfg.EventSubscribeScoped(AccountConfig_EventType::AccountsChanged,
 		std::bind(&MailMsgEditor::AccCfg_EventHandler,
 			this, std::placeholders::_1, std::placeholders::_2));
 	load_accounts(AccCfg, chcSender, AccountId_Empty);
@@ -21,13 +21,13 @@ void MailMsgEditor::AccountInfo_Setup()
 
 void MailMsgEditor::AccountInfo_Cleanup()
 {
-	AccCfg.EventUnsubscribe(accCfgSubId);
+	accCfgEvtSubHdl.Unsubscribe();
 }
 
 int MailMsgEditor::AccCfg_EventHandler(const AccountConfig* acc_cfg, const AccountConfig::EventInfo& evt_info)
 {
-	if (AccountConfig_Def::EventType::etAccountsChanged != evt_info.type) return 0;
-	const auto& del_acc_ids = evt_info.data->DeletedAccIds;
+	if (AccountConfig_EventType::AccountsChanged != evt_info.type) return 0;
+	const auto& del_acc_ids = evt_info.data.DeletedAccIds;
 	int cur_acc_id = GetAccountId();
 	if (std::find(del_acc_ids.begin(), del_acc_ids.end(), cur_acc_id) != del_acc_ids.end()) {
 		// Current message account has been deleted - clear all the references

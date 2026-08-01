@@ -13,7 +13,7 @@ namespace MailMsgEditor_Def
 class MailMsgEditor : public MailMsgEditorUI, public MailMsgFileView
 {
 	/****** Account (Sender) ******/
-	AccountConfig::EventSubscriptionId accCfgSubId;
+	AccountConfig::EventSubscriptionHandle accCfgEvtSubHdl;
 	void AccountInfo_Setup();
 	void AccountInfo_Cleanup();
 	int AccCfg_EventHandler(const AccountConfig* acc_cfg, const AccountConfig::EventInfo& evt_info);

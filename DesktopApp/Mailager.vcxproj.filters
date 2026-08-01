@@ -366,6 +366,18 @@
     <ClInclude Include="..\CoreAppLib\ListEditMgr.h">
       <Filter>Header Files\CoreAppLib</Filter>
     </ClInclude>
+    <ClInclude Include="MailMsgRegistry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MailMainView\MailEventRouter.h">
+      <Filter>MailMainView</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\ConnAuthFacade.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CoreAppLib\MailSyncMgr.h">
+      <Filter>Header Files\CoreAppLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -675,6 +687,18 @@
     <ClCompile Include="OAuth2Cfg\OAuth2EditMgr.cpp">
       <Filter>OAuth2Cfg</Filter>
     </ClCompile>
+    <ClCompile Include="MailMsgRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MailMainView\MailEventRouter.cpp">
+      <Filter>MailMainView</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\ConnAuthFacade.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CoreAppLib\MailSyncMgr.cpp">
+      <Filter>Source Files\CoreAppLib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Mailager.cfg" />
@@ -702,5 +726,6 @@
     <None Include="OAuth2Cfg\OAuth2CfgUI.fbp">
       <Filter>OAuth2Cfg</Filter>
     </None>
+    <None Include="oauth2.cfg" />
   </ItemGroup>
 </Project>

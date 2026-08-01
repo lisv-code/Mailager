@@ -5,6 +5,7 @@
 #include "../../CoreAppLib/AccountConfig.h"
 #include "../MailMsgFileMgr.h"
 #include "../MailMsgViewMgr.h"
+#include "MailEventRouter.h"
 
 namespace MailMainView_Def
 {
@@ -20,11 +21,11 @@ private:
 	MailMsgFileMgr* msgFileMgr;
 	MailMsgViewMgr* msgViewMgr;
 
-	void AdjustMailSyncUiControls(MailMsgFileMgr::GrpProcStatus acc_busy_state);
+	void AdjustMailSyncUiControls(MailSyncProcStatus acc_busy_state);
 	int AccountCfg_EventHandler(const AccountConfig* acc_cfg, const AccountConfig::EventInfo& evt_info);
 	void RefreshMasterToolsState(const wxDataViewItem* item = nullptr);
 	void RefreshDetailToolsState(bool enable_filter);
-	void StartMailSync(bool receiving, bool sending);
+	void StartMailSync(bool receive, bool send);
 	void StopMailSync(bool receiving, bool sending);
 
 	void mnuMailSyncStartRecv_OnMenuSelection(wxCommandEvent& event);
@@ -57,7 +58,7 @@ private:
 	void CreateMasterViewModel(bool group_by_folder);
 	void ExpandFirstLevel();
 	static bool IsFolderMatches(int folder_id, MailMsgFile* mail_msg);
-	static MailMsgFileMgr::GrpProcStatus GetAccItemBusyState(const wxDataViewItem& item, MailMsgFileMgr* msg_mgr);
+	MailSyncProcStatus GetAccItemBusyState(const wxDataViewItem& item);
 	static void ResetFolderMailCount(wxDataViewCtrl* view_ctrl, int folder_id);
 
 	// ****** Detail ******
@@ -71,18 +72,13 @@ private:
 	void OpenMailMsgItem(const wxDataViewItem* mail_msg_item);
 
 	// ****** MailMsgProcEvent ******
-	bool isStop;
-	std::mutex mutex1;
-	int procResult;
+	MailEventRouter mailEvtRtr;
 	void InitMailMsgProcEvent();
 	void FreeMailMsgProcEvent();
-	int MailMsgProcEventHandler(const MailMsgFileMgr* mail_mgr, const MailMsgFileMgr::EventInfo& evt_info);
-	static bool NeedProcEventWait(MailMsgFileMgr_EventType evt_type, bool event_finish);
-	static bool RouteProcEvent(wxEvtHandler* dest, const MailMsgFileMgr::EventInfo& evt_info);
 	void MailMsgCommandHandler(wxCommandEvent& event);
 	void MailMsgEvent_CredentialsRequest(
 		const Connections::ConnectionInfo* connection, std::string* pswd_data, bool* need_save);
-	void MailMsgEvent_NewMessageAdded(std::shared_ptr<MailMsgFile>* mail_msg);
+	void MailMsgEvent_NewMessageAdded(std::shared_ptr<MailMsgFile>& mail_msg);
 	void MailMsgEvent_SyncFinished();
 public:
 	MailMainView(wxWindow* parent, MailMsgFileMgr* msg_file_mgr, MailMsgViewMgr* msg_view_mgr);

@@ -59,7 +59,7 @@ void MainWnd::mnuFileExit_OnMenuSelection(wxCommandEvent& event) { this->Close()
 
 void MainWnd::mnuEditNewMailMessageOnMenuSelection(wxCommandEvent& event)
 {
-	mailMsgViewMgr.OpenStdView(mailMsgFileMgr.CreateMailMsg(MailMsgGrpId_Empty));
+	mailMsgViewMgr.OpenStdView(mailMsgFileMgr.MsgRegistry.CreateDraft(MailMsgGrpId_Empty));
 }
 
 void MainWnd::mnuViewToolbar_OnMenuSelection(wxCommandEvent& event)

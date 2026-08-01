@@ -3,8 +3,6 @@
 #include <wx/fileconf.h>
 #include "ConnectionHelper.h"
 
-using namespace AccountConfig_Def;
-
 AccountConfig AccCfg; // Account Configuration global singleton
 
 #define CfgGrp_General "General"
@@ -113,10 +111,10 @@ int AccountConfig::Save(AccountSettings* save_items, size_t save_count, int* del
 		}
 
 		if (result >= 0) {
-			EventData evt_data;
+			AccountConfig_EventData evt_data;
 			for (const auto& acc : accounts) evt_data.Accounts.push_back(&acc);
 			if (del_count > 0) evt_data.DeletedAccIds.assign(del_ids, del_ids + del_count);
-			RaiseEvent(etAccountsChanged, &evt_data);
+			RaiseEvent(AccountConfig_EventType::AccountsChanged, evt_data);
 		}
 	}
 
